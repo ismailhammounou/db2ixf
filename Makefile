@@ -169,37 +169,37 @@ clean-luigi:  ## Clean deployment package and temporary files.
 .PHONY: record-add
 record-add: ## Record a new change by creating news fragments (Read changelog.md).
 	echo "Message: $(msg)"
-	echo "Issue: AZFRICSD-$(nbr)"
+	echo "Issue: db2ixf-$(nbr)"
 	$(VENV_ACTIVATE); towncrier create -c "$(msg)" $(nbr).added.md
 
 .PHONY: record-change
 record-change: ## Record a new change by creating new fragments (Read changelog.md).
 	echo "Message: $(msg)"
-	echo "Issue: AZFRICSD-$(nbr)"
+	echo "Issue: db2ixf-$(nbr)"
 	$(VENV_ACTIVATE); towncrier create -c "$(msg)" $(nbr).changed.md
 
 .PHONY: record-deprecate
 record-deprecate: ## Record a new change by creating new fragments (Read changelog.md).
 	echo "Message: $(msg)"
-	echo "Issue: AZFRICSD-$(nbr)"
+	echo "Issue: db2ixf-$(nbr)"
 	$(VENV_ACTIVATE); towncrier create -c "$(msg)" $(nbr).deprecated.md
 
 .PHONY: record-remove
 record-remove: ## Record a new change by creating new fragments (Read changelog.md).
 	echo "Message: $(msg)"
-	echo "Issue: AZFRICSD-$(nbr)"
+	echo "Issue: db2ixf-$(nbr)"
 	$(VENV_ACTIVATE); towncrier create -c "$(msg)" $(nbr).removed.md
 
 .PHONY: record-fix
 record-fix: ## Record a new change by creating new fragments (Read changelog.md).
 	echo "Message: $(msg)"
-	echo "Issue: AZFRICSD-$(nbr)"
+	echo "Issue: db2ixf-$(nbr)"
 	$(VENV_ACTIVATE); towncrier create -c "$(msg)" $(nbr).fixed.md
 
 .PHONY: record-secure
 record-secure: ## Record a new change by creating new fragments (Read changelog.md).
 	echo "Message: $(msg)"
-	echo "Issue: AZFRICSD-$(nbr)"
+	echo "Issue: db2ixf-$(nbr)"
 	$(VENV_ACTIVATE); towncrier create -c "$(msg)" $(nbr).security.md
 
 .PHONY: changelog
