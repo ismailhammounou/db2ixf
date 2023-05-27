@@ -1,0 +1,181 @@
+[build-system]
+requires = [
+    'setuptools',
+    'setuptools-scm[toml]>=6.2',
+    'wheel',
+]
+build-backend = 'setuptools.build_meta'
+
+
+
+[project]
+name = 'db2ixf'
+authors = [
+    { name = 'Ismail Hammounou', email = 'ismail.hammounou@gmail.com' },
+]
+maintainers = [
+    { name = 'Ismail Hammounou', email = 'ismail.hammounou@gmail.com' },
+]
+description = 'Parsing and processing of IBM eXchange formats (IXF)'
+keywords = [
+    'PC', 'IXF', 'IBM', 'DB2', 'Development', 'Tools', 'Package', 'Parsing',
+    'Format'
+]
+license = { file = "LICENSE" }
+requires-python = '>=3.7'
+dynamic = ['version', 'readme']
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: GNU Affero General Public License v3',
+    'Operating System :: Unix',
+    'Operating System :: Microsoft',
+    'Operating System :: MacOS',
+    'Programming Language :: Python :: Implementation :: CPython',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+]
+dependencies = [
+    'pyarrow',
+    'typer[all]',
+]
+
+[project.optional-dependencies]
+
+[project.scripts]
+db2ixf = 'db2ixf.cli:app'
+
+[project.urls]
+homepage = 'https://github.com/ismailhammounou/db2ixf'
+documentation = 'https://github.com/ismailhammounou/db2ixf/blob/main/README.md'
+repository = 'https://github.com/ismailhammounou/db2ixf.git'
+changelog = 'https://github.com/ismailhammounou/db2ixf/blob/main/CHANGELOG.md'
+
+
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.dynamic]
+version = { attr = 'db2ixf._version.__version__' }
+readme = { file = ['README.md'], content-type = 'text/markdown' }
+
+[tool.setuptools.packages.find]
+where = ['src']
+include = ['db2ixf*']
+exclude = ['tests*', 'db2ixf.tests*']
+namespaces = true
+
+
+
+[tool.setuptools_scm]
+write_to = 'src/db2ixf/_version.py'
+version_scheme = 'release-branch-semver'
+
+
+
+[tool.disutils]
+bdist_wheel.universal = true
+
+
+
+[tool.pytest.ini_options]
+# https://docs.pytest.org/en/7.1.x/reference/reference.html#ini-options-ref
+minversion = '6.1'
+# Where
+testpaths = 'tests'
+python_files = 'test_*.py'
+python_classes = 'Test*'
+python_functions = 'test_*'
+# JUnit xml
+junit_duration_report = 'total'
+junit_family = 'xunit2'
+junit_logging = 'no'
+junit_log_passing_tests = 'True'
+log_auto_indent = 'False'
+# Global logging
+log_level = 'INFO'
+log_date_format = '%Y-%m-%d %H:%M:%S'
+log_format = '%(asctime)s %(levelname)s %(message)s'
+# Console logging
+log_cli = 'True'
+log_cli_level = 'INFO'
+log_cli_date_format = '%Y-%m-%d %H:%M:%S'
+log_cli_format = '%(asctime)s %(levelname)s %(message)s'
+# File logging
+
+# Console
+
+# Markers
+
+# Runtime
+
+# Fixtures
+
+# Other options to add in pytest cli command (use for plugins)
+addopts = '--setup-show --strict-markers'
+
+
+
+[tool.coverage.run]
+branch = true
+source = ['src']
+sigterm = true
+
+[tool.coverage.report]
+skip_empty = true
+sort = 'Cover'
+
+[tool.coverage.html]
+directory = 'report/coverage/html'
+
+[tool.coverage.xml]
+output = 'report/coverage/coverage.xml'
+
+[tool.coverage.json]
+output = 'report/coverage/coverage.json'
+
+
+
+[tool.towncrier]
+directory = 'resources/changelog'
+filename = 'CHANGELOG.md'
+start_string = '<!-- release notes start -->'
+underlines = ['', '', '']
+template = 'resources/changelog/changelog_template.jinja'
+title_format = '## [{version}](https://github.com/ismailhammounou/db2ixf/tree/{version}) - {project_date}'
+issue_format = '[db2ixf-{issue}](https://github.com/ismailhammounou/db2ixf/issues/{issue})'
+
+[[tool.towncrier.type]]
+directory = 'added'
+name = 'Added'
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = 'changed'
+name = 'Changed'
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = 'deprecated'
+name = 'Deprecated'
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = 'removed'
+name = 'Removed'
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = 'fixed'
+name = 'Fixed'
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = 'security'
+name = 'Security'
+showcontent = true

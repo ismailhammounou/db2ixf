@@ -1,0 +1,240 @@
+# Project information
+site_name: DB2 IXF PARSER
+#site_url:
+repo_url: https://github.com/ismailhammounou/db2ixf
+repo_name: db2ixf
+site_description: Documentation of db2ixf python package
+site_author: Ismail Hammounou
+copyright: Copyright &copy; 2023 Ismail Hammounou - <a href="#__consent">Change cookie settings</a>
+remote_branch: gh-pages
+remote_name: origin
+
+
+
+# Documentation layout
+nav:
+  - Home: index.md
+  - Start: markdown/get-started.md
+  - Code Reference: markdown/code-reference.md
+
+
+
+# Build directories
+docs_dir: docs
+
+site_dir: site
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  language: fr
+  logo: assets/images/db2ixf-parser.png
+  favicon: assets/images/db2ixf-parser.png
+  font:
+    text: Comic Sans Ms
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: me
+      accent: red
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: yellow
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to light mode
+  icon:
+    edit: material/pencil
+    view: material/eye
+  hljs_languages:
+    - terraform
+    - tsql
+    - gsql
+    - cypher
+    - apex
+  navigation_depth: 2
+  features:
+    - header.autohide
+    - navigation.footer
+    - navigation.indexes
+    - navigation.tracking
+    - navigation.instant
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.follow
+    #    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - search.share
+    - announce.dismiss
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - content.action.view
+    - content.tabs.link
+
+extra_css:
+  - assets/stylesheets/extra.css
+
+extra_javascript:
+  - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - assets/javascripts/tablesort.js
+  - assets/javascripts/mathjax.js
+
+extra:
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+    cookies:
+      analytics:
+        name: Google Analytics
+        checked: false
+      github:
+        name: Github Analytics
+        checked: false
+      custom:
+        name: Allianz Analytics
+        checked: false
+    actions:
+      - accept
+      - reject
+      - manage
+  social:
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/IsmailHam777
+      name: Author on Twitter
+    - icon: fontawesome/solid/paper-plane
+      link: mailto:ismail.hammounou@gmail.com
+      name: Contact us
+    - icon: fontawesome/brands/github
+      link: https://github.com/ismailhammounou
+      name: Author on Github
+#  version:
+#    provider: mike
+  generator: true
+  manifest: manifest.webmanifest
+
+
+
+# Preview controls
+
+
+
+# Live Reloading
+watch:
+  - src
+use_directory_urls: true
+strict: false
+dev_addr: 127.0.0.1:8000
+
+
+
+# Formatting options
+## Markdown extensions
+markdown_extensions:
+  - abbr
+  - smarty
+  - meta
+  - attr_list
+  - def_list
+  - md_in_html
+  - admonition
+  - tables
+  - footnotes
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.critic
+  - pymdownx.keys
+  - pymdownx.smartsymbols
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      auto_append:
+        - resources/mkdocs/abbreviations.md
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - toc:
+      permalink: ⚓︎
+      permalink_title: Anchor link to this section for reference
+      toc_depth: 6
+  - pymdownx.tasklist:
+      custom_checkbox: true
+      clickable_checkbox: false
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight:
+      linenums: true
+      anchor_linenums: true
+      auto_title: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+
+
+## Plugins
+plugins:
+  - autorefs
+  - glightbox
+  - mike:
+      canonical_version: null
+      version_selector: true
+  - git-revision-date-localized:
+      enabled: !ENV [ CI, true ]
+      type: date
+      enable_creation_date: true
+      fallback_to_build_date: true
+  - search:
+      lang: [ 'en', 'fr', 'de' ]
+      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+  - mkdocstrings:
+      enabled: !ENV [ ENABLE_MKDOCSTRINGS, true ]
+      default_handler: python
+      handlers:
+        python:
+          options:
+            heading_level: 1
+            show_root_heading: true
+            show_root_toc_entry: true
+            show_root_full_path: false
+            show_root_members_full_path: false
+            show_object_full_path: false
+            show_category_heading: true
+            members_order: source
+            group_by_category: true
+            show_submodules: false
+            docstring_style: numpy
+            docstring_section_style: spacy # list, spacy, table
+            line_length: 100
+            merge_init_into_class: true
+            show_if_no_docstring: false
+            annotations_path: source # source, brief
+            show_signature: true
+            show_signature_annotations: false
+            separate_signature: false
+            show_bases: false
+            show_source: true

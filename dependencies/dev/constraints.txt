@@ -1,0 +1,3 @@
+### Project constraints
+-c ../release/constraints.txt
+babel>=2.9.0

@@ -1,0 +1,15 @@
+graft src
+prune recipes
+prune resources
+prune changelog
+prune config
+prune contributing
+prune dependencies
+prune docker
+prune docs
+prune report
+prune target
+prune tests
+prune venv
+prune .github
+exclude Dockerfile Makefile MANIFEST.in .flake8 .gitignore mkdocs.yml requirements.*

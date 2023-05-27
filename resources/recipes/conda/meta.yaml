@@ -1,0 +1,63 @@
+{% set name = "db2ixf" %}
+{% set version = "0.1.0" %}
+
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+
+source:
+  path: ../../src
+
+
+build:
+  number: 0
+  preserve_egg_dir: True
+  script:
+    - python -m pip install --no-deps --ignore-installed -vv .
+    - python m build --no-isolation
+  entry_points:
+    - db2ixf = db2ixf.cli:app
+
+
+requirements:
+  host:
+    - python
+    - pip
+  build:
+    - python
+    - setuptools
+    - setuptools-scm[toml]>=6.2
+    - wheel
+  run:
+    - python
+    - pyarrow
+    - typer[all]
+
+test:
+  imports:
+    - db2ixf
+  commands:
+    - db2ixf --help
+
+about:
+  home: https://github.com/ismailhammounou/db2ixf
+  license: AGPL-3.0
+  license_family: AGPL-3.0
+  license_file: LICENSE
+  summary: 'Parsing and processing of IBM eXchange formats (IXF)'
+  description: |
+    DB2IXF Parser is python package that simplifies the parsing
+    and processing of IBM eXchange Format (IXF) files. IXF is a file format
+    used by IBM's DB2 database system for data import and export operations.
+    This package provides a streamlined solution for extracting data from IXF files and
+    converting it to various formats, including JSON, CSV, and Parquet.
+  doc_url: https://github.com/ismailhammounou/db2ixf
+  dev_url: https://pypi.python.org/pypi/db2ixf
+  doc_source_url: https://github.com/ismailhammounou/db2ixf/blob/main/README.md
+
+
+extra:
+  recipe-maintainers:
+    - ismailhammounou

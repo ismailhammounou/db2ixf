@@ -1,0 +1,36 @@
+[flake8]
+filename = *.py
+format = codeclimate
+count = True
+extend-ignore = E241
+extend-exclude =
+    .pytest_cache/,
+# ignore python files in docs folder
+    docs/,
+# this contains our built documentation
+    site/,
+# this contains builds of flake8 that we don't want to check
+    dist/,
+# pytest reports
+    report/,
+# target contains some generated python files
+    target/,
+# python env
+    venv/,
+# build folder
+    build/,
+# vendor packages
+    vendor/,
+# legacy code
+    legacy/
+per-file-ignores =
+    src/**/_version:F401
+max-line-length = 80
+max-doc-length = 80
+indent-size = 4
+disable-noqa = False
+show-source = True
+statistics = True
+jobs = auto
+doctests = True
+max-complexity = 10

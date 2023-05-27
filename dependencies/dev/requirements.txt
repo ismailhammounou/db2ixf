@@ -1,0 +1,47 @@
+### Project Dependencies
+-r ../release/requirements.txt
+
+### Packaging
+#### Build backend
+setuptools
+setuptools-scm[toml]
+wheel
+#### Build frontend
+build
+
+### Publishing
+twine
+
+### Testing
+pytest
+pytest-xdist[psutil]
+pytest-asyncio
+pytest-mock
+
+### Reporting
+pytest-cov
+pytest-html
+
+### Analysis
+flake8
+radon
+flake8-codeclimate
+flake8-html
+
+### Security
+safety
+
+### Changelog
+towncrier
+
+### Documentation
+mkdocs-material
+mkdocstrings[python]
+mkdocs-git-revision-date-localized-plugin
+mkdocs-glightbox
+babel
+black
+pillow
+cairosvg
+
+### Utilities
