@@ -17,8 +17,8 @@ analysis and integration with other systems.
 as input, enabling direct parsing of IXF data from file objects, 
 making it convenient for handling large datasets without the need 
 for intermediate file storage.
-- **Minimal dependencies**: The package has only one dependency, pyarrow, 
-which is automatically installed alongside the package.
+- **Minimal dependencies**: The package has only 2 dependencies, pyarrow and 
+  typer, which are automatically installed alongside the package.
 - **CLI**: command line tool called ``db2ixf`` comes with the package.
 
 ## Getting Started

@@ -36,8 +36,8 @@ different formats, including JSON, CSV, and Parquet.
 3. **Support for File-Like Objects**: The package supports file-like objects 
 as input, enabling the direct parsing of IXF data from file objects.
 
-4. **Minimal Dependency**: The package has only one dependency, pyarrow, 
-which is automatically installed alongside the package.
+4. **Minimal Dependency**: The package has only 2 dependencies, pyarrow and 
+   typer, which are automatically installed alongside the package.
 
 5. **CLI**: Command line tool called `db2ixf`.
 
