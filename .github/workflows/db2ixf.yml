@@ -1,0 +1,87 @@
+name: db2ixf ci-cd
+
+
+env:
+  # Run security check
+  RUN_SECURITY_CHECK: 'true'
+  # Run tests
+  RUN_TESTS: 'false'
+  # Build and publish Python library
+  PUBLISH_ARTIFACTS: 'true'
+
+
+on:
+  push:
+    branches:
+      - 'main'
+
+  pull_request:
+    branches:
+      - 'main'
+
+  release:
+    types: [ published ]
+
+
+permissions:
+  contents: read
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  cicd:
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production
+      url: https://github.com
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure Make
+        run: ./configure
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Add conda to system path
+        run: |
+          # $CONDA is an environment variable pointing to the root of the miniconda directory
+          echo $CONDA/bin >> $GITHUB_PATH
+
+      - name: Install dependencies using conda
+        run: |
+          make -C cicd venv
+
+      - name: Check the security using PyUP safety package
+        if: ${{ env.RUN_SECURITY_CHECK == 'true' }}
+        run: |
+          make -C cicd safety-review
+
+      - name: Tests with reports
+        if: ${{ env.RUN_TESTS == 'true' }}
+        run: |
+          make -C cicd test-with-report
+
+      - name: Build package
+        run: |
+          make -C cicd build-package
+
+      - name: Publish package
+        if: ${{ env.PUBLISH_ARTIFACTS == 'true' }}
+        run: |
+          make -C cicd deploy-package
