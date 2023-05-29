@@ -25,14 +25,9 @@ license = { file = "LICENSE" }
 requires-python = '>=3.7'
 dynamic = ['version', 'readme']
 classifiers = [
-    'Development Status :: 4 - Beta',
+    'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: GNU Affero General Public License v3',
-    'Operating System :: Unix',
-    'Operating System :: Microsoft',
-    'Operating System :: MacOS',
-    'Programming Language :: Python :: Implementation :: CPython',
-    'Programming Language :: Python :: 3 :: Only',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
@@ -146,7 +141,7 @@ directory = 'resources/changelog'
 filename = 'CHANGELOG.md'
 start_string = '<!-- release notes start -->'
 underlines = ['', '', '']
-template = 'resources/changelog/changelog_template.jinja'
+template = 'resources/templates/changelog.jinja'
 title_format = '## [{version}](https://github.com/ismailhammounou/db2ixf/tree/{version}) - {project_date}'
 issue_format = '[db2ixf-{issue}](https://github.com/ismailhammounou/db2ixf/issues/{issue})'
 
