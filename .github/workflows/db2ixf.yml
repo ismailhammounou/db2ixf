@@ -79,6 +79,6 @@ jobs:
           make -C cicd build-package
 
       - name: Publish package
-        if: ${{ env.PUBLISH_ARTIFACTS == 'true' }}
+        if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
         run: |
           make -C cicd deploy-package
