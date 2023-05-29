@@ -88,11 +88,11 @@ jobs:
           python-version: '3.11'
 
       - name: Update conda and add it to the system path
-          run: |
-            # $CONDA is an environment variable pointing to the root of the miniconda directory
-            echo $CONDA/bin >> $GITHUB_PATH
-            # Update conda
-            conda update -n base -c defaults conda
+        run: |
+          # $CONDA is an environment variable pointing to the root of the miniconda directory
+          echo $CONDA/bin >> $GITHUB_PATH
+          # Update conda
+          conda update -n base -c defaults conda
 
       - name: Install dependencies using conda
         run: |
