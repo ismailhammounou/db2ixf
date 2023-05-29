@@ -16,7 +16,7 @@ authors = [
 maintainers = [
     { name = 'Ismail Hammounou', email = 'ismail.hammounou@gmail.com' },
 ]
-description = 'Parsing and processing of IBM eXchange formats (IXF)'
+description = 'Parsing and processing of IBM eXchange format (IXF)'
 keywords = [
     'PC', 'IXF', 'IBM', 'DB2', 'Development', 'Tools', 'Package', 'Parsing',
     'Format'
