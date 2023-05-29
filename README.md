@@ -2,7 +2,9 @@
 
 # DB2IXF Parser
 
-![](https://github.com/ismailhammounou/db2ixf/blob/main/resources/images/db2ixf-logo.png?raw=true)
+
+<img src="https://github.com/ismailhammounou/db2ixf/blob/main/resources/images/db2ixf-logo.png?raw=true" alt="Logo" style="display: block; margin: 0 auto;">
+
 
 DB2IXF parser is an open-source python package that simplifies the parsing and
 processing of IBM eXchange Format (IXF) files. IXF is a file format used by
