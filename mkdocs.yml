@@ -28,8 +28,8 @@ theme:
   name: material
   custom_dir: docs/overrides
   language: fr
-  logo: assets/images/db2ixf-parser.png
-  favicon: assets/images/db2ixf-parser.png
+  logo: assets/images/db2ixf-logo.png
+  favicon: assets/images/db2ixf-logo.png
   font:
     text: Comic Sans Ms
   palette:
