@@ -14,17 +14,11 @@ on:
   push:
     branches:
       - 'main'
-
   pull_request:
     branches:
       - 'main'
-
   release:
     types: [ published ]
-
-
-permissions:
-  contents: read
 
 
 concurrency:
@@ -33,7 +27,7 @@ concurrency:
 
 
 jobs:
-  cicd:
+  test:
 
     runs-on: ubuntu-latest
 
@@ -44,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
+        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11' ]
 
     steps:
       - name: Checkout
@@ -66,21 +60,55 @@ jobs:
         run: |
           make venv
 
-      - name: Check the security using PyUP safety package
-        if: ${{ env.RUN_SECURITY_CHECK == 'true' }}
-        run: |
-          make safety-review
-
       - name: Tests with reports
         if: ${{ env.RUN_TESTS == 'true' }}
         run: |
           make test-with-report
 
+  deploy:
+    needs: [ test ]
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production
+      url: https://github.com
+
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.11'
+
+      - name: Update conda and add it to the system path
+          run: |
+            # $CONDA is an environment variable pointing to the root of the miniconda directory
+            echo $CONDA/bin >> $GITHUB_PATH
+            # Update conda
+            conda update -n base -c defaults conda
+
+      - name: Install dependencies using conda
+        run: |
+          make venv
+
+      - name: Check the security using PyUP safety package
+        if: ${{ env.RUN_SECURITY_CHECK == 'true' }}
+        run: |
+          make safety-review
+
       - name: Build package
         run: |
           make build-package
 
-      - name: Publish package
+      - name: Publish package distributions to PyPI
         if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
-        run: |
-          make deploy-package
+        uses: pypa/gh-action-pypi-publish@release/v1
+#        with:
+#          repository-url: https://test.pypi.org/legacy/
