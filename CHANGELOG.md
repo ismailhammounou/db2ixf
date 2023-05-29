@@ -10,4 +10,11 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the
 changes for the upcoming release can be found
 in [here](https://github.com/ismailhammounou/db2ixf/tree/main/resources/changelog/).
 
+
 <!-- release notes start -->
+
+## [0.1.0](https://github.com/ismailhammounou/db2ixf/tree/0.1.0) - 2023-05-29
+
+### Added
+
+- Add IXF Parser [db2ixf-1](https://github.com/ismailhammounou/db2ixf/issues/1)
