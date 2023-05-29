@@ -192,7 +192,7 @@ build-package: clean-pyc clean-dist ## Build the python package.
 deploy-package: ## Deploy the python package
 	$(VENV_ACTIVATE); python -m pip install --upgrade twine -c $(DEV_DEPENDENCIES_DIR)/constraints.txt
 	echo "Deployment: Twine uploads to PyPI"
-	$(VENV_ACTIVATE); python -m twine upload --verbose --non-interactive dist/*
+	$(VENV_ACTIVATE); python -m twine upload --verbose dist/*
 
 
 
