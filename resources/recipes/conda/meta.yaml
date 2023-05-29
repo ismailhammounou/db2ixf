@@ -8,7 +8,7 @@ package:
 
 
 source:
-  path: ../../src
+  path: ../../../src
 
 
 build:
