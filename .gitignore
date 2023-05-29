@@ -533,3 +533,6 @@ src/db2ixf/_version.py
 resources/tools/*
 resources/data/*
 tests/resources/data/*
+
+## Contributing
+contributing/anaconda/*
