@@ -1,4 +1,4 @@
-name: db2ixf
+name: Package Pipeline
 
 
 env:
@@ -55,30 +55,32 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Add conda to system path
+      - name: Update conda and add it to the system path
         run: |
           # $CONDA is an environment variable pointing to the root of the miniconda directory
           echo $CONDA/bin >> $GITHUB_PATH
+          # Update conda
+          conda update -n base -c defaults conda
 
       - name: Install dependencies using conda
         run: |
-          make -C cicd venv
+          make venv
 
       - name: Check the security using PyUP safety package
         if: ${{ env.RUN_SECURITY_CHECK == 'true' }}
         run: |
-          make -C cicd safety-review
+          make safety-review
 
       - name: Tests with reports
         if: ${{ env.RUN_TESTS == 'true' }}
         run: |
-          make -C cicd test-with-report
+          make test-with-report
 
       - name: Build package
         run: |
-          make -C cicd build-package
+          make build-package
 
       - name: Publish package
         if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
         run: |
-          make -C cicd deploy-package
+          make deploy-package
