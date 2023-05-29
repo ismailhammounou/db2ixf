@@ -151,12 +151,12 @@ IXF Parser is released under the
 IXF Parser was made possible by the contributions of several individuals. We
 would like to acknowledge the following:
 
-- [OpenAI](https://openai.com/): For documentation.
+- [OpenAI](https://openai.com/) (ChatGPT): For documentation.
 
 - [PyArrow](https://arrow.apache.org/): For the excellent library that enables
   efficient conversion to Parquet format.
 
-- [Typer](https://typer.tiangolo.com/) : For the excellent tool helping to
+- [Typer](https://typer.tiangolo.com/) : For the excellent tool that helps to
   create CLI.
 
 - [Contributors \& Users](https://github.com/ismailhammounou/db2ixf/graphs/contributors):
