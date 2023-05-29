@@ -2,7 +2,7 @@
 
 # DB2IXF Parser
 
-<div style="text-align: center;">
+<div align="center">
   <img src="https://github.com/ismailhammounou/db2ixf/blob/main/resources/images/db2ixf-logo.png?raw=true" alt="Logo" width="300" height="300">
 </div>
 
