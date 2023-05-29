@@ -27,6 +27,12 @@ converting it to various formats, including JSON, CSV, and Parquet.
   typer, which are automatically installed alongside the package.
 - **CLI**: command line tool called ``db2ixf`` comes with the package.
 
+
+## Hypothesis
+
+- **One** IXF file contains **One** table.
+
+
 ## Getting Started
 
 ### Installation
