@@ -50,6 +50,10 @@
 
 *[XML]: Extensible Markup Language
 
+*[CSV]: Comma Separated Value
+
+*[TSV]: Tab Separated Value
+
 *[WHL]: Wheel Package
 
 *[EGG]: Python Egg

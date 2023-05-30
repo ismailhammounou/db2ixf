@@ -1,3 +1,5 @@
+[![Python](https://img.shields.io/badge/Python-37|38|39|310|311-green.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-AGPLv3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Pipeline](https://github.com/ismailhammounou/db2ixf/actions/workflows/db2ixf.yml/badge.svg)](https://github.com/ismailhammounou/db2ixf/actions/workflows/db2ixf.yml)
 
 # DB2IXF Parser

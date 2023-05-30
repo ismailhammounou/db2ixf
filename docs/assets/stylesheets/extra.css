@@ -1,11 +1,11 @@
 [data-md-color-primary="me"] {
-    --md-primary-fg-color: #004a93;
-    --md-primary-fg-color--light: #42a5f5;
-    --md-primary-fg-color--dark: #1975d2;
+    --md-primary-fg-color: #d53a1e;
+    --md-primary-fg-color--light: #749bd7;
+    --md-primary-fg-color--dark: #90a2b9;
 }
 
 [data-md-color-scheme="default"] {
-    --md-footer-bg-color: #004a93de;
+    --md-footer-bg-color: #d53a1e;
 }
 
 [data-md-color-scheme="slate"] {

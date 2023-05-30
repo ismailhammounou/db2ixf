@@ -25,37 +25,38 @@ app = typer.Typer(
 
 
 @app.command(epilog='Made with heart :D')
-def json(file: Annotated[Path,
-                         typer.Argument(
-                             help='Path to the ixf FILE.',
-                             exists=True,
-                             dir_okay=False,
-                             resolve_path=True,
-                             rich_help_panel='Required Arguments',
-                         )],
-         output: Annotated[Union[Path, None],
-                           typer.Argument(
-                               help='Path to the `json` OUTPUT file.',
-                               dir_okay=False,
-                               readable=False,
-                               resolve_path=True,
-                               rich_help_panel='Optional Arguments',
-                           )] = None,
-         encoding: Annotated[Union[str, None],
-                             typer.Option(
-                                 '--encoding',
-                                 '-e',
-                                 help='IXF file encoding.',
-                                 rich_help_panel='Command Options',
-                             )] = 'latin-1',
-         verbose: Annotated[int,
+def json(
+        file: Annotated[Path,
+                        typer.Argument(
+                            help='Path to the ixf FILE.',
+                            exists=True,
+                            dir_okay=False,
+                            resolve_path=True,
+                            rich_help_panel='Required Arguments',
+                        )],
+        output: Annotated[Union[Path, None],
+                          typer.Argument(
+                              help='Path to the `json` OUTPUT file.',
+                              dir_okay=False,
+                              readable=False,
+                              resolve_path=True,
+                              rich_help_panel='Optional Arguments',
+                          )] = None,
+        encoding: Annotated[Union[str, None],
                             typer.Option(
-                                '--verbose',
-                                '-v',
-                                help='Verbosity level.',
-                                count=True,
-                            )] = 0,
-         ):
+                                '--encoding',
+                                '-e',
+                                help='IXF file encoding.',
+                                rich_help_panel='Command Options',
+                            )] = 'latin-1',
+        verbose: Annotated[int,
+                           typer.Option(
+                               '--verbose',
+                               '-v',
+                               help='Verbosity level.',
+                               count=True,
+                           )] = 0,
+):
     """
     Parse ixf ``FILE`` and convert it to a **json** ``OUTPUT``.
     """
@@ -82,7 +83,8 @@ def json(file: Annotated[Path,
 
 
 @app.command(epilog='Made with heart :D')
-def csv(file: Annotated[Path,
+def csv(
+        file: Annotated[Path,
                         typer.Argument(
                             help='Path to the ixf FILE.',
                             exists=True,
@@ -119,7 +121,7 @@ def csv(file: Annotated[Path,
                                help='Verbosity level.',
                                count=True,
                            )] = 0,
-        ):
+):
     """
     Parse ixf ``FILE`` and convert it to a **csv** ``OUTPUT``.
     """
@@ -150,54 +152,55 @@ def csv(file: Annotated[Path,
 
 
 @app.command(epilog='Made with heart :D')
-def parquet(file: Annotated[Path,
-                            typer.Argument(
-                                help='Path to the ixf FILE.',
-                                exists=True,
-                                dir_okay=False,
-                                resolve_path=True,
-                                rich_help_panel='Required Arguments',
-                            )],
-            output: Annotated[Union[Path, None],
-                              typer.Argument(
-                                  help='Path to the `parquet` OUTPUT file.',
-                                  dir_okay=False,
-                                  readable=False,
-                                  resolve_path=True,
-                                  rich_help_panel='Optional Arguments',
-                              )] = None,
-            encoding: Annotated[Union[str, None],
-                                typer.Option(
-                                    '--encoding',
-                                    '-e',
-                                    help='IXF file encoding.',
-                                    rich_help_panel='Command Options',
-                                )] = 'latin-1',
-            version: Annotated[Union[str, None],
-                               typer.Option(
-                                   '--version',
-                                   help='Parquet version. Please look '
-                                        'at pyarrow documentation.',
-                                   rich_help_panel='Command Options',
-                               )] = '1.0',
-            batch_size: Annotated[Union[int, None],
-                                  typer.Option(
-                                      '--batch-size',
-                                      '-s',
-                                      help='Size of the batch: number of '
-                                           'rows to extract before writing '
-                                           'to the parquet file, It is used '
-                                           'for memory optimization.',
-                                      rich_help_panel='Command Options',
-                                  )] = 500,
-            verbose: Annotated[int,
-                               typer.Option(
-                                   '--verbose',
-                                   '-v',
-                                   help='Verbosity level.',
-                                   count=True,
-                               )] = 0,
-            ):
+def parquet(
+        file: Annotated[Path,
+                        typer.Argument(
+                            help='Path to the ixf FILE.',
+                            exists=True,
+                            dir_okay=False,
+                            resolve_path=True,
+                            rich_help_panel='Required Arguments',
+                        )],
+        output: Annotated[Union[Path, None],
+                          typer.Argument(
+                              help='Path to the `parquet` OUTPUT file.',
+                              dir_okay=False,
+                              readable=False,
+                              resolve_path=True,
+                              rich_help_panel='Optional Arguments',
+                          )] = None,
+        encoding: Annotated[Union[str, None],
+                            typer.Option(
+                                '--encoding',
+                                '-e',
+                                help='IXF file encoding.',
+                                rich_help_panel='Command Options',
+                            )] = 'latin-1',
+        version: Annotated[Union[str, None],
+                           typer.Option(
+                               '--version',
+                               help='Parquet version. Please look '
+                                    'at pyarrow documentation.',
+                               rich_help_panel='Command Options',
+                           )] = '1.0',
+        batch_size: Annotated[Union[int, None],
+                              typer.Option(
+                                  '--batch-size',
+                                  '-s',
+                                  help='Size of the batch: number of '
+                                       'rows to extract before writing '
+                                       'to the parquet file, It is used '
+                                       'for memory optimization.',
+                                  rich_help_panel='Command Options',
+                              )] = 500,
+        verbose: Annotated[int,
+                           typer.Option(
+                               '--verbose',
+                               '-v',
+                               help='Verbosity level.',
+                               count=True,
+                           )] = 0,
+):
     """
     Parse ixf ``FILE`` and convert it to a **parquet** ``OUTPUT``.
     """
@@ -238,16 +241,17 @@ def version_callback(value: bool):
 
 
 @app.callback(invoke_without_command=True)
-def main(ctx: typer.Context,
-         version: Annotated[Optional[bool],
-                            typer.Option(
-                                '--version',
-                                '-v',
-                                help='Show the version of the CLI.',
-                                callback=version_callback,
-                                is_eager=True,
-                            )] = None
-         ):
+def main(
+        ctx: typer.Context,
+        version: Annotated[Optional[bool],
+                           typer.Option(
+                               '--version',
+                               '-v',
+                               help='Show the version of the CLI.',
+                               callback=version_callback,
+                               is_eager=True,
+                           )] = None
+):
     """
     A command-line tool (**CLI**) for parsing and converting IXF (IBM DB2
     Import/Export Format) files to various formats such as JSON, CSV, and

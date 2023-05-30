@@ -6,8 +6,8 @@ IXF file is organised in a sequence of records.
 these records have 5 main types: Header, Table, Column Descriptor, Data and Application.
 
 Inside the IXF file, these records are ordered which means that it starts with a header record,
-table one, set of column descriptors where each column descriptor is also a record
-then it ends with the set of data records.
+table one, set of column descriptors - where each column descriptor is also a record -
+ant it ends with the set of data records.
 
 IXF = H + T + Set(C) + Set(D).
 
@@ -18,14 +18,13 @@ For more information about record types; Please visit this
 [link](https://www.ibm.com/docs/en/db2/11.5?topic=format-pcixf-record-types).
 
 
-
-Data records stores the data we want to extract, which means that for each column we need
-to extract its content from the data record. Each column has its data type.
+Data records [Set(D)] stores the data we want to extract, which means that
+for each column we need to extract its content from the data record.
+Each column has its data type.
 
 For more information about data types; Please visit this
 [link](https://www.ibm.com/docs/en/db2/11.5?topic=format-pcixf-data-types).
 """
 from db2ixf.ixf import IXFParser
-
 
 __all__ = ['IXFParser']
