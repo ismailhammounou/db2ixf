@@ -2,6 +2,7 @@
 site_name: DB2 IXF PARSER
 #site_url:
 repo_url: https://github.com/ismailhammounou/db2ixf
+edit_uri: blob/main/docs/
 repo_name: db2ixf
 site_description: Documentation of db2ixf python package
 site_author: Ismail Hammounou
@@ -13,9 +14,17 @@ remote_name: origin
 
 # Documentation layout
 nav:
-  - Home: index.md
-  - Start: markdown/get-started.md
-  - Code Reference: markdown/code-reference.md
+  - Home:
+      - Welcome: markdown/welcome.md
+      - Introduction: markdown/introduction.md
+  - Getting Started: markdown/getting-started.md
+  - Code Reference:
+      - IXF: markdown/code/db2ixf.md
+      - Collectors: markdown/code/collectors.md
+      - Helpers: markdown/code/helpers.md
+      - Encoders: markdown/code/encoders.md
+      - Exceptions: markdown/code/exceptions.md
+      - Constants: markdown/code/constants.md
 
 
 
@@ -27,7 +36,7 @@ site_dir: site
 theme:
   name: material
   custom_dir: docs/overrides
-  language: fr
+  language: en
   logo: assets/images/db2ixf-logo.png
   favicon: assets/images/db2ixf-logo.png
   font:
@@ -53,30 +62,22 @@ theme:
   icon:
     edit: material/pencil
     view: material/eye
-  hljs_languages:
-    - terraform
-    - tsql
-    - gsql
-    - cypher
-    - apex
   navigation_depth: 2
   features:
     - header.autohide
+    - navigation.top
     - navigation.footer
     - navigation.indexes
-    - navigation.tracking
     - navigation.instant
+    - navigation.tracking
     - navigation.tabs
     - navigation.tabs.sticky
-    - navigation.sections
-    - navigation.expand
-    - navigation.top
-    - toc.follow
-    #    - toc.integrate
     - search.suggest
     - search.highlight
     - search.share
     - announce.dismiss
+    - toc.integrate
+    - toc.follow
     - content.code.copy
     - content.code.annotate
     - content.action.edit
@@ -108,9 +109,6 @@ extra:
       github:
         name: Github Analytics
         checked: false
-      custom:
-        name: Allianz Analytics
-        checked: false
     actions:
       - accept
       - reject
@@ -125,8 +123,6 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/ismailhammounou
       name: Author on Github
-#  version:
-#    provider: mike
   generator: true
   manifest: manifest.webmanifest
 
@@ -146,6 +142,47 @@ dev_addr: 127.0.0.1:8000
 
 
 # Formatting options
+## Plugins
+plugins:
+  - git-revision-date-localized:
+      enabled: !ENV [ CI, true ]
+      type: date
+      enable_creation_date: true
+      fallback_to_build_date: true
+  - search:
+      lang: [ 'en', 'fr', 'es', 'de', 'ar' ]
+      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+  - mkdocstrings:
+      enabled: !ENV [ ENABLE_MKDOCSTRINGS, true ]
+      default_handler: python
+      handlers:
+        python:
+          options:
+            heading_level: 1
+            show_root_heading: true
+            show_root_toc_entry: true
+            show_root_full_path: false
+            show_root_members_full_path: false
+            show_object_full_path: false
+            show_category_heading: true
+            members_order: source
+            group_by_category: true
+            show_submodules: false
+            docstring_style: numpy
+            docstring_section_style: table # list, spacy, table
+            line_length: 100
+            merge_init_into_class: true
+            show_if_no_docstring: false
+            annotations_path: source # source, brief
+            show_signature: true
+            show_signature_annotations: false
+            separate_signature: false
+            show_bases: false
+            show_source: true
+  - autorefs
+  - glightbox
+
+
 ## Markdown extensions
 markdown_extensions:
   - abbr
@@ -165,6 +202,10 @@ markdown_extensions:
   - pymdownx.smartsymbols
   - pymdownx.details
   - pymdownx.inlinehilite
+  - toc:
+      permalink: ⚓︎
+      permalink_title: Anchor link to this section for reference
+      toc_depth: 4
   - pymdownx.snippets:
       auto_append:
         - resources/mkdocs/abbreviations.md
@@ -172,10 +213,6 @@ markdown_extensions:
       generic: true
   - pymdownx.betterem:
       smart_enable: all
-  - toc:
-      permalink: ⚓︎
-      permalink_title: Anchor link to this section for reference
-      toc_depth: 6
   - pymdownx.tasklist:
       custom_checkbox: true
       clickable_checkbox: false
@@ -193,48 +230,3 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-
-
-
-## Plugins
-plugins:
-  - autorefs
-  - glightbox
-  - mike:
-      canonical_version: null
-      version_selector: true
-  - git-revision-date-localized:
-      enabled: !ENV [ CI, true ]
-      type: date
-      enable_creation_date: true
-      fallback_to_build_date: true
-  - search:
-      lang: [ 'en', 'fr', 'de' ]
-      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
-  - mkdocstrings:
-      enabled: !ENV [ ENABLE_MKDOCSTRINGS, true ]
-      default_handler: python
-      handlers:
-        python:
-          options:
-            heading_level: 1
-            show_root_heading: true
-            show_root_toc_entry: true
-            show_root_full_path: false
-            show_root_members_full_path: false
-            show_object_full_path: false
-            show_category_heading: true
-            members_order: source
-            group_by_category: true
-            show_submodules: false
-            docstring_style: numpy
-            docstring_section_style: spacy # list, spacy, table
-            line_length: 100
-            merge_init_into_class: true
-            show_if_no_docstring: false
-            annotations_path: source # source, brief
-            show_signature: true
-            show_signature_annotations: false
-            separate_signature: false
-            show_bases: false
-            show_source: true
