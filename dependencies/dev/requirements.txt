@@ -37,8 +37,8 @@ towncrier
 ### Documentation
 mkdocs-material
 mkdocstrings[python]
-mkdocs-git-revision-date-localized-plugin
 mkdocs-glightbox
+mkdocs-git-revision-date-localized-plugin
 babel
 black
 pillow
