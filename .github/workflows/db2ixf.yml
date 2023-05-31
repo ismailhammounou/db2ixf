@@ -2,12 +2,16 @@ name: CI
 
 
 env:
-  # Run security check
-  RUN_SECURITY_CHECK: 'true'
   # Run tests
   RUN_TESTS: 'false'
-  # Build and publish Python library
+  # Run security check
+  RUN_SECURITY_CHECK: 'true'
+  # Publish artifacts
   PUBLISH_ARTIFACTS: 'true'
+
+
+permissions:
+  contents: read
 
 
 on:
@@ -27,13 +31,9 @@ concurrency:
 
 
 jobs:
-  test:
+  test-package:
 
     runs-on: ubuntu-latest
-
-    environment:
-      name: production
-      url: https://github.com
 
     strategy:
       fail-fast: false
@@ -65,8 +65,11 @@ jobs:
         run: |
           make test-with-report
 
-  deploy:
-    needs: [ test ]
+
+  deploy-package:
+    if: ${{ github.event_name == 'release' }}
+
+    needs: [ test-package ]
 
     runs-on: ubuntu-latest
 
@@ -76,7 +79,6 @@ jobs:
 
     permissions:
       id-token: write
-      contents: write
 
     steps:
       - name: Checkout
@@ -108,15 +110,39 @@ jobs:
           make build-package
 
       - name: Publish package distributions to PyPI
-        if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
+        if: ${{ env.PUBLISH_ARTIFACTS == 'true' }}
         uses: pypa/gh-action-pypi-publish@release/v1
+  deploy-doc:
+    if: ${{ github.event_name == 'push' }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Update conda and add it to the system path
+        run: |
+          # $CONDA is an environment variable pointing to the root of the miniconda directory
+          echo $CONDA/bin >> $GITHUB_PATH
+          # Update conda
+          conda update -n base -c defaults conda
+
+      - name: Install & Update dependencies using conda
+        run: |
+          make update
 
       - name: Create a cache id in Github environment
-        if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
+        if: ${{ env.PUBLISH_ARTIFACTS == 'true' }}
         run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
 
       - name: Restore all cache id(s)
-        if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
+        if: ${{ env.PUBLISH_ARTIFACTS == 'true' }}
         uses: actions/cache@v3
         with:
           key: docs-${{ env.cache_id }}
@@ -125,9 +151,9 @@ jobs:
             docs-
 
       - name: Publish package docs to Github Pages
-        if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
+        if: ${{ env.PUBLISH_ARTIFACTS == 'true' }}
         run: |
           # Configure git
-          git config global user.name "Mkdocs"
+          git config --global user.name "Mkdocs"
           # Deploy documentation to github pages using Mkdocs
           make mkdocs-deploy-docs
