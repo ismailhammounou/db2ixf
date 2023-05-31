@@ -165,10 +165,10 @@ create a powerful and dependable tool for working with DB2's IXF files.
 - [ ] Improve documentation.
 - [x] Add a CLI.
 - [x] Improve CLI: output can be optional.
-- [ ] Add better ci-cd.
-- [ ] Improve Makefile.
-- [ ] ~~Support multiprocessing.~~
-- [ ] ~~Support archived inputs: only python not CLI ?~~
+- [x] Add better ci-cd.
+- [x] Improve Makefile.
+- [x] ~~Support multiprocessing.~~ 
+- [x] ~~Support archived inputs: only python not CLI ?~~
 - [x] Add logging.
 
 ## License
