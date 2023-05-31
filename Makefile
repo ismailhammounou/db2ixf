@@ -120,10 +120,15 @@ clean-flake8:  ## Clean flake8 reports
 clean-changelog: ## Clean changelog fragments (records).
 	rm -rf resources/changelog/*.md || true
 
-.PHONY: clean-ghp
-clean-ghp: ## Clean documentation branches.
-	git branch -d github-pages
-	git branch -d gh-pages
+.PHONY: clean-local-ghp
+clean-local-ghp: ## Clean local documentation branches.
+	git branch --delete gh-pages || true
+	git branch --delete github-pages || true
+
+.PHONY: clean-remote-ghp
+clean-remote-ghp: ## Clean remote documentation branches.
+	git push origin --delete gh-pages || true
+	git branch origin --delete github-pages || true
 
 
 
