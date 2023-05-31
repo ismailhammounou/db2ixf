@@ -138,7 +138,7 @@ Usage: db2ixf [OPTIONS] COMMAND [ARGS]...
 ```
 
 For a detailed story and usage, please refer to the
-[documentation](https://github.com/ismailhammounou/db2ixf).
+[documentation](https://ismailhammounou.github.io/db2ixf/).
 
 ## Contributing
 
