@@ -56,10 +56,10 @@ from db2ixf import IXFParser
 
 path = Path('path/to/IXF/file.XXX.IXF')
 with open(path, mode='rb') as f:
-	parser = IXFParser(f)
-	rows = parser.parse()
-	for row in rows:
-		print(row)
+    parser = IXFParser(f)
+    rows = parser.parse()
+    for row in rows:
+        print(row)
 ```
 
 #### Converting to JSON
@@ -71,10 +71,10 @@ from db2ixf import IXFParser
 
 path = Path('path/to/IXF/file.XXX.IXF')
 with open(path, mode='rb') as f:
-	parser = IXFParser(f)
-	output_path = Path('path/to/output/file.json')
-	with open(output_path, mode='w', encoding='utf-8') as output_file:
-		parser.to_json(output_file)
+    parser = IXFParser(f)
+    output_path = Path('path/to/output/file.json')
+    with open(output_path, mode='w', encoding='utf-8') as output_file:
+        parser.to_json(output_file)
 ```
 
 #### Converting to CSV
@@ -86,10 +86,10 @@ from db2ixf import IXFParser
 
 path = Path('path/to/IXF/file.XXX.IXF')
 with open(path, mode='rb') as f:
-	parser = IXFParser(f)
-	output_path = Path('path/to/output/file.csv')
-	with open(output_path, mode='w', encoding='utf-8') as output_file:
-		parser.to_csv(output_file)
+    parser = IXFParser(f)
+    output_path = Path('path/to/output/file.csv')
+    with open(output_path, mode='w', encoding='utf-8') as output_file:
+        parser.to_csv(output_file)
 ```
 
 #### Converting to Parquet
@@ -101,10 +101,10 @@ from db2ixf import IXFParser
 
 path = Path('path/to/IXF/file.XXX.IXF')
 with open(path, mode='rb') as f:
-	parser = IXFParser(f)
-	output_path = Path('path/to/output/file.parquet')
-	with open(output_path, mode='wb') as output_file:
-		parser.to_parquet(output_file)
+    parser = IXFParser(f)
+    output_path = Path('path/to/output/file.parquet')
+    with open(output_path, mode='wb') as output_file:
+        parser.to_parquet(output_file)
 ```
 
 #### CLI
@@ -175,25 +175,6 @@ create a powerful and dependable tool for working with DB2's IXF files.
 
 IXF Parser is released under the
 [AGPL-3.0 License](https://github.com/ismailhammounou/db2ixf/blob/main/LICENSE).
-
-## Acknowledgements
-
-IXF Parser was made possible by the contributions of several individuals. We
-would like to acknowledge the following:
-
-- [OpenAI](https://openai.com/) (ChatGPT): For documentation.
-
-- [PyArrow](https://arrow.apache.org/): For the excellent library that enables
-  efficient conversion to Parquet format.
-
-- [Typer](https://typer.tiangolo.com/) : For the excellent tool that helps to
-  create CLI.
-
-- [Contributors \& Users](https://github.com/ismailhammounou/db2ixf/graphs/contributors):
-  For their valuable feedback, bug reports, and contributions to the project.
-
-We are grateful for the support and collaboration that have helped shape the IXF
-Parser package into what it is today.
 
 ## Support
 
