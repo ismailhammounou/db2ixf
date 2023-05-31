@@ -13,6 +13,13 @@ in [here](https://github.com/ismailhammounou/db2ixf/tree/main/resources/changelo
 
 <!-- release notes start -->
 
+## [0.1.3](https://github.com/ismailhammounou/db2ixf/tree/0.1.3) - 2023-05-31
+
+### Fixed
+
+- Fix issue with gh pages
+  [db2ixf-11](https://github.com/ismailhammounou/db2ixf/issues/11)
+
 ## [0.1.2](https://github.com/ismailhammounou/db2ixf/tree/0.1.2) - 2023-05-31
 
 ### Fixed

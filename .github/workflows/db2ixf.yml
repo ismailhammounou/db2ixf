@@ -127,4 +127,7 @@ jobs:
       - name: Publish package docs to Github Pages
         if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
         run: |
+          # Configure git
+          git config global user.name "Mkdocs"
+          # Deploy documentation to github pages using Mkdocs
           make mkdocs-deploy-docs
