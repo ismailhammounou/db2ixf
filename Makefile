@@ -131,7 +131,7 @@ clean-ghp: ## Clean documentation branches.
 #   SAFETY
 # ============================
 .PHONY: safety-check
-safety-check: clean-security update ## Check dependencies vulnerabilities using pyup.io safety package.
+safety-check: clean-security ## Check dependencies vulnerabilities using pyup.io safety package.
 	@echo "----------------------------------------------------------------------------------------"
 	@echo "------------------------          VULNERABILITY CHECK         --------------------------"
 	@echo "----------------------------------------------------------------------------------------"
@@ -255,7 +255,7 @@ build-docs: ## Build documentation.
 	$(VENV_ACTIVATE); mkdocs build
 
 .PHONY: mkdocs-deploy-docs
-mkdocs-deploy-docs: update changelog clean-docs build-docs  ## Deploy documentation to github pages (gh-pages) using Mkdocs.
+mkdocs-deploy-docs: clean-docs build-docs  ## Deploy documentation to github pages (gh-pages) using Mkdocs.
 	echo "Deploying the documentation to github pages (gh-pages) using Mkdocs"
 	$(VENV_ACTIVATE); mkdocs gh-deploy --clean \
 		--message "Deploy documentation ({sha}) for the version `$(PACKAGE_VERSION)`" \

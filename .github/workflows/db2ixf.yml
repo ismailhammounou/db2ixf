@@ -1,4 +1,4 @@
-name: Pipeline
+name: CI
 
 
 env:
@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -75,15 +75,15 @@ jobs:
       url: https://github.com
 
     permissions:
-      # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
+      contents: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Set up Python 3.11
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
@@ -94,9 +94,9 @@ jobs:
           # Update conda
           conda update -n base -c defaults conda
 
-      - name: Install dependencies using conda
+      - name: Install & Update dependencies using conda
         run: |
-          make venv
+          make update
 
       - name: Check the security using PyUP safety package
         if: ${{ env.RUN_SECURITY_CHECK == 'true' }}
@@ -110,5 +110,21 @@ jobs:
       - name: Publish package distributions to PyPI
         if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
         uses: pypa/gh-action-pypi-publish@release/v1
-#        with:
-#          repository-url: https://test.pypi.org/legacy/
+
+      - name: Create a cache id in Github environment
+        if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
+        run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+
+      - name: Restore all cache id(s)
+        if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
+        uses: actions/cache@v3
+        with:
+          key: docs-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            docs-
+
+      - name: Publish package docs to Github Pages
+        if: ${{ env.PUBLISH_ARTIFACTS == 'true' && github.event_name == 'release' }}
+        run: |
+          make mkdocs-deploy-docs
