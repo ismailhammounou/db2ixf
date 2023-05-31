@@ -18,6 +18,7 @@ in [here](https://github.com/ismailhammounou/db2ixf/blob/main/CHANGELOG.md).
 
 - Improve ci and fix
   issues [db2ixf-12](https://github.com/ismailhammounou/db2ixf/issues/12)
+- Improve ci-cd [db2ixf-2](https://github.com/ismailhammounou/db2ixf/issues/2)
 
 ## [0.1.3](https://github.com/ismailhammounou/db2ixf/tree/0.1.3) - 2023-05-31
 
