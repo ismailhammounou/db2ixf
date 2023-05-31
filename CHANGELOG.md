@@ -8,17 +8,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the
 changes for the upcoming release can be found
-in [here](https://github.com/ismailhammounou/db2ixf/tree/main/resources/changelog/)
-.
+in [here](https://github.com/ismailhammounou/db2ixf/blob/main/CHANGELOG.md).
 
 <!-- release notes start -->
-## [0.1.4](https://github.com/ismailhammounou/db2ixf/tree/0.1.4) - 2023-06-01
 
+## [0.1.4](https://github.com/ismailhammounou/db2ixf/tree/0.1.4) - 2023-06-01
 
 ### Changed
 
-- Improve ci and fix issues [db2ixf-12](https://github.com/ismailhammounou/db2ixf/issues/12)
-
+- Improve ci and fix
+  issues [db2ixf-12](https://github.com/ismailhammounou/db2ixf/issues/12)
 
 ## [0.1.3](https://github.com/ismailhammounou/db2ixf/tree/0.1.3) - 2023-05-31
 
