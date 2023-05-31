@@ -35,7 +35,7 @@ site_dir: site
 
 theme:
   name: material
-  custom_dir: docs/overrides
+  #  custom_dir: docs/overrides
   language: en
   logo: assets/images/db2ixf-logo.png
   favicon: assets/images/db2ixf-logo.png
