@@ -12,6 +12,13 @@ in [here](https://github.com/ismailhammounou/db2ixf/tree/main/resources/changelo
 .
 
 <!-- release notes start -->
+## [0.1.4](https://github.com/ismailhammounou/db2ixf/tree/0.1.4) - 2023-06-01
+
+
+### Changed
+
+- Improve ci and fix issues [db2ixf-12](https://github.com/ismailhammounou/db2ixf/issues/12)
+
 
 ## [0.1.3](https://github.com/ismailhammounou/db2ixf/tree/0.1.3) - 2023-05-31
 
