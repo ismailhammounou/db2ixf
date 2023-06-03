@@ -161,7 +161,8 @@ create a powerful and dependable tool for working with DB2's IXF files.
 
 - [ ] Search for contributors/maintainers/sponsors.
 - [ ] Add tests (Manual testing was done but need write unit tests).
-- [ ] Adding new collectors for other ixf data types: floating point ... etc.
+- [x] Adding new collector for the floating point data type.
+- [ ] Adding new collectors for other ixf data types: binary ...etc.
 - [ ] Improve documentation.
 - [x] Add a CLI.
 - [x] Improve CLI: output can be optional.

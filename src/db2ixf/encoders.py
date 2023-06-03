@@ -6,7 +6,7 @@ from datetime import date, datetime, time
 
 
 class CustomJSONEncoder(json.JSONEncoder):
-    """Custom JSON encoder to handle python data, time and datetime objects."""
+    """Custom JSON encoder to handle python date, time and datetime objects."""
 
     def default(self, o):
         if isinstance(o, (date, time, datetime)):
