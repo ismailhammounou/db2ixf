@@ -1,6 +1,6 @@
 # coding=utf-8
 """Collects data from fields extracted from data records."""
-from datetime import datetime, date, time
+from datetime import datetime
 from struct import unpack
 from typing import Union
 
@@ -71,6 +71,69 @@ def collect_bigint(c, fields, pos, encoding) -> int:
         Integer.
     """
     field = int(unpack('<q', fields[pos:pos + 8])[0])
+    return field
+
+
+def collect_decimal(c, fields, pos, encoding) -> Union[int, float]:
+    """Collects DECIMAL data type from ixf as a integer or a float.
+
+    Parameters
+    ----------
+    c : dict
+        Column descriptor extracted from IXF.
+    fields : str
+        Binary string containing data of the row.
+    pos : int
+        Position of the column in the `fields`.
+    encoding : str
+        Encoding of the ixf file.
+
+    Returns
+    -------
+    Union[int, float]:
+        Integer or Float
+    """
+    p = int(c['IXFCLENG'][0:3])
+    s = int(c['IXFCLENG'][3:5])
+    length = int((p + 2) / 2)
+    field = fields[pos:pos + length]
+
+    dec = 0.0
+    for b in range(0, min(len(field), length) - 1):
+        dec = dec * 100 + int(field[b] >> 4) * 10 + int(field[b] & 0x0f)
+    dec = dec * 10 + int(field[-1] >> 4)
+
+    if int(field[-1] & 0x0f) != 12:
+        dec = -dec
+
+    if s == 0:
+        return int(dec)
+
+    return dec / pow(10, s)
+
+
+def collect_floating_point(c, fields, pos, encoding) -> float:
+    """Collects FLOATING POINT data type from ixf as a float.
+
+    Parameters
+    ----------
+    c : dict
+        Column descriptor extracted from IXF.
+    fields : str
+        Binary string containing data of the row.
+    pos : int
+        Position of the column in the `fields`.
+    encoding : str
+        Encoding of the ixf file.
+
+    Returns
+    -------
+    float
+        A python float object.
+    """
+    length = int(c['IXFCLENG'])
+    fmt = '!d' if length == 8 else '!f'
+    field = float(unpack(fmt, fields[pos:pos + length])[0])
     return field
 
 
@@ -190,41 +253,3 @@ def collect_timestamp(c, fields, pos, encoding) -> datetime:
     """
     field = str(fields[pos:pos + 26], encoding=encoding)
     return datetime.strptime(field, '%Y-%m-%d-%H.%M.%S.%f')
-
-
-def collect_decimal(c, fields, pos, encoding) -> Union[int, float]:
-    """Collects DECIMAL data type from ixf as a integer or a float.
-
-    Parameters
-    ----------
-    c : dict
-        Column descriptor extracted from IXF.
-    fields : str
-        Binary string containing data of the row.
-    pos : int
-        Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
-
-    Returns
-    -------
-    Union[int, float]:
-        Integer or Float
-    """
-    p = int(c['IXFCLENG'][0:3])
-    s = int(c['IXFCLENG'][3:5])
-    length = int((p + 2) / 2)
-    field = fields[pos:pos + length]
-
-    dec = 0.0
-    for b in range(0, min(len(field), length) - 1):
-        dec = dec * 100 + int(field[b] >> 4) * 10 + int(field[b] & 0x0f)
-    dec = dec * 10 + int(field[-1] >> 4)
-
-    if int(field[-1] & 0x0f) != 12:
-        dec = -dec
-
-    if s == 0:
-        return int(dec)
-
-    return dec / pow(10, s)

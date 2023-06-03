@@ -7,10 +7,18 @@ and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the
-changes for the upcoming release can be found
-in [here](https://github.com/ismailhammounou/db2ixf/blob/main/CHANGELOG.md).
+changes for the upcoming release may be found
+in [here](https://github.com/ismailhammounou/db2ixf/tree/main/resources/changelog).
+
 
 <!-- release notes start -->
+
+## [0.1.5](https://github.com/ismailhammounou/db2ixf/tree/0.1.5) - 2023-06-03
+
+### Added
+
+- Support of floating point data
+  type [db2ixf-14](https://github.com/ismailhammounou/db2ixf/issues/14)
 
 ## [0.1.4](https://github.com/ismailhammounou/db2ixf/tree/0.1.4) - 2023-06-01
 

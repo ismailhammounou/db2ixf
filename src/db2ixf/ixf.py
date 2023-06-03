@@ -8,18 +8,19 @@ import csv
 import json
 import pyarrow.parquet
 from db2ixf.collectors import (collect_bigint,
-                                                     collect_char,
-                                                     collect_date,
-                                                     collect_decimal,
-                                                     collect_integer,
-                                                     collect_time,
-                                                     collect_timestamp,
-                                                     collect_varchar,
-                                                     collect_smallint)
+                               collect_char,
+                               collect_date,
+                               collect_decimal,
+                               collect_integer,
+                               collect_time,
+                               collect_timestamp,
+                               collect_varchar,
+                               collect_smallint,
+                               collect_floating_point)
 from db2ixf.constants import (HEADER_RECORD_TYPE,
-                                                    TABLE_RECORD_TYPE,
-                                                    COL_DESCRIPTOR_RECORD_TYPE,
-                                                    DATA_RECORD_TYPE)
+                              TABLE_RECORD_TYPE,
+                              COL_DESCRIPTOR_RECORD_TYPE,
+                              DATA_RECORD_TYPE)
 from db2ixf.encoders import CustomJSONEncoder
 from db2ixf.exceptions import (
     NotValidColumnDescriptorException,
@@ -259,6 +260,7 @@ class IXFParser:
                 392: collect_timestamp,
                 448: collect_varchar,
                 452: collect_char,
+                480: collect_floating_point,
                 484: collect_decimal,
                 492: collect_bigint,
                 496: collect_integer,

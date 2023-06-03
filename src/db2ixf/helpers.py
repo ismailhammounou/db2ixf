@@ -27,6 +27,7 @@ def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
         'TIMESTAMP': pyarrow.timestamp('ns'),
         'VARCHAR': pyarrow.string(),
         'CHAR': pyarrow.string(),
+        'FLOATING POINT': pyarrow.float64(),
         'DECIMAL': pyarrow.decimal128(19),
         'BIGINT': pyarrow.int64(),
         'INTEGER': pyarrow.int32(),
@@ -39,13 +40,17 @@ def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
         ctype = int(c['IXFCTYPE'])
         dtype = mapper[IXF_DTYPES[ctype]]
 
+        if ctype == 480:
+            length = int(c['IXFCLENG'])
+            dtype = pyarrow.float32() if length == 4 else dtype
+
         if ctype == 484:
             precision = int(c['IXFCLENG'][0:3])
             scale = int(c['IXFCLENG'][3:5])
             if scale == 0:
                 dtype = pyarrow.int64()
             else:
-                dtype = pyarrow.decimal128(precision, scale)
+                dtype = pyarrow.decimal256(precision, scale)
 
         if ctype == 392:
             fsp = int(c['IXFCLENG'])
@@ -86,6 +91,7 @@ def get_pandas_schema(cols: list[dict]):
         'TIMESTAMP': 'datetime64[ns]',
         'VARCHAR': object,
         'CHAR': object,
+        'FLOATING POINT': 'float64',
         'DECIMAL': 'float32',
         'BIGINT': 'int64',
         'INTEGER': 'int64',
@@ -97,6 +103,10 @@ def get_pandas_schema(cols: list[dict]):
         cname = str(c['IXFCNAME'], encoding='utf-8').strip()
         ctype = int(c['IXFCTYPE'])
         dtype = mapper[IXF_DTYPES[ctype]]
+
+        if ctype == 480:
+            length = int(c['IXFCLENG'])
+            dtype = 'float32' if length == 4 else dtype
 
         if ctype == 484:
             precision = int(c['IXFCLENG'][0:3])
