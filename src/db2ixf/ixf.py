@@ -513,7 +513,7 @@ class IXFParser:
             batch_size = 500
 
         if parquet_version is None:
-            batch_size = '1.0'
+            parquet_version = '1.0'
 
         logger.info("Start parsing")
         logger.debug("Put the pointer at the beginning of the ixf file")
@@ -531,7 +531,7 @@ class IXFParser:
         )
         with output as of:
             with ParquetWriter(
-                    of, parquet_schema, flavor='spark', version='1.0'
+                    of, parquet_schema, flavor='spark', version=parquet_version
             ) as writer:
                 for batch in get_batch(self.parse_data, size=batch_size):
                     data = [pyarrow.array(v) for v in batch.values()]
