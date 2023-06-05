@@ -118,10 +118,9 @@ db2ixf --help
 
  Usage: db2ixf [OPTIONS] COMMAND [ARGS]...
 
- A command-line tool (CLI) for parsing and converting IXF (IBM DB2
- Import/Export Format) files to various formats such as JSON, CSV, and
- Parquet. Easily parse and convert IXF files to meet your data processing
- needs.
+ A command-line tool (CLI) for parsing and converting IXF (IBM DB2 Import/Export 
+ Format) files to various formats such as JSON, CSV, and Parquet. Easily parse 
+ and convert IXF files to meet your data processing needs.
 
 +- Options -------------------------------------------------------------------+
 | --version             -v        Show the version of the CLI.                |

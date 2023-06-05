@@ -9,9 +9,9 @@
 </div>
 
 DB2IXF parser is an open-source python package that simplifies the parsing and
-processing of IBM eXchange Format (IXF) files. IXF is a file format used by
-IBM's DB2 database system for data import and export operations. This package
-provides a streamlined solution for extracting data from IXF files and
+processing of IBM Integration eXchange Format (IXF) files. IXF is a file format
+used by IBM's DB2 database system for data import and export operations. This
+package provides a streamlined solution for extracting data from IXF files and
 converting it to various formats, including JSON, CSV, and Parquet.
 
 ## Features
@@ -46,6 +46,40 @@ pip install db2ixf
 ### Usage
 
 Here are some examples of how to use DB2 IXF Parser:
+
+#### CLI
+
+Start with this:
+
+```bash
+db2ixf --help
+```
+
+Result:
+
+```
+ Usage: db2ixf [OPTIONS] COMMAND [ARGS]...
+
+ A command-line tool (CLI) for parsing and converting IXF (IBM DB2 Import/Export 
+ Format) files to various formats such as JSON, CSV, and Parquet. Easily parse 
+ and convert IXF files to meet your data processing needs.
+
++- Options -------------------------------------------------------------------+
+| --version             -v        Show the version of the CLI.                |
+| --install-completion            Install completion for the current shell.   |
+| --show-completion               Show completion for the current shell, to   |
+|                                 copy it or customize the installation.      |
+| --help                          Show this message and exit.                 |
++-----------------------------------------------------------------------------+
++- Commands ------------------------------------------------------------------+
+| csv      Parse ixf FILE and convert it to a csv OUTPUT.                     |
+| json     Parse ixf FILE and convert it to a json OUTPUT.                    |
+| parquet  Parse ixf FILE and convert it to a parquet OUTPUT.                 |
++-----------------------------------------------------------------------------+
+
+ Made with heart :D
+
+```
 
 #### Parsing an IXF file
 
@@ -107,36 +141,6 @@ with open(path, mode='rb') as f:
         parser.to_parquet(output_file)
 ```
 
-#### CLI
-
-Start with this:
-
-```bash
-db2ixf --help
-```
-
-Result:
-
-```
-Usage: db2ixf [OPTIONS] COMMAND [ARGS]...
-
- A command-line tool (CLI) for parsing and converting IXF (IBM DB2 Import/Export Format) files to various formats such as JSON, CSV, and Parquet. Easily parse and convert IXF files to meet your data processing needs.
-
-┌─ Options ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ --version             -v        Show the version of the CLI.                                                                                                                                                                        │
-│ --install-completion            Install completion for the current shell.                                                                                                                                                           │
-│ --show-completion               Show completion for the current shell, to copy it or customize the installation.                                                                                                                    │
-│ --help                          Show this message and exit.                                                                                                                                                                         │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-┌─ Commands ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ csv      Parse ixf FILE and convert it to a csv OUTPUT.                                                                                                                                                                             │
-│ json     Parse ixf FILE and convert it to a json OUTPUT.                                                                                                                                                                            │
-│ parquet  Parse ixf FILE and convert it to a parquet OUTPUT.                                                                                                                                                                         │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-
- Made with heart :D
-```
-
 For a detailed story and usage, please refer to the
 [documentation](https://ismailhammounou.github.io/db2ixf/).
 
@@ -168,7 +172,7 @@ create a powerful and dependable tool for working with DB2's IXF files.
 - [x] Improve CLI: output can be optional.
 - [x] Add better ci-cd.
 - [x] Improve Makefile.
-- [x] ~~Support multiprocessing.~~ 
+- [x] ~~Support multiprocessing.~~
 - [x] ~~Support archived inputs: only python not CLI ?~~
 - [x] Add logging.
 
