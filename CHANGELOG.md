@@ -8,12 +8,19 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the
 changes for the upcoming release may be found
-in [here](https://github.com/ismailhammounou/db2ixf/tree/main/resources/changelog).
-
+in [here](https://github.com/ismailhammounou/db2ixf/tree/main/resources/changelog)
+.
 
 <!-- release notes start -->
+## [0.1.6](https://github.com/ismailhammounou/db2ixf/tree/0.1.6) - 2023-06-05
 
-## [0.1.5](https://github.com/ismailhammounou/db2ixf/tree/0.1.5) - 2023-06-03
+
+### Fixed
+
+- Fix bug with parquet_version param default value and pass it to pyarrow parquet writer [db2ixf-15](https://github.com/ismailhammounou/db2ixf/issues/15)
+
+
+## [0.1.5](https://github.com/ismailhammounou/db2ixf/tree/0.1.5) - 2023-06-05
 
 ### Added
 
