@@ -263,7 +263,7 @@ build-docs: ## Build documentation.
 mkdocs-deploy-docs: clean-docs build-docs  ## Deploy documentation to github pages (gh-pages) using Mkdocs.
 	echo "Deploying the documentation to github pages (gh-pages) using Mkdocs"
 	$(VENV_ACTIVATE); mkdocs gh-deploy --clean \
-		--message "Deploy documentation ({sha}) for the version `$(PACKAGE_VERSION)`" \
+		--message "Deploy documentation ({sha})." \
 		--config-file mkdocs.yml \
 		--verbose \
 		--force
