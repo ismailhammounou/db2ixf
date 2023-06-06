@@ -25,6 +25,8 @@ def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
         'DATE': pyarrow.date32(),
         'TIME': pyarrow.time64('ns'),
         'TIMESTAMP': pyarrow.timestamp('ns'),
+        'BLOB': pyarrow.large_binary(),
+        'CLOB': pyarrow.large_string(),
         'VARCHAR': pyarrow.string(),
         'CHAR': pyarrow.string(),
         'FLOATING POINT': pyarrow.float64(),
@@ -32,6 +34,7 @@ def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
         'BIGINT': pyarrow.int64(),
         'INTEGER': pyarrow.int32(),
         'SMALLINT': pyarrow.int16(),
+        'BINARY': pyarrow.binary(254),
     }
 
     schema = {}
@@ -39,6 +42,10 @@ def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
         cname = c['IXFCNAME'].decode('utf-8').strip()
         ctype = int(c['IXFCTYPE'])
         dtype = mapper[IXF_DTYPES[ctype]]
+
+        if ctype == 912:
+            length = int(c['IXFCLENG'])
+            dtype = pyarrow.binary(length)
 
         if ctype == 480:
             length = int(c['IXFCLENG'])
@@ -63,7 +70,8 @@ def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
             elif 6 < fsp <= 12:
                 dtype = pyarrow.timestamp('ns')
             else:
-                msg = f'Precision of the decimal column {cname} is not valid, it should be <= 12'
+                msg = f'Precision of the decimal column {cname} is not' \
+                      f' valid, it should be <= 12'
                 raise NotValidDataPrecisionException(msg)
 
         schema[cname] = dtype
@@ -71,7 +79,7 @@ def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
     return schema
 
 
-def get_pandas_schema(cols: list[dict]):
+def get_pandas_schema(cols: list[dict]) -> dict[str, object]:
     """Creates a pandas schema of the columns extracted from IXF file.
 
     Parameters
@@ -89,6 +97,8 @@ def get_pandas_schema(cols: list[dict]):
         'DATE': 'datetime64[ns]',
         'TIME': 'datetime64[ns]',
         'TIMESTAMP': 'datetime64[ns]',
+        'BLOB': bytes,
+        'CLOB': object,
         'VARCHAR': object,
         'CHAR': object,
         'FLOATING POINT': 'float64',
@@ -96,6 +106,7 @@ def get_pandas_schema(cols: list[dict]):
         'BIGINT': 'int64',
         'INTEGER': 'int64',
         'SMALLINT': 'int64',
+        'BINARY': bytes,
     }
 
     schema = {}
@@ -123,8 +134,8 @@ def get_pandas_schema(cols: list[dict]):
 
 def merge_dicts(dicts: list[dict]) -> dict[str, list]:
     """
-    Merge a list of dictionaries into a single dictionary where each key is mapped
-    to a list of its values.
+    Merge a list of dictionaries into a single dictionary where each key is
+    mapped to a list of its values.
 
     Parameters
     ----------
@@ -155,8 +166,8 @@ def merge_dicts(dicts: list[dict]) -> dict[str, list]:
 def get_batch(generator: Generator, size: int = 500) -> Dict[str, list]:
     """Batch generator. It yields a batch of rows in a single dictionary.
 
-    It gets a list of size '`size`' containing rows from the data source generator then merge all
-    rows in one dictionary which is the yielded one.
+    It gets a list of size '`size`' containing rows from the data source
+    generator then merge all rows in one dictionary which is the yielded one.
 
 
     Parameters
@@ -169,7 +180,8 @@ def get_batch(generator: Generator, size: int = 500) -> Dict[str, list]:
     Yields
     ------
     Generator[List, None, None]
-        A generator that yields batches of rows, where each batch is a list of rows.
+        A generator that yields batches of rows, where each batch is a
+        list of rows.
 
     Examples
     --------

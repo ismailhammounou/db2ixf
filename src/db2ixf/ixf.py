@@ -16,7 +16,10 @@ from db2ixf.collectors import (collect_bigint,
                                collect_timestamp,
                                collect_varchar,
                                collect_smallint,
-                               collect_floating_point)
+                               collect_floating_point,
+                               collect_blob,
+                               collect_clob,
+                               collect_binary)
 from db2ixf.constants import (HEADER_RECORD_TYPE,
                               TABLE_RECORD_TYPE,
                               COL_DESCRIPTOR_RECORD_TYPE,
@@ -258,6 +261,8 @@ class IXFParser:
                 384: collect_date,
                 388: collect_time,
                 392: collect_timestamp,
+                404: collect_blob,
+                408: collect_clob,
                 448: collect_varchar,
                 452: collect_char,
                 480: collect_floating_point,
@@ -265,6 +270,7 @@ class IXFParser:
                 492: collect_bigint,
                 496: collect_integer,
                 500: collect_smallint,
+                912: collect_binary,
             }
             func = switcher.get(col_type, None)
             try:

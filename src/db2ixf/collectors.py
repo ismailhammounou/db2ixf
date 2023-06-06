@@ -1,8 +1,39 @@
 # coding=utf-8
-"""Collects data from fields extracted from data records."""
-from datetime import datetime
+"""Collects data from the fields extracted from the data records (D)."""
+from datetime import datetime, date, time
+from db2ixf.exceptions import LargeObjectLengthException, \
+    BinaryLengthException, ExceedingDefinedMaximumLengthException
 from struct import unpack
 from typing import Union
+
+
+def collect_binary(c, fields, pos, encoding) -> bytes:
+    """Collects BINARY data type from ixf as a bytes.
+
+    Parameters
+    ----------
+    c : dict
+        Column descriptor extracted from IXF.
+    fields : str
+        Binary string containing data of the row.
+    pos : int
+        Position of the column in the `fields`.
+    encoding : str
+        Encoding of the ixf file.
+
+    Returns
+    -------
+    bytes:
+        a binary string data.
+    """
+    length = int(c['IXFCLENG'])
+    if length > 254:
+        msg = 'Length of a binary data types should not exceed 254 bytes.'
+        raise BinaryLengthException(msg)
+
+    field = fields[pos:pos + length]
+
+    return field
 
 
 def collect_smallint(c, fields, pos, encoding) -> int:
@@ -250,6 +281,85 @@ def collect_timestamp(c, fields, pos, encoding) -> datetime:
     -------
     timestamp:
         Timestamp of format yyyy-mm-dd-HH.MM.SS.UUUUUU
+
+    Raises
+    ------
+    LargeObjectLengthException
+        When the length of the large object exceeds the maximum length.
     """
     field = str(fields[pos:pos + 26], encoding=encoding)
     return datetime.strptime(field, '%Y-%m-%d-%H.%M.%S.%f')
+
+
+def collect_clob(c, fields, pos, encoding) -> str:
+    """Collects CLOB data type from ixf as a string object.
+
+    Parameters
+    ----------
+    c : dict
+        Column descriptor extracted from IXF.
+    fields : str
+        Binary string containing data of the row.
+    pos : int
+        Position of the column in the `fields`.
+    encoding : str
+        Encoding of the ixf file.
+
+    Returns
+    -------
+    str
+        String representing the CLOB (Character Large Object).
+    """
+    max_length = int(c['IXFCLENG'])
+    if max_length > 32767:
+        msg = 'For CLOB data type, max length must be less than 32767 Bytes.'
+        raise ExceedingDefinedMaximumLengthException(msg)
+
+    length = int(unpack('<h', fields[pos:pos + 4])[0])
+    if length > max_length:
+        msg = f'Length exceeds the maximum length {max_length}.'
+        raise LargeObjectLengthException(msg)
+
+    pos += 4
+    field = str(fields[pos:pos + length], encoding=encoding)
+    return field.strip()
+
+
+def collect_blob(c, fields, pos, encoding) -> bytes:
+    """Collects BLOB data type from ixf as a binary string large object.
+
+    Parameters
+    ----------
+    c : dict
+        Column descriptor extracted from IXF.
+    fields : str
+        Binary string containing data of the row.
+    pos : int
+        Position of the column in the `fields`.
+    encoding : str
+        Encoding of the ixf file.
+
+    Returns
+    -------
+    bytes
+        Binary string representing the BLOB (Blob Large Object).
+
+    Raises
+    ------
+    LargeObjectLengthException
+        When the length of the large object exceeds the maximum length.
+    """
+    max_length = int(c['IXFCLENG'])
+    if max_length > 32767:
+        msg = 'For BLOB data type, max length must be less than 32767 Bytes.'
+        raise ExceedingDefinedMaximumLengthException(msg)
+
+    length = int(unpack('<h', fields[pos:pos + 4])[0])
+    if length > max_length:
+        msg = f'Length exceeds the maximum length {max_length}.'
+        raise LargeObjectLengthException(msg)
+
+    pos += 4
+    field = fields[pos:pos + length]
+
+    return field
