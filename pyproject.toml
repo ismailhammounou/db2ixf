@@ -127,13 +127,13 @@ skip_empty = true
 sort = 'Cover'
 
 [tool.coverage.html]
-directory = 'report/coverage/html'
+directory = 'target/report/coverage/html'
 
 [tool.coverage.xml]
-output = 'report/coverage/coverage.xml'
+output = 'target/report/coverage/coverage.xml'
 
 [tool.coverage.json]
-output = 'report/coverage/coverage.json'
+output = 'target/report/coverage/coverage.json'
 
 
 

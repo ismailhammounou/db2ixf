@@ -12,6 +12,22 @@ in [here](https://github.com/ismailhammounou/db2ixf/tree/main/resources/changelo
 .
 
 <!-- release notes start -->
+
+## [0.1.7](https://github.com/ismailhammounou/db2ixf/tree/0.1.7) - 2023-06-06
+
+
+### Added
+
+- Add support for CLOB data type [db2ixf-16](https://github.com/ismailhammounou/db2ixf/issues/16)
+- Add support for BLOB data type [db2ixf-17](https://github.com/ismailhammounou/db2ixf/issues/17)
+- Add support for binary data type [db2ixf-19](https://github.com/ismailhammounou/db2ixf/issues/19)
+
+
+### Changed
+
+- Improve documentation [db2ixf-18](https://github.com/ismailhammounou/db2ixf/issues/18)
+
+
 ## [0.1.6](https://github.com/ismailhammounou/db2ixf/tree/0.1.6) - 2023-06-05
 
 
