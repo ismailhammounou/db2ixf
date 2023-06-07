@@ -514,6 +514,10 @@ cython_debug/
 *.diff
 
 ### Project
+## IDE
+.idea
+**/.idea
+
 ## Temporary files/folders
 tmp/
 temp/
@@ -532,7 +536,6 @@ src/db2ixf/_version.py
 ## Resources
 resources/tools/*
 resources/data/*
-tests/resources/data/*
 
 ## Contributing
 contributing/anaconda/*
