@@ -1,3 +1,4 @@
 ### Project dependencies
+ebcdic
 pyarrow
 typer[all]

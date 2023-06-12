@@ -42,13 +42,6 @@ def json(
                               resolve_path=True,
                               rich_help_panel='Optional Arguments',
                           )] = None,
-        encoding: Annotated[Union[str, None],
-                            typer.Option(
-                                '--encoding',
-                                '-e',
-                                help='IXF file encoding.',
-                                rich_help_panel='Command Options',
-                            )] = 'latin-1',
         verbose: Annotated[int,
                            typer.Option(
                                '--verbose',
@@ -65,19 +58,15 @@ def json(
         filename = file.name.lower().removesuffix('.ixf') + '.json'
         output /= filename
 
-    if encoding is None:
-        encoding = 'latin-1'
-
     if verbose > 2:
         logger.setLevel(VERBOSE_MAPPING[2])
     else:
         logger.setLevel(VERBOSE_MAPPING[verbose])
 
     logger.info(f'IXF file: {file}')
-    logger.info(f'IXF file encoding: {encoding}')
     logger.info(f'JSON file: {output}')
 
-    parser = IXFParser(file, encoding)
+    parser = IXFParser(file)
     parser.to_json(output)
     raise typer.Exit()
 
@@ -100,13 +89,6 @@ def csv(
                               resolve_path=True,
                               rich_help_panel='Optional Arguments',
                           )] = None,
-        encoding: Annotated[Union[str, None],
-                            typer.Option(
-                                '--encoding',
-                                '-e',
-                                help='IXF file encoding.',
-                                rich_help_panel='Command Options',
-                            )] = 'latin-1',
         sep: Annotated[Union[str, None],
                        typer.Option(
                            '--sep',
@@ -130,9 +112,6 @@ def csv(
         filename = file.name.lower().removesuffix('.ixf') + '.csv'
         output /= filename
 
-    if encoding is None:
-        encoding = 'latin-1'
-
     if sep is None:
         sep = '|'
 
@@ -142,11 +121,10 @@ def csv(
         logger.setLevel(VERBOSE_MAPPING[verbose])
 
     logger.info(f'IXF file: {file}')
-    logger.info(f'IXF file encoding: {encoding}')
     logger.info(f'CSV file: {output}')
     logger.info(f'CSV file separator/delimiter: {sep}')
 
-    parser = IXFParser(file, encoding)
+    parser = IXFParser(file)
     parser.to_csv(output, str(sep))
     raise typer.Exit()
 
@@ -169,13 +147,6 @@ def parquet(
                               resolve_path=True,
                               rich_help_panel='Optional Arguments',
                           )] = None,
-        encoding: Annotated[Union[str, None],
-                            typer.Option(
-                                '--encoding',
-                                '-e',
-                                help='IXF file encoding.',
-                                rich_help_panel='Command Options',
-                            )] = 'latin-1',
         version: Annotated[Union[str, None],
                            typer.Option(
                                '--version',
@@ -209,9 +180,6 @@ def parquet(
         filename = file.name.lower().removesuffix('.ixf') + '.parquet'
         output /= filename
 
-    if encoding is None:
-        encoding = 'latin-1'
-
     if version is None:
         version = '1.0'
 
@@ -224,12 +192,11 @@ def parquet(
         logger.setLevel(VERBOSE_MAPPING[verbose])
 
     logger.info(f'IXF file: {file}')
-    logger.info(f'IXF file encoding: {encoding}')
     logger.info(f'PARQUET file: {output}')
     logger.info(f'PARQUET version: {version}')
     logger.info(f'Batch size: {batch_size}')
 
-    parser = IXFParser(file, encoding)
+    parser = IXFParser(file)
     parser.to_parquet(output, int(batch_size), str(version))
     raise typer.Exit()
 

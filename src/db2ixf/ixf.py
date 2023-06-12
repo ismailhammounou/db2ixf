@@ -25,10 +25,10 @@ from db2ixf.constants import (HEADER_RECORD_TYPE,
                               COL_DESCRIPTOR_RECORD_TYPE,
                               DATA_RECORD_TYPE)
 from db2ixf.encoders import CustomJSONEncoder
-from db2ixf.exceptions import (
-    NotValidColumnDescriptorException,
-    UnknownDataTypeException)
-from db2ixf.helpers import get_batch, get_pyarrow_schema
+from db2ixf.exceptions import (NotValidColumnDescriptorException,
+                               UnknownDataTypeException)
+from db2ixf.helpers import (get_batch,
+                            get_pyarrow_schema)
 from db2ixf.logger import logger
 from os import PathLike
 from pathlib import Path
@@ -44,8 +44,6 @@ class IXFParser:
     ----------
     file : str, Path, PathLike or File-Like Object
         Input file and it is better to use file-like object.
-    encoding: str, default: latin-1
-        Encoding of the ixf file. Defaults to latin-1 (ISO 8859-1).
     """
     header_info: dict
     """Contains header informations from input ixf file."""
@@ -65,9 +63,7 @@ class IXFParser:
     number_rows: int
     """Number of rows extracted from the input ixf file."""
 
-    def __init__(self,
-                 file: Union[str, Path, PathLike, BinaryIO],
-                 encoding: str = 'latin-1'):
+    def __init__(self, file: Union[str, Path, PathLike, BinaryIO]):
         """Init the instance."""
         logger.debug('Start initializing the parser')
 
@@ -77,8 +73,7 @@ class IXFParser:
 
         try:
             if file.mode != 'rb':
-                msg = 'file-like object should be opened in ' \
-                      'read and binary mode'
+                msg = 'file-like object should be opened in read-binary mode'
                 raise ValueError(msg)
         except Exception as e:
             logger.error('Parser has an error while reading the ixf file')
@@ -87,7 +82,6 @@ class IXFParser:
 
         # Init instance attributes
         self.file = file
-        self.encoding = encoding
 
         # State
         self.header_info = {}
@@ -174,9 +168,12 @@ class IXFParser:
             for i, j in record_type.items():
                 column[i] = self.file.read(j)
 
+            for k, v in column.items():
+                print(f'{k} : {v}')
+
             try:
                 if column['IXFCRECT'] != b'C':
-                    c = str(column['IXFCNAME'], encoding=self.encoding).strip()
+                    c = str(column['IXFCNAME'], encoding='utf')
                     msg = f'IXF file is not valid, it contains a not ' \
                           f'valid column descriptor (see {c}).'
                     raise NotValidColumnDescriptorException(msg)
@@ -185,6 +182,7 @@ class IXFParser:
                 sys.exit(1)
 
             column['IXFCDSIZ'] = self.file.read(int(column['IXFCRECL']) - 862)
+
             self.columns_info.append(column)
         return self.columns_info
 
@@ -226,7 +224,7 @@ class IXFParser:
         # Start Extraction
         r = {}
         for c in self.columns_info:
-            col_name = str(c['IXFCNAME'], encoding=self.encoding).strip()
+            col_name = str(c['IXFCNAME'], encoding='utf-8')
             col_type = int(c['IXFCTYPE'])
             col_is_nullable = c['IXFCNULL'] == b'Y'
             col_position = int(c['IXFCPOSN'])
@@ -282,8 +280,7 @@ class IXFParser:
                     r[col_name] = func(
                         c,
                         self.current_data_record['IXFDCOLS'],
-                        pos,
-                        self.encoding
+                        pos
                     )
             except Exception as e:
                 logger.error(e)
@@ -339,8 +336,12 @@ class IXFParser:
         self.file.seek(0)
         logger.debug("Parse header record")
         self.parse_header()
+        for k, v in self.header_info.items():
+            print(f'{k}: {v}')
         logger.debug("Parse table record")
         self.parse_table()
+        for k, v in self.table_info.items():
+            print(f'{k}: {v}')
         logger.debug("Parse column descriptor records")
         self.parse_columns()
 
@@ -463,10 +464,7 @@ class IXFParser:
         with output as out:
             writer = csv.writer(out, delimiter=sep)
             cols = [
-                str(
-                    c['IXFCNAME'],
-                    encoding=self.encoding
-                ).strip() for c in self.columns_info
+                str(c['IXFCNAME'], encoding='utf-8') for c in self.columns_info
             ]
             writer.writerow(cols)
             for r in self.parse_data():

@@ -1,6 +1,5 @@
 # coding=utf-8
 """Contains some encoders used to output data in some formats."""
-
 import json
 from datetime import date, datetime, time
 

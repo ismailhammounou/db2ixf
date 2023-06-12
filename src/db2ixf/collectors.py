@@ -1,25 +1,27 @@
 # coding=utf-8
 """Collects data from the fields extracted from the data records (D)."""
+import ebcdic  # noqa
 from datetime import datetime, date, time
-from db2ixf.exceptions import LargeObjectLengthException, \
-    BinaryLengthException, ExceedingDefinedMaximumLengthException
+from db2ixf.exceptions import (LargeObjectLengthException,
+                               BinaryLengthException,
+                               ExceedingDefinedMaximumLengthException,
+                               CLOBCodePageException, CharLengthException)
+from db2ixf.helpers import get_ccsid_from_column
 from struct import unpack
 from typing import Union
 
 
-def collect_binary(c, fields, pos, encoding) -> bytes:
+def collect_binary(c, fields, pos) -> bytes:
     """Collects BINARY data type from ixf as a bytes.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
@@ -36,19 +38,17 @@ def collect_binary(c, fields, pos, encoding) -> bytes:
     return field
 
 
-def collect_smallint(c, fields, pos, encoding) -> int:
+def collect_smallint(c, fields, pos) -> int:
     """Collects SMALLINT data type from ixf as an integer.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
@@ -59,19 +59,17 @@ def collect_smallint(c, fields, pos, encoding) -> int:
     return field
 
 
-def collect_integer(c, fields, pos, encoding) -> int:
+def collect_integer(c, fields, pos) -> int:
     """Collects INTEGER data type from ixf as an integer.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
@@ -82,19 +80,17 @@ def collect_integer(c, fields, pos, encoding) -> int:
     return field
 
 
-def collect_bigint(c, fields, pos, encoding) -> int:
+def collect_bigint(c, fields, pos) -> int:
     """Collects BIGINT data type from ixf as an integer.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
@@ -105,19 +101,17 @@ def collect_bigint(c, fields, pos, encoding) -> int:
     return field
 
 
-def collect_decimal(c, fields, pos, encoding) -> Union[int, float]:
+def collect_decimal(c, fields, pos) -> Union[int, float]:
     """Collects DECIMAL data type from ixf as a integer or a float.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
@@ -143,19 +137,17 @@ def collect_decimal(c, fields, pos, encoding) -> Union[int, float]:
     return dec / pow(10, s)
 
 
-def collect_floating_point(c, fields, pos, encoding) -> float:
+def collect_floating_point(c, fields, pos) -> float:
     """Collects FLOATING POINT data type from ixf as a float.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
@@ -168,19 +160,17 @@ def collect_floating_point(c, fields, pos, encoding) -> float:
     return field
 
 
-def collect_char(c, fields, pos, encoding) -> str:
+def collect_char(c, fields, pos) -> str:
     """Collects CHAR data type from ixf as a string.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
@@ -188,94 +178,114 @@ def collect_char(c, fields, pos, encoding) -> str:
         String.
     """
     length = int(c['IXFCLENG'])
-    field = str(fields[pos:pos + length], encoding=encoding)
+    if length > 254:
+        msg = 'Length of a char data types should not exceed 254 bytes.'
+        raise CharLengthException(msg)
+
+    sbcp, dbcp = get_ccsid_from_column(c)
+
+    if dbcp != 0:
+        field = fields[pos:pos + length].decode(f'ibm{dbcp}')
+    else:
+        if sbcp == 0:
+            field = bin(int(fields[pos:pos + length], 2))
+        else:
+            field = fields[pos:pos + length].decode(f'ibm{sbcp}')
+
     return field.strip()
 
 
-def collect_varchar(c, fields, pos, encoding) -> str:
+def collect_varchar(c, fields, pos) -> str:
     """Collects VARCHAR data type from ixf as a string.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
     str:
         String.
     """
+    max_length = int(c['IXFCLENG'])
+    if max_length > 254:
+        msg = 'Max length of a varchar data type must be less than 254 bytes.'
+        raise ExceedingDefinedMaximumLengthException(msg)
+
     length = int(unpack('<h', fields[pos:pos + 2])[0])
     pos += 2
-    field = str(fields[pos:pos + length], encoding=encoding)
+
+    sbcp, dbcp = get_ccsid_from_column(c)
+
+    if dbcp != 0:
+        field = fields[pos:pos + length].decode(f'ibm{dbcp}')
+    else:
+        if sbcp == 0:
+            field = bin(int(fields[pos:pos + length], 2))
+        else:
+            field = fields[pos:pos + length].decode(f'ibm{sbcp}')
+
     return field.strip()
 
 
-def collect_date(c, fields, pos, encoding) -> date:
+def collect_date(c, fields, pos) -> date:
     """Collects DATE data type from ixf as a date object.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
     date:
         Date of format yyyy-mm-dd.
     """
-    field = str(fields[pos:pos + 10], encoding=encoding)
+    field = str(fields[pos:pos + 10], encoding='utf-8')
     return datetime.strptime(field, '%Y-%m-%d').date()
 
 
-def collect_time(c, fields, pos, encoding) -> time:
+def collect_time(c, fields, pos) -> time:
     """Collects TIME data type from ixf as a time object.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
     time:
         Time of format HH:MM:SS.
     """
-    field = str(fields[pos:pos + 8], encoding=encoding)
+    field = str(fields[pos:pos + 8], encoding='utf-8')
     return datetime.strptime(field, '%H.%M.%S').time()
 
 
-def collect_timestamp(c, fields, pos, encoding) -> datetime:
+def collect_timestamp(c, fields, pos) -> datetime:
     """Collects TIMESTAMP data type from ixf as a datetime object.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
@@ -287,28 +297,35 @@ def collect_timestamp(c, fields, pos, encoding) -> datetime:
     LargeObjectLengthException
         When the length of the large object exceeds the maximum length.
     """
-    field = str(fields[pos:pos + 26], encoding=encoding)
+    field = str(fields[pos:pos + 26], encoding='utf-8')
     return datetime.strptime(field, '%Y-%m-%d-%H.%M.%S.%f')
 
 
-def collect_clob(c, fields, pos, encoding) -> str:
+def collect_clob(c, fields, pos) -> str:
     """Collects CLOB data type from ixf as a string object.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
     str
         String representing the CLOB (Character Large Object).
+
+    Raises
+    ------
+    ExceedingDefinedMaximumLengthException
+        When the maximum length exceeds the defined limit which is 32767 bytes.
+    LargeObjectLengthException
+        When the length of the large object exceeds the maximum length.
+    CLOBCodePageException
+        When SBCP and DBCP are simultaneously equal to 0.
     """
     max_length = int(c['IXFCLENG'])
     if max_length > 32767:
@@ -321,33 +338,47 @@ def collect_clob(c, fields, pos, encoding) -> str:
         raise LargeObjectLengthException(msg)
 
     pos += 4
-    field = str(fields[pos:pos + length], encoding=encoding)
-    return field.strip()
+
+    sbcp, dbcp = get_ccsid_from_column(c)
+
+    if dbcp != 0:
+        field = fields[pos:pos + length].decode(f'ibm{dbcp}')
+    else:
+        if sbcp == 0:
+            msg = 'CLOB data type can not be a bit string as BLOB, ' \
+                  'the SBCP and DBCP should not simultaneously be equal to 0.'
+            raise CLOBCodePageException(msg)
+        else:
+            field = fields[pos:pos + length].decode(f'ibm{sbcp}')
+
+    return field
 
 
-def collect_blob(c, fields, pos, encoding) -> bytes:
-    """Collects BLOB data type from ixf as a binary string large object.
+def collect_blob(c, fields, pos) -> str:
+    """Collects BLOB data type from ixf as a string.
 
     Parameters
     ----------
     c : dict
-        Column descriptor extracted from IXF.
+        Column descriptor extracted from IXF file.
     fields : str
-        Binary string containing data of the row.
+        Bytes string containing data of the row.
     pos : int
         Position of the column in the `fields`.
-    encoding : str
-        Encoding of the ixf file.
 
     Returns
     -------
-    bytes
-        Binary string representing the BLOB (Blob Large Object).
+    str
+        string representing the BLOB (Blob Large Object) or a string
+        of bit data.
 
     Raises
     ------
+    ExceedingDefinedMaximumLengthException
+        When the maximum length exceeds the defined limit which is 32767 bytes.
     LargeObjectLengthException
         When the length of the large object exceeds the maximum length.
+
     """
     max_length = int(c['IXFCLENG'])
     if max_length > 32767:
@@ -360,6 +391,12 @@ def collect_blob(c, fields, pos, encoding) -> bytes:
         raise LargeObjectLengthException(msg)
 
     pos += 4
-    field = fields[pos:pos + length]
+
+    sbcp, _ = get_ccsid_from_column(c)
+
+    if sbcp == 0:
+        field = bin(int(fields[pos:pos + length], 2))
+    else:
+        field = fields[pos:pos + length].decode(f'cp{sbcp}')
 
     return field

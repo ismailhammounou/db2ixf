@@ -33,4 +33,4 @@ show-source = True
 statistics = True
 jobs = auto
 doctests = True
-max-complexity = 10
+max-complexity = 12

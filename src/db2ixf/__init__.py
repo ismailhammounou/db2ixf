@@ -3,16 +3,18 @@
 Helps the user to parse PC/IXF file format of IBM DB2.
 
 IXF file is organised in a sequence of records.
-these records have 5 main types: Header, Table, Column Descriptor, Data and Application.
+these records have 5 main types: Header, Table, Column Descriptor,
+Data and Application.
 
-Inside the IXF file, these records are ordered which means that it starts with a header record,
-table one, set of column descriptors - where each column descriptor is also a record -
-ant it ends with the set of data records.
+Inside the IXF file, these records are ordered which means that it
+starts with a header record, table one, set of column descriptors
+- where each column descriptor is also a record - ant it ends with the set of
+data records.
 
 IXF = H + T + Set(C) + Set(D).
 
-Each record type is represented by a list of fields and each field has a length in bytes that
-we will use to read data from the IXF file.
+Each record type is represented by a list of fields and each field has a length
+in bytes that we will use to read data from the IXF file.
 
 For more information about record types; Please visit this
 [link](https://www.ibm.com/docs/en/db2/11.5?topic=format-pcixf-record-types).
@@ -25,6 +27,22 @@ Each column has its data type.
 For more information about data types; Please visit this
 [link](https://www.ibm.com/docs/en/db2/11.5?topic=format-pcixf-data-types).
 """
+import codecs
+from db2ixf.ibmcodecs import (ibm_utf_32_be,
+                              ibm_utf_32_le,
+                              ibm_utf_32,
+                              ibm_utf_16_be,
+                              ibm_utf_16_le,
+                              ibm_utf_16,
+                              ibm_utf_8)
 from db2ixf.ixf import IXFParser
+
+codecs.register(ibm_utf_32_be)
+codecs.register(ibm_utf_32_le)
+codecs.register(ibm_utf_32)
+codecs.register(ibm_utf_16_be)
+codecs.register(ibm_utf_16_le)
+codecs.register(ibm_utf_16)
+codecs.register(ibm_utf_8)
 
 __all__ = ['IXFParser']

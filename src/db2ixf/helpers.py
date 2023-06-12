@@ -120,7 +120,6 @@ def get_pandas_schema(cols: list[dict]) -> dict[str, object]:
             dtype = 'float32' if length == 4 else dtype
 
         if ctype == 484:
-            precision = int(c['IXFCLENG'][0:3])
             scale = int(c['IXFCLENG'][3:5])
             if scale == 0:
                 dtype = 'int64'
@@ -149,7 +148,8 @@ def merge_dicts(dicts: list[dict]) -> dict[str, list]:
 
     Examples
     --------
-    >>> ex = [{'key1': 'value1', 'key2': 'value2'}, {'key1': 'value3', 'key2': 'value4'}]
+    >>> ex = [{'key1': 'value1', 'key2': 'value2'}] # noqa
+    >>> ex.append({'key1': 'value3', 'key2': 'value4'})
     >>> merge_dicts(ex)
     {'key1': ['value1', 'value3'], 'key2': ['value2', 'value4']}
     """
@@ -196,10 +196,13 @@ def get_batch(generator: Generator, size: int = 500) -> Dict[str, list]:
 
     Notes
     -----
-    - The function accumulates rows until the number of rows reaches the specified `size`.
+    - The function accumulates rows until the number of rows reaches the
+      specified `size`.
     - Once the accumulated rows reach the `size`, a batch is formed and yielded.
-    - If there are remaining rows that do not form a complete batch, they are yielded as the last batch.
-    - The `merge_dicts` function should be implemented separately and used to merge the rows into a single dictionary.
+    - If there are remaining rows that do not form a complete batch, they are
+      yielded as the last batch.
+    - The `merge_dicts` function should be implemented separately and used
+      to merge the rows into a single dictionary.
     """
 
     rows = []
@@ -214,3 +217,38 @@ def get_batch(generator: Generator, size: int = 500) -> Dict[str, list]:
     if rows:
         batch = merge_dicts(rows)
         yield batch
+
+
+def get_ccsid_from_header(header: dict) -> tuple[int, int]:
+    """
+    Get the coded character set identifiers for single and double
+    bytes data type. Which means the code page for singular/double byte
+    data type.
+    """
+    sbcp = str(header['IXFHSBCP'], 'utf-8').strip()
+    dbcp = str(header['IXFHDBCP'], 'utf-8').strip()
+
+    sbcp = int(sbcp) if sbcp else 0
+    dbcp = int(dbcp) if dbcp else 0
+
+    if sbcp == 0:
+        dbcp = 0
+
+    return sbcp, dbcp
+
+
+def get_ccsid_from_column(column: dict) -> tuple[int, int]:
+    """
+    Get the coded character set identifiers for single and double bytes
+    data type. Which means the code page for singular/double byte data type.
+    """
+    sbcp = str(column['IXFCSBCP'], 'utf-8').strip()
+    dbcp = str(column['IXFCDBCP'], 'utf-8').strip()
+
+    sbcp = int(sbcp) if sbcp else 0
+    dbcp = int(dbcp) if dbcp else 0
+
+    if sbcp == 0:
+        dbcp = 0
+
+    return sbcp, dbcp
