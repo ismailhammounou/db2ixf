@@ -173,7 +173,7 @@ class IXFParser:
 
             try:
                 if column['IXFCRECT'] != b'C':
-                    c = str(column['IXFCNAME'], encoding='utf')
+                    c = str(column['IXFCNAME'], encoding='utf-8')
                     msg = f'IXF file is not valid, it contains a not ' \
                           f'valid column descriptor (see {c}).'
                     raise NotValidColumnDescriptorException(msg)
