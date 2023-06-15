@@ -168,9 +168,6 @@ class IXFParser:
             for i, j in record_type.items():
                 column[i] = self.file.read(j)
 
-            for k, v in column.items():
-                print(f'{k} : {v}')
-
             try:
                 if column['IXFCRECT'] != b'C':
                     c = str(column['IXFCNAME'], encoding='utf-8')
@@ -336,12 +333,8 @@ class IXFParser:
         self.file.seek(0)
         logger.debug("Parse header record")
         self.parse_header()
-        for k, v in self.header_info.items():
-            print(f'{k}: {v}')
         logger.debug("Parse table record")
         self.parse_table()
-        for k, v in self.table_info.items():
-            print(f'{k}: {v}')
         logger.debug("Parse column descriptor records")
         self.parse_columns()
 
