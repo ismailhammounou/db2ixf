@@ -4,8 +4,9 @@ import ebcdic  # noqa
 from datetime import datetime, date, time
 from db2ixf.exceptions import (LargeObjectLengthException,
                                BinaryLengthException,
-                               ExceedingDefinedMaximumLengthException,
-                               CLOBCodePageException, CharLengthException)
+                               CLOBCodePageException,
+                               CharLengthException,
+                               VarCharLengthException)
 from db2ixf.helpers import get_ccsid_from_column
 from struct import unpack
 from typing import Union
@@ -185,12 +186,12 @@ def collect_char(c, fields, pos) -> str:
     sbcp, dbcp = get_ccsid_from_column(c)
 
     if dbcp != 0:
-        field = fields[pos:pos + length].decode(f'ibm{dbcp}')
+        field = fields[pos:pos + length].decode(f'cp{dbcp}')
     else:
         if sbcp == 0:
             field = bin(int(fields[pos:pos + length], 2))
         else:
-            field = fields[pos:pos + length].decode(f'ibm{sbcp}')
+            field = fields[pos:pos + length].decode(f'cp{sbcp}')
 
     return field.strip()
 
@@ -213,22 +214,27 @@ def collect_varchar(c, fields, pos) -> str:
         String.
     """
     max_length = int(c['IXFCLENG'])
-    if max_length > 254:
-        msg = 'Max length of a varchar data type must be less than 254 bytes.'
-        raise ExceedingDefinedMaximumLengthException(msg)
+    # if max_length > 254:
+    #     msg = f'Max length of a varchar data type (={max_length}) ' \
+    #           f'must be less than 254 bytes.'
+    #     raise ExceedingDefinedMaximumLengthException(msg)
 
     length = int(unpack('<h', fields[pos:pos + 2])[0])
+    if length > max_length:
+        msg = f'Length {length} exceeds the maximum length {max_length}.'
+        raise VarCharLengthException(msg)
+
     pos += 2
 
     sbcp, dbcp = get_ccsid_from_column(c)
 
     if dbcp != 0:
-        field = fields[pos:pos + length].decode(f'ibm{dbcp}')
+        field = fields[pos:pos + length].decode(f'cp{dbcp}')
     else:
         if sbcp == 0:
             field = bin(int(fields[pos:pos + length], 2))
         else:
-            field = fields[pos:pos + length].decode(f'ibm{sbcp}')
+            field = fields[pos:pos + length].decode(f'cp{sbcp}')
 
     return field.strip()
 
@@ -328,13 +334,14 @@ def collect_clob(c, fields, pos) -> str:
         When SBCP and DBCP are simultaneously equal to 0.
     """
     max_length = int(c['IXFCLENG'])
-    if max_length > 32767:
-        msg = 'For CLOB data type, max length must be less than 32767 Bytes.'
-        raise ExceedingDefinedMaximumLengthException(msg)
+    # if max_length > 32767:
+    #     msg = f'For CLOB data type, max length (={max_length}) must be ' \
+    #           f'less than 32767 Bytes.'
+    #     raise ExceedingDefinedMaximumLengthException(msg)
 
     length = int(unpack('<h', fields[pos:pos + 4])[0])
     if length > max_length:
-        msg = f'Length exceeds the maximum length {max_length}.'
+        msg = f'Length {length} exceeds the maximum length {max_length}.'
         raise LargeObjectLengthException(msg)
 
     pos += 4
@@ -342,16 +349,16 @@ def collect_clob(c, fields, pos) -> str:
     sbcp, dbcp = get_ccsid_from_column(c)
 
     if dbcp != 0:
-        field = fields[pos:pos + length].decode(f'ibm{dbcp}')
+        field = fields[pos:pos + length].decode(f'cp{dbcp}')
     else:
         if sbcp == 0:
             msg = 'CLOB data type can not be a bit string as BLOB, ' \
                   'the SBCP and DBCP should not simultaneously be equal to 0.'
             raise CLOBCodePageException(msg)
         else:
-            field = fields[pos:pos + length].decode(f'ibm{sbcp}')
+            field = fields[pos:pos + length].decode(f'cp{sbcp}')
 
-    return field
+    return field.strip()
 
 
 def collect_blob(c, fields, pos) -> str:
@@ -381,13 +388,13 @@ def collect_blob(c, fields, pos) -> str:
 
     """
     max_length = int(c['IXFCLENG'])
-    if max_length > 32767:
-        msg = 'For BLOB data type, max length must be less than 32767 Bytes.'
-        raise ExceedingDefinedMaximumLengthException(msg)
+    # if max_length > 32767:
+    #     msg = 'For BLOB data type, max length must be less than 32767 Bytes.'
+    #     raise ExceedingDefinedMaximumLengthException(msg)
 
     length = int(unpack('<h', fields[pos:pos + 4])[0])
     if length > max_length:
-        msg = f'Length exceeds the maximum length {max_length}.'
+        msg = f'Length {length} exceeds the maximum length {max_length}.'
         raise LargeObjectLengthException(msg)
 
     pos += 4
@@ -399,4 +406,4 @@ def collect_blob(c, fields, pos) -> str:
     else:
         field = fields[pos:pos + length].decode(f'cp{sbcp}')
 
-    return field
+    return field.strip()
