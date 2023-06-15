@@ -34,7 +34,8 @@ from db2ixf.ibmcodecs import (ibm_utf_32_be,
                               ibm_utf_16_be,
                               ibm_utf_16_le,
                               ibm_utf_16,
-                              ibm_utf_8)
+                              ibm_utf_8,
+                              ibm_latin1)
 from db2ixf.ixf import IXFParser
 
 codecs.register(ibm_utf_32_be)
@@ -44,5 +45,6 @@ codecs.register(ibm_utf_16_be)
 codecs.register(ibm_utf_16_le)
 codecs.register(ibm_utf_16)
 codecs.register(ibm_utf_8)
+codecs.register(ibm_latin1)
 
 __all__ = ['IXFParser']

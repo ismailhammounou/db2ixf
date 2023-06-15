@@ -99,3 +99,17 @@ def ibm_utf_8(name):
     aliases = ['ibm1208', '1208', 'cp1208', 'ibm1209', '1209', 'cp1209']
     if name.lower() in aliases:
         return UTF8Codec()
+
+
+class Latin1Codec(codecs.Codec):
+    def encode(self, input, errors='strict'):  # noqa
+        return codecs.latin_1_encode(input, errors)
+
+    def decode(self, input, errors='strict'):  # noqa
+        return codecs.latin_1_decode(input, errors)
+
+
+def ibm_latin1(name):
+    aliases = ['ibm1252', '1252', 'cp1252']
+    if name.lower() in aliases:
+        return Latin1Codec()
