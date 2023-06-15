@@ -1,6 +1,5 @@
 # coding: utf-8
 """Conftest pytest module, see pytest doc"""
-import shutil
 from db2ixf import IXFParser
 from pathlib import Path
 from pytest import fixture
@@ -56,7 +55,7 @@ def test_output_dir(request, pytestconfig):
     yield output_dir
 
     # Clean up the output directory after the test completes
-    shutil.rmtree(output_dir)
+    # shutil.rmtree(output_dir)
 
 
 @fixture(scope='function')
