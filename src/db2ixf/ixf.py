@@ -224,7 +224,7 @@ class IXFParser:
         # Start Extraction
         r = {}
         for c in self.columns_info:
-            col_name = str(c['IXFCNAME'], encoding='utf-8')
+            col_name = str(c['IXFCNAME'], encoding='utf-8').strip()
             col_type = int(c['IXFCTYPE'])
             col_is_nullable = c['IXFCNULL'] == b'Y'
             col_position = int(c['IXFCPOSN'])
@@ -464,7 +464,9 @@ class IXFParser:
         with output as out:
             writer = csv.writer(out, delimiter=sep)
             cols = [
-                str(c['IXFCNAME'], encoding='utf-8') for c in self.columns_info
+                str(
+                    c['IXFCNAME'], encoding='utf-8'
+                ).strip() for c in self.columns_info
             ]
             writer.writerow(cols)
             for r in self.parse_data():
