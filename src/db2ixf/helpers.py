@@ -3,7 +3,7 @@
 import pyarrow
 from db2ixf.constants import IXF_DTYPES
 from db2ixf.exceptions import NotValidDataPrecisionException
-from typing import Generator, Dict
+from typing import Generator, Dict, BinaryIO, Tuple
 
 
 def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
@@ -219,7 +219,7 @@ def get_batch(generator: Generator, size: int = 500) -> Dict[str, list]:
         yield batch
 
 
-def get_ccsid_from_header(header: dict) -> tuple[int, int]:
+def get_ccsid_from_header(header: dict) -> Tuple[int, int]:
     """
     Get the coded character set identifiers for single and double
     bytes data type. Which means the code page for singular/double byte
@@ -237,7 +237,7 @@ def get_ccsid_from_header(header: dict) -> tuple[int, int]:
     return sbcp, dbcp
 
 
-def get_ccsid_from_column(column: dict) -> tuple[int, int]:
+def get_ccsid_from_column(column: dict) -> Tuple[int, int]:
     """
     Get the coded character set identifiers for single and double bytes
     data type. Which means the code page for singular/double byte data type.
@@ -252,3 +252,21 @@ def get_ccsid_from_column(column: dict) -> tuple[int, int]:
         dbcp = 0
 
     return sbcp, dbcp
+
+
+def get_record_length_and_type(file: BinaryIO) -> Tuple[int, str]:
+    """Get record length and its type.
+
+    Parameters
+    ----------
+    file : BinaryIO.
+        File-like object representing the IXF file.
+
+    Returns
+    -------
+    Tuple[int, str]
+        record length, record type
+    """
+    recl: int = int(file.read(6))
+    rect: str = file.read(1).decode("utf-8")
+    return recl, rect

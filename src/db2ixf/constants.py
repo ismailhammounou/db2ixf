@@ -127,6 +127,7 @@ IXF_TO_PYTHON_DTYPES = {
 }
 """Maps IXF data types to python ones"""
 
+# Will need to delete this coz not necessary so skip it
 CCSID_TO_CODE_PAGE = {
     37: 'cp037',
     273: 'cp273',
