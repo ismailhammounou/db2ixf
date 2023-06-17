@@ -168,15 +168,16 @@ class IXFParser:
             for i, j in record_type.items():
                 column[i] = self.file.read(j)
 
-            try:
-                if column['IXFCRECT'] != b'C':
-                    c = str(column['IXFCNAME'], encoding='utf-8')
-                    msg = f'IXF file is not valid, it contains a not ' \
-                          f'valid column descriptor (see {c}).'
-                    raise NotValidColumnDescriptorException(msg)
-            except Exception as e:
-                logger.error(e)
-                sys.exit(1)
+            if column['IXFCRECT'] != b'C':
+                msg1 = f'Non valid IXF file: It either contains non ' \
+                       f'supported record type/subtype like application ' \
+                       f'one or it contains a non valid column descriptor ' \
+                       f'(see the column {column["IXFCNAME"]}).'
+                logger.error(msg1)
+                msg2 = 'Hint: try to recreate IXF file without any ' \
+                       'application record or any SQL error.'
+                logger.info(msg2)
+                raise NotValidColumnDescriptorException(msg1)
 
             column['IXFCDSIZ'] = self.file.read(int(column['IXFCRECL']) - 862)
 

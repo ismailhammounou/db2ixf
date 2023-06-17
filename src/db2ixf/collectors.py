@@ -1,6 +1,5 @@
 # coding=utf-8
 """Collects data from the fields extracted from the data records (D)."""
-import ebcdic  # noqa
 from datetime import datetime, date, time
 from db2ixf.exceptions import (LargeObjectLengthException,
                                BinaryLengthException,
