@@ -35,7 +35,7 @@ The IXF Parser package offers the following features:
 3. **Support for File-Like Objects**: The package supports file-like objects as
    input, enabling the direct parsing of IXF data from file objects.
 
-4. **Minimal Dependency**: The package has only 2 dependencies, pyarrow and
-   typer, which are automatically installed alongside the package.
+4. **Minimal dependencies**: The package has only 3 dependencies (pyarrow, typer
+   and ebcdic) which are automatically installed alongside the package.
 
 5. **CLI**: Command line tool called `db2ixf`.
