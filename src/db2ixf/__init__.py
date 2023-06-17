@@ -28,23 +28,76 @@ For more information about data types; Please visit this
 [link](https://www.ibm.com/docs/en/db2/11.5?topic=format-pcixf-data-types).
 """
 import codecs
-from db2ixf.ibmcodecs import (ibm_utf_32_be,
-                              ibm_utf_32_le,
-                              ibm_utf_32,
-                              ibm_utf_16_be,
-                              ibm_utf_16_le,
-                              ibm_utf_16,
-                              ibm_utf_8,
-                              ibm_latin1)
+import ebcdic
+from db2ixf.ibmcodecs import (ibm_utf_32_be, ibm_utf_32_le, ibm_utf_32,
+                              ibm_utf_16_be, ibm_utf_16_le, ibm_utf_16,
+                              ibm_utf_8, ibm_latin1, ibm_latin9, ibm_37,
+                              ibm_813, ibm_859, ibm_1383, ibm_867, ibm_874,
+                              ibm_912, ibm_915, ibm_916, ibm_920, ibm_921,
+                              ibm_922, ibm_923, ibm_924, ibm_942, ibm_943,
+                              ibm_948, ibm_949, ibm_954, ibm_964, ibm_970,
+                              ibm_1089, ibm_1363, ibm_1375, ibm_1386, ibm_1392,
+                              ibm_5050, ibm_5054, ibm_5346, ibm_5347, ibm_5348,
+                              ibm_5349, ibm_5350, ibm_5351, ibm_5352, ibm_5353,
+                              ibm_5354, ibm_5488, ibm_9030, ibm_25546,
+                              ibm_33722)
 from db2ixf.ixf import IXFParser
 
-codecs.register(ibm_utf_32_be)
-codecs.register(ibm_utf_32_le)
-codecs.register(ibm_utf_32)
-codecs.register(ibm_utf_16_be)
-codecs.register(ibm_utf_16_le)
-codecs.register(ibm_utf_16)
-codecs.register(ibm_utf_8)
-codecs.register(ibm_latin1)
+search_functions = (
+    ebcdic._find_ebcdic_codec,
+    ibm_utf_32_be,
+    ibm_utf_32_le,
+    ibm_utf_32,
+    ibm_utf_16_be,
+    ibm_utf_16_le,
+    ibm_utf_16,
+    ibm_utf_8,
+    ibm_latin1,
+    ibm_latin9,
+    ibm_37,
+    ibm_813,
+    ibm_859,
+    ibm_867,
+    ibm_874,
+    ibm_912,
+    ibm_915,
+    ibm_916,
+    ibm_920,
+    ibm_921,
+    ibm_922,
+    ibm_923,
+    ibm_924,
+    ibm_942,
+    ibm_943,
+    ibm_948,
+    ibm_949,
+    ibm_954,
+    ibm_964,
+    ibm_970,
+    ibm_1089,
+    ibm_1363,
+    ibm_1375,
+    ibm_1383,
+    ibm_1386,
+    ibm_1392,
+    ibm_5050,
+    ibm_5054,
+    ibm_5346,
+    ibm_5347,
+    ibm_5348,
+    ibm_5349,
+    ibm_5350,
+    ibm_5351,
+    ibm_5352,
+    ibm_5353,
+    ibm_5354,
+    ibm_5488,
+    ibm_9030,
+    ibm_25546,
+    ibm_33722,
+)
+
+for sf in search_functions:
+    codecs.register(sf)
 
 __all__ = ['IXFParser']
