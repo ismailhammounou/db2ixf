@@ -194,19 +194,19 @@ These are complete examples for all the commands:
 === "json"
 
     ```bash
-    db2ixf json -vvv --encoding "utf-8" "Path/to/IXF/file.IXF" "Path/to/OUTPUT/file.json"
+    db2ixf json -vvv "Path/to/IXF/file.IXF" "Path/to/OUTPUT/file.json"
     ```
 
 === "csv"
 
     ```bash
-    db2ixf csv -vvv -e "utf-8" --sep "!" "Path/to/IXF/file.IXF" "Path/to/OUTPUT/file.csv"
+    db2ixf csv -vvv --sep "!" "Path/to/IXF/file.IXF" "Path/to/OUTPUT/file.csv"
     ```
 
 === "parquet"
 
     ```bash
-    db2ixf parquet -vvv --encoding "utf-8"  --version "1.0" --batch-size 4000 "Path/to/IXF/file.IXF" "Path/to/OUTPUT/file.parquet"
+    db2ixf parquet -vvv --version "1.0" --batch-size 4000 "Path/to/IXF/file.IXF" "Path/to/OUTPUT/file.parquet"
     ```
 
 !!! tip
