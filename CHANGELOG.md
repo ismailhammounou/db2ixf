@@ -12,6 +12,25 @@ in [here](https://github.com/ismailhammounou/db2ixf/tree/main/resources/changelo
 .
 
 <!-- release notes start -->
+## [0.2.0](https://github.com/ismailhammounou/db2ixf/tree/0.2.0) - 2023-06-17
+
+
+### Added
+
+- Add unit tests [db2ixf-3](https://github.com/ismailhammounou/db2ixf/issues/3)
+- Add ibm encoding to use on the fly by reading ixf file [db2ixf-23](https://github.com/ismailhammounou/db2ixf/issues/23)
+
+
+### Changed
+
+- improve CLI and adapt it [db2ixf-24](https://github.com/ismailhammounou/db2ixf/issues/24)
+
+
+### Removed
+
+- Delete encoding because IXF file contains the encoding [db2ixf-20](https://github.com/ismailhammounou/db2ixf/issues/20)
+- Drop support for python 3.7 [db2ixf-22](https://github.com/ismailhammounou/db2ixf/issues/22)
+
 
 ## [0.1.7](https://github.com/ismailhammounou/db2ixf/tree/0.1.7) - 2023-06-06
 
