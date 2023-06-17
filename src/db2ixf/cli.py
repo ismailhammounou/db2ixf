@@ -47,7 +47,7 @@ def json(
                                '--verbose',
                                '-v',
                                metavar='',
-                               help='Verbosity level.',
+                               help='Counter for verbosity level.',
                                count=True,
                            )] = 0,
 ):
@@ -102,7 +102,7 @@ def csv(
                                '--verbose',
                                '-v',
                                metavar='',
-                               help='Verbosity level.',
+                               help='Counter for verbosity level.',
                                count=True,
                            )] = 0,
 ):
@@ -171,7 +171,7 @@ def parquet(
                                '--verbose',
                                '-v',
                                metavar='',
-                               help='Verbosity level.',
+                               help='Counter for verbosity level.',
                                count=True,
                            )] = 0,
 ):
