@@ -46,6 +46,7 @@ def json(
                            typer.Option(
                                '--verbose',
                                '-v',
+                               metavar='',
                                help='Verbosity level.',
                                count=True,
                            )] = 0,
@@ -100,6 +101,7 @@ def csv(
                            typer.Option(
                                '--verbose',
                                '-v',
+                               metavar='',
                                help='Verbosity level.',
                                count=True,
                            )] = 0,
@@ -168,6 +170,7 @@ def parquet(
                            typer.Option(
                                '--verbose',
                                '-v',
+                               metavar='',
                                help='Verbosity level.',
                                count=True,
                            )] = 0,
