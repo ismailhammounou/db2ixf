@@ -1,5 +1,6 @@
 # coding=utf-8
 """Test db2ixf package"""
+import pytest
 from db2ixf import IXFParser
 from tests import RESOURCES_DIR
 
@@ -35,7 +36,8 @@ def test_json_conversion(test_output_dir):
         assert output.is_file()
 
 
-def test_csv_conversion(test_output_dir):
+@pytest.mark.parametrize('separator', ['$', '#'])
+def test_csv_conversion(test_output_dir, separator):
     """Test csv conversion."""
     ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
@@ -45,12 +47,20 @@ def test_csv_conversion(test_output_dir):
     output = test_output_dir / 'result.csv'
 
     with open(output, mode='wt', encoding='utf-8') as out:
-        assert parser.to_csv(out) == 0
+        assert parser.to_csv(out, sep=separator) == 0
         assert output.exists()
         assert output.is_file()
 
 
-def test_parquet_conversion(test_output_dir):
+parquet_param_data = [
+    ('1.0', 100), ('2.4', 100), ('2.6', 100),
+    ('1.0', 500), ('2.4', 500), ('2.6', 500),
+    ('1.0', 1000), ('2.4', 1000), ('2.6', 1000),
+]
+
+
+@pytest.mark.parametrize('parquet_version, size', parquet_param_data)
+def test_parquet_conversion(test_output_dir, parquet_version, size):
     """Test parquet conversion."""
     ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
@@ -60,6 +70,8 @@ def test_parquet_conversion(test_output_dir):
     output = test_output_dir / 'result.parquet'
 
     with open(output, mode='wb') as out:
-        assert parser.to_parquet(out) == 0
+        assert parser.to_parquet(out,
+                                 batch_size=size,
+                                 parquet_version=parquet_version) == 0
         assert output.exists()
         assert output.is_file()

@@ -1,5 +1,6 @@
 # coding=utf-8
 """Test db2ixf CLI (cli.py)."""
+import pytest
 import subprocess
 from tests import RESOURCES_DIR
 
@@ -27,7 +28,8 @@ def test_cli_db2ixf_conversion_to_json(test_output_dir):
     assert output_file.is_file()
 
 
-def test_cli_db2ixf_conversion_to_csv(test_output_dir):
+@pytest.mark.parametrize('separator', ['$', '#'])
+def test_cli_db2ixf_conversion_to_csv(test_output_dir, separator):
     """Test CLI db2ixf conversion to csv."""
     # Input file in IXF
     ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
@@ -39,6 +41,8 @@ def test_cli_db2ixf_conversion_to_csv(test_output_dir):
     command = [
         'db2ixf',
         'csv',
+        '--sep',
+        str(separator),
         str(ixf_file),
         str(output_file),
     ]
@@ -50,7 +54,18 @@ def test_cli_db2ixf_conversion_to_csv(test_output_dir):
     assert output_file.is_file()
 
 
-def test_cli_db2ixf_conversion_to_parquet(test_output_dir):
+parquet_param_data = [
+    ('1.0', 100), ('2.4', 100), ('2.6', 100),
+    ('1.0', 500), ('2.4', 500), ('2.6', 500),
+    ('1.0', 1000), ('2.4', 1000), ('2.6', 1000),
+]
+
+
+@pytest.mark.parametrize('parquet_version, size', parquet_param_data)
+def test_cli_db2ixf_conversion_to_parquet(
+        test_output_dir,
+        parquet_version,
+        size):
     """Test CLI db2ixf conversion to parquet."""
     # Input file in IXF
     ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
@@ -62,6 +77,10 @@ def test_cli_db2ixf_conversion_to_parquet(test_output_dir):
     command = [
         'db2ixf',
         'parquet',
+        '--version',
+        str(parquet_version),
+        '--batch-size',
+        str(size),
         str(ixf_file),
         str(output_file),
     ]
