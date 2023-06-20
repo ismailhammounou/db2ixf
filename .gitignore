@@ -539,3 +539,4 @@ resources/data/*
 
 ## Contributing
 contributing/anaconda/*
+tests/resources/data/sample-confidential.ixf
