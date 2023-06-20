@@ -7,7 +7,7 @@ from tests import RESOURCES_DIR
 def test_cli_db2ixf_conversion_to_json(test_output_dir):
     """Test CLI db2ixf conversion to json."""
     # Input file in IXF
-    ixf_file = RESOURCES_DIR / 'data' / 'sample-confidential.ixf'
+    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
     # Output in json
     output_file = test_output_dir / 'result.json'
@@ -30,7 +30,7 @@ def test_cli_db2ixf_conversion_to_json(test_output_dir):
 def test_cli_db2ixf_conversion_to_csv(test_output_dir):
     """Test CLI db2ixf conversion to csv."""
     # Input file in IXF
-    ixf_file = RESOURCES_DIR / 'data' / 'sample-confidential.ixf'
+    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
     # Output in csv
     output_file = test_output_dir / 'result.csv'
@@ -53,7 +53,7 @@ def test_cli_db2ixf_conversion_to_csv(test_output_dir):
 def test_cli_db2ixf_conversion_to_parquet(test_output_dir):
     """Test CLI db2ixf conversion to parquet."""
     # Input file in IXF
-    ixf_file = RESOURCES_DIR / 'data' / 'sample-confidential.ixf'
+    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
     # Output in parquet
     output_file = test_output_dir / 'result.parquet'

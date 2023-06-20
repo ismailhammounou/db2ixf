@@ -7,7 +7,7 @@ from tests import RESOURCES_DIR
 def test_parser(test_output_dir):
     """Test the parser."""
 
-    ixf_file = RESOURCES_DIR / 'data' / 'sample-confidential.ixf'
+    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
     with open(ixf_file, mode='rb'):
         parser = IXFParser(ixf_file)
@@ -22,7 +22,7 @@ def test_parser(test_output_dir):
 
 def test_json_conversion(test_output_dir):
     """Test json conversion."""
-    ixf_file = RESOURCES_DIR / 'data' / 'sample-confidential.ixf'
+    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
     with open(ixf_file, mode='rb'):
         parser = IXFParser(ixf_file)
@@ -37,7 +37,7 @@ def test_json_conversion(test_output_dir):
 
 def test_csv_conversion(test_output_dir):
     """Test csv conversion."""
-    ixf_file = RESOURCES_DIR / 'data' / 'sample-confidential.ixf'
+    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
     with open(ixf_file, mode='rb'):
         parser = IXFParser(ixf_file)
@@ -52,7 +52,7 @@ def test_csv_conversion(test_output_dir):
 
 def test_parquet_conversion(test_output_dir):
     """Test parquet conversion."""
-    ixf_file = RESOURCES_DIR / 'data' / 'sample-confidential.ixf'
+    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
     with open(ixf_file, mode='rb'):
         parser = IXFParser(ixf_file)
