@@ -123,3 +123,17 @@ class CLOBCodePageException(Exception):
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
+
+
+class BlobBinaryStringException(Exception):
+    """Exception raised when encountering a data type different of binary string
+    which occurs when single byte code page equals to 0 but we re not getting
+    a binary string but an other type like character string.
+
+    Read the
+    [doc](https://www.ibm.com/docs/en/db2/11.5?topic=format-pcixf-data-types).
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)

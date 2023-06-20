@@ -5,8 +5,10 @@ from db2ixf.exceptions import (LargeObjectLengthException,
                                BinaryLengthException,
                                CLOBCodePageException,
                                CharLengthException,
-                               VarCharLengthException)
+                               VarCharLengthException,
+                               BlobBinaryStringException)
 from db2ixf.helpers import get_ccsid_from_column
+from db2ixf.logger import logger
 from struct import unpack
 from typing import Union
 
@@ -55,7 +57,7 @@ def collect_smallint(c, fields, pos) -> int:
     int:
         Integer.
     """
-    field = int(unpack('<i', fields[pos:pos + 2])[0])
+    field = int(unpack('<h', fields[pos:pos + 2])[0])
     return field
 
 
@@ -338,9 +340,10 @@ def collect_clob(c, fields, pos) -> str:
     #           f'less than 32767 Bytes.'
     #     raise ExceedingDefinedMaximumLengthException(msg)
 
-    length = int(unpack('<h', fields[pos:pos + 4])[0])
+    length = int(unpack('<i', fields[pos:pos + 4])[0])
     if length > max_length:
         msg = f'Length {length} exceeds the maximum length {max_length}.'
+        logger.error(msg)
         raise LargeObjectLengthException(msg)
 
     pos += 4
@@ -353,6 +356,7 @@ def collect_clob(c, fields, pos) -> str:
         if sbcp == 0:
             msg = 'CLOB data type can not be a bit string as BLOB, ' \
                   'the SBCP and DBCP should not simultaneously be equal to 0.'
+            logger.error(msg)
             raise CLOBCodePageException(msg)
         else:
             field = fields[pos:pos + length].decode(f'cp{sbcp}')
@@ -384,25 +388,37 @@ def collect_blob(c, fields, pos) -> str:
         When the maximum length exceeds the defined limit which is 32767 bytes.
     LargeObjectLengthException
         When the length of the large object exceeds the maximum length.
-
+    BlobBinaryStringException
+        When the Blob content does not contain bit data (string binary) when
+        single byte code page equals to 0.
     """
     max_length = int(c['IXFCLENG'])
     # if max_length > 32767:
     #     msg = 'For BLOB data type, max length must be less than 32767 Bytes.'
     #     raise ExceedingDefinedMaximumLengthException(msg)
 
-    length = int(unpack('<h', fields[pos:pos + 4])[0])
+    length = int(unpack('<i', fields[pos:pos + 4])[0])
     if length > max_length:
         msg = f'Length {length} exceeds the maximum length {max_length}.'
+        logger.error(msg)
         raise LargeObjectLengthException(msg)
 
     pos += 4
 
+    data = fields[pos:pos + length]
+
     sbcp, _ = get_ccsid_from_column(c)
 
     if sbcp == 0:
-        field = bin(int(fields[pos:pos + length], 2))
+        try:
+            field = bin(int(data, 2))
+        except BlobBinaryStringException as e:
+            msg = f'Blob data type should be bit data (binary string) when ' \
+                  f'the single byte code page (IXFCSBCP) equals to 0 but in ' \
+                  f'this case it is not a bit data (={data})'
+            logger.error(msg)
+            raise BlobBinaryStringException(msg)
     else:
-        field = fields[pos:pos + length].decode(f'cp{sbcp}')
+        field = data.decode(f'cp{sbcp}')
 
     return field.strip()

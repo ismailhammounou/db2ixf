@@ -1,703 +1,452 @@
 # coding=utf-8
-"""Add new codecs that maps ibm code pages to python encodings."""
+"""Add new aliases that maps ibm code pages to python encodings."""
 import codecs
 
 
-class UTF32BECodec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.utf_32_be_encode(input, errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.utf_32_be_decode(input, errors, True)
+def add_encoding_alias(old_name, new_name):
+    old = codecs.lookup(old_name)
+    new = codecs.CodecInfo(old.encode, old.decode,
+                           streamreader=old.streamreader,
+                           streamwriter=old.streamwriter,
+                           incrementalencoder=old.incrementalencoder,
+                           incrementaldecoder=old.incrementaldecoder,
+                           name=new_name)
+    return new
 
 
 def ibm_utf_32_be(name):
     aliases = ['ibm1232', 'cp1232', 'ibm1233', 'cp1233']
     if name.lower() in aliases:
-        return UTF32BECodec()
-
-
-class UTF32LECodec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.utf_32_le_encode(input, errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.utf_32_le_decode(input, errors, True)
+        return add_encoding_alias('utf_32_be', name)
 
 
 def ibm_utf_32_le(name):
     aliases = ['ibm1234', 'cp1234', 'ibm1235', 'cp1235']
     if name.lower() in aliases:
-        return UTF32LECodec()
-
-
-class UTF32Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.utf_32_encode(input, errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.utf_32_decode(input, errors, True)
+        return add_encoding_alias('utf_32_le', name)
 
 
 def ibm_utf_32(name):
     aliases = ['ibm1236', 'cp1236', 'ibm1237', 'cp1237']
     if name.lower() in aliases:
-        return UTF32Codec()
-
-
-class UTF16BECodec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.utf_16_be_encode(input, errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.utf_16_be_decode(input, errors, True)
+        return add_encoding_alias('utf_32', name)
 
 
 def ibm_utf_16_be(name):
     aliases = ['ibm1200', 'cp1200', 'ibm1201', 'cp1201']
     if name.lower() in aliases:
-        return UTF16BECodec()
-
-
-class UTF16LECodec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.utf_16_le_encode(input, errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.utf_16_le_decode(input, errors, True)
+        return add_encoding_alias('utf_16_be', name)
 
 
 def ibm_utf_16_le(name):
     aliases = ['ibm1202', 'cp1202', 'ibm1203', 'cp1203']
     if name.lower() in aliases:
-        return UTF16LECodec()
-
-
-class UTF16Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.utf_16_encode(input, errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.utf_16_decode(input, errors, True)
+        return add_encoding_alias('utf_16_le', name)
 
 
 def ibm_utf_16(name):
     aliases = ['ibm1204', 'cp1204', 'ibm1205', 'cp1205']
     if name.lower() in aliases:
-        return UTF16Codec()
-
-
-class UTF8Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.utf_8_encode(input, errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.utf_8_decode(input, errors, True)
+        return add_encoding_alias('utf_16', name)
 
 
 def ibm_utf_8(name):
     aliases = ['ibm1208', 'cp1208', 'ibm1209', 'cp1209']
     if name.lower() in aliases:
-        return UTF8Codec()
-
-
-class Latin1Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.latin_1_encode(input, errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.latin_1_decode(input, errors)
+        return add_encoding_alias('utf_8', name)
 
 
 def ibm_latin1(name):
     aliases = ['ibm1252', 'cp1252']
     if name.lower() in aliases:
-        return Latin1Codec()
-
-
-class Latin9Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso_8859_15', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso_8859_15', errors)
+        return add_encoding_alias('latin_1', name)
 
 
 def ibm_latin9(name):
     aliases = ['ibm923', 'cp923', 'ibm924', 'cp924']
     if name.lower() in aliases:
-        return Latin9Codec()
-
-
-class IBM37Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp037', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp037', errors)
+        return add_encoding_alias('iso8859_15', name)
 
 
 def ibm_37(name):
     aliases = ['ibm37', 'cp37']
     if name.lower() in aliases:
-        return IBM37Codec()
+        return add_encoding_alias('cp037', name)
 
 
-class IBM813Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso8859_7', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso8859_7', errors)
+def ibm_39(name):
+    aliases = ['ibm39', 'cp39']
+    if name.lower() in aliases:
+        return add_encoding_alias('cp037', name)
 
 
 def ibm_813(name):
     aliases = ['ibm813', 'cp813']
     if name.lower() in aliases:
-        return IBM813Codec()
-
-
-class IBM859Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso8859_15', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso8859_15', errors)
+        return add_encoding_alias('iso8859_7', name)
 
 
 def ibm_859(name):
     aliases = ['ibm859', 'cp859']
     if name.lower() in aliases:
-        return IBM859Codec()
-
-
-class IBM867Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp862', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp862', errors)
+        return add_encoding_alias('iso8859_15', name)
 
 
 def ibm_867(name):
     aliases = ['ibm867', 'cp867']
     if name.lower() in aliases:
-        return IBM867Codec()
-
-
-class IBM874Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp838', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp838', errors)
+        return add_encoding_alias('cp862', name)
 
 
 def ibm_874(name):
     aliases = ['ibm874', 'cp874']
     if name.lower() in aliases:
-        return IBM874Codec()
-
-
-class IBM912Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso8859_2', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso8859_2', errors)
+        return add_encoding_alias('cp838', name)
 
 
 def ibm_912(name):
     aliases = ['ibm912', 'cp912']
     if name.lower() in aliases:
-        return IBM912Codec()
-
-
-class IBM915Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso8859_5', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso8859_5', errors)
+        return add_encoding_alias('iso8859_2', name)
 
 
 def ibm_915(name):
     aliases = ['ibm915', 'cp915']
     if name.lower() in aliases:
-        return IBM915Codec()
-
-
-class IBM916Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso8859_8', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso8859_8', errors)
+        return add_encoding_alias('iso8859_5', name)
 
 
 def ibm_916(name):
     aliases = ['ibm916', 'cp916']
     if name.lower() in aliases:
-        return IBM916Codec()
-
-
-class IBM920Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso8859_9', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso8859_9', errors)
+        return add_encoding_alias('iso8859_8', name)
 
 
 def ibm_920(name):
     aliases = ['ibm920', 'cp920']
     if name.lower() in aliases:
-        return IBM920Codec()
-
-
-class IBM921Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'ascii', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'ascii', errors)
+        return add_encoding_alias('iso8859_9', name)
 
 
 def ibm_921(name):
     aliases = ['ibm921', 'cp921']
     if name.lower() in aliases:
-        return IBM921Codec()
-
-
-class IBM922Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'ascii', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'ascii', errors)
+        return add_encoding_alias('ascii', name)
 
 
 def ibm_922(name):
     aliases = ['ibm922', 'cp922']
     if name.lower() in aliases:
-        return IBM922Codec()
-
-
-class IBM923Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso8859_15', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso8859_15', errors)
+        return add_encoding_alias('ascii', name)
 
 
 def ibm_923(name):
     aliases = ['ibm923', 'cp923']
     if name.lower() in aliases:
-        return IBM923Codec()
-
-
-class IBM924Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso8859_15', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso8859_15', errors)
+        return add_encoding_alias('iso8859_15', name)
 
 
 def ibm_924(name):
     aliases = ['ibm924', 'cp924']
     if name.lower() in aliases:
-        return IBM924Codec()
-
-
-class IBM942Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'ascii', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'ascii', errors)
-
-
-def ibm_942(name):
-    aliases = ['ibm942', 'cp942']
-    if name.lower() in aliases:
-        return IBM942Codec()
-
-
-class IBM943Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'ms932', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'ms932', errors)
+        return add_encoding_alias('iso8859_15', name)
 
 
 def ibm_943(name):
     aliases = ['ibm943', 'cp943']
     if name.lower() in aliases:
-        return IBM943Codec()
+        return add_encoding_alias('shift_jis', name)
 
 
-class IBM948Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'ms932', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'ms932', errors)
-
-
-def ibm_948(name):
-    aliases = ['ibm948', 'cp948']
+def ibm_947(name):
+    aliases = ['ibm947', 'cp947']
     if name.lower() in aliases:
-        return IBM948Codec()
+        return add_encoding_alias('big5', name)
 
 
-class IBM949Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'ascii', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'ascii', errors)
-
-
-def ibm_949(name):
-    aliases = ['ibm949', 'cp949']
+def ibm_951(name):
+    aliases = ['ibm951', 'cp951']
     if name.lower() in aliases:
-        return IBM949Codec()
-
-
-class IBM954Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'euc_jp', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'euc_jp', errors)
+        return add_encoding_alias('cp949', name)
 
 
 def ibm_954(name):
     aliases = ['ibm954', 'cp954']
     if name.lower() in aliases:
-        return IBM954Codec()
-
-
-class IBM964Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'ascii', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'ascii', errors)
+        return add_encoding_alias('euc_jp', name)
 
 
 def ibm_964(name):
     aliases = ['ibm964', 'cp964']
     if name.lower() in aliases:
-        return IBM964Codec()
-
-
-class IBM970Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'euc_kr', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'euc_kr', errors)
+        return add_encoding_alias('ascii', name)
 
 
 def ibm_970(name):
     aliases = ['ibm970', 'cp970', 'ibm971', 'cp971']
     if name.lower() in aliases:
-        return IBM970Codec()
+        return add_encoding_alias('euc_kr', name)
 
 
-class IBM1089Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso8859_6', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso8859_6', errors)
+def ibm_1088(name):
+    aliases = ['ibm1088', 'cp1088']
+    if name.lower() in aliases:
+        return add_encoding_alias('euc_kr', name)
 
 
 def ibm_1089(name):
     aliases = ['ibm1089', 'cp1089']
     if name.lower() in aliases:
-        return IBM1089Codec()
+        return add_encoding_alias('iso8859_6', name)
 
 
-class IBM1363Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'ms949', errors)
+def ibm_1098(name):
+    aliases = ['ibm1097', 'cp1097']
+    if name.lower() in aliases:
+        return add_encoding_alias('cp1097', name)
 
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'ms949', errors)
+
+def ibm_1114(name):
+    aliases = ['ibm1114', 'cp1114']
+    if name.lower() in aliases:
+        return add_encoding_alias('big5', name)
+
+
+def ibm_1115(name):
+    aliases = ['ibm1115', 'cp1115']
+    if name.lower() in aliases:
+        return add_encoding_alias('gb2312', name)
+
+
+def ibm_1124(name):
+    aliases = ['ibm1124', 'cp1124']
+    if name.lower() in aliases:
+        return add_encoding_alias('cp1025', name)
+
+
+def ibm_1351(name):
+    aliases = ['ibm1351', 'cp1351']
+    if name.lower() in aliases:
+        return add_encoding_alias('iso2022_jp_ext', name)
+
+
+def ibm_1362(name):
+    aliases = ['ibm1362', 'cp1362']
+    if name.lower() in aliases:
+        return add_encoding_alias('iso2022_kr', name)
 
 
 def ibm_1363(name):
     aliases = ['ibm1363', 'cp1363']
     if name.lower() in aliases:
-        return IBM1363Codec()
-
-
-class IBM1375Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'big5_hkscs', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'big5_hkscs', errors)
+        return add_encoding_alias('ms949', name)
 
 
 def ibm_1375(name):
     aliases = ['ibm1375', 'cp1375']
     if name.lower() in aliases:
-        return IBM1375Codec()
+        return add_encoding_alias('big5_hkscs', name)
 
 
-class IBM1383Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'euc_cn', errors)
+def ibm_1380(name):
+    aliases = ['ibm1380', 'cp1380']
+    if name.lower() in aliases:
+        return add_encoding_alias('gb2312', name)
 
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'euc_cn', errors)
+
+def ibm_1381(name):
+    aliases = ['ibm1381', 'cp1381']
+    if name.lower() in aliases:
+        return add_encoding_alias('gb2312', name)
 
 
 def ibm_1383(name):
     aliases = ['ibm1383', 'cp1383']
     if name.lower() in aliases:
-        return IBM1383Codec()
+        return add_encoding_alias('gb2312', name)
 
 
-class IBM1386Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'gbk', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'gbk', errors)
+def ibm_1385(name):
+    aliases = ['ibm1385', 'cp1385']
+    if name.lower() in aliases:
+        return add_encoding_alias('gbk', name)
 
 
 def ibm_1386(name):
     aliases = ['ibm1386', 'cp1386']
     if name.lower() in aliases:
-        return IBM1386Codec()
+        return add_encoding_alias('gbk', name)
 
 
-class IBM1392Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'gb18030', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'gb18030', errors)
+def ibm_1390(name):
+    aliases = ['ibm1390', 'cp1390']
+    if name.lower() in aliases:
+        return add_encoding_alias('euc_jp', name)
 
 
 def ibm_1392(name):
     aliases = ['ibm1392', 'cp1392']
     if name.lower() in aliases:
-        return IBM1392Codec()
-
-
-class IBM5050Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'jisx0213', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'jisx0213', errors)
+        return add_encoding_alias('gb18030', name)
 
 
 def ibm_5050(name):
     aliases = ['ibm5050', 'cp5050']
     if name.lower() in aliases:
-        return IBM5050Codec()
-
-
-class IBM5054Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso_2022_jp', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso_2022_jp', errors)
+        return add_encoding_alias('euc_jis_2004', name)
 
 
 def ibm_5054(name):
     aliases = ['ibm5054', 'cp5054']
     if name.lower() in aliases:
-        return IBM5054Codec()
-
-
-class IBM5346Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp1250', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp1250', errors)
+        return add_encoding_alias('iso_2022_jp', name)
 
 
 def ibm_5346(name):
     aliases = ['ibm5346', 'cp5346']
     if name.lower() in aliases:
-        return IBM5346Codec()
-
-
-class IBM5347Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp1251', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp1251', errors)
+        return add_encoding_alias('cp1250', name)
 
 
 def ibm_5347(name):
     aliases = ['ibm5347', 'cp5347']
     if name.lower() in aliases:
-        return IBM5347Codec()
-
-
-class IBM5348Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp1252', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp1252', errors)
+        return add_encoding_alias('cp1251', name)
 
 
 def ibm_5348(name):
     aliases = ['ibm5348', 'cp5348']
     if name.lower() in aliases:
-        return IBM5348Codec()
-
-
-class IBM5349Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp1253', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp1253', errors)
+        return add_encoding_alias('cp1252', name)
 
 
 def ibm_5349(name):
     aliases = ['ibm5349', 'cp5349']
     if name.lower() in aliases:
-        return IBM5349Codec()
-
-
-class IBM5350Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp1254', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp1254', errors)
+        return add_encoding_alias('cp1253', name)
 
 
 def ibm_5350(name):
     aliases = ['ibm5350', 'cp5350']
     if name.lower() in aliases:
-        return IBM5350Codec()
-
-
-class IBM5351Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp1255', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp1255', errors)
+        return add_encoding_alias('cp1254', name)
 
 
 def ibm_5351(name):
     aliases = ['ibm5351', 'cp5351']
     if name.lower() in aliases:
-        return IBM5351Codec()
-
-
-class IBM5352Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp1256', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp1256', errors)
+        return add_encoding_alias('cp1255', name)
 
 
 def ibm_5352(name):
     aliases = ['ibm5352', 'cp5352']
     if name.lower() in aliases:
-        return IBM5352Codec()
-
-
-class IBM5353Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp1257', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp1257', errors)
+        return add_encoding_alias('cp1256', name)
 
 
 def ibm_5353(name):
     aliases = ['ibm5353', 'cp5353']
     if name.lower() in aliases:
-        return IBM5353Codec()
-
-
-class IBM5354Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp1258', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp1258', errors)
+        return add_encoding_alias('cp1257', name)
 
 
 def ibm_5354(name):
     aliases = ['ibm5354', 'cp5354']
     if name.lower() in aliases:
-        return IBM5354Codec()
-
-
-class IBM5488Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'gb18030', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'gb18030', errors)
+        return add_encoding_alias('cp1258', name)
 
 
 def ibm_5488(name):
     aliases = ['ibm5488', 'cp5488']
     if name.lower() in aliases:
-        return IBM5488Codec()
-
-
-class IBM9030Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'cp838', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'cp838', errors)
+        return add_encoding_alias('gb18030', name)
 
 
 def ibm_9030(name):
     aliases = ['ibm9030', 'cp9030']
     if name.lower() in aliases:
-        return IBM9030Codec()
+        return add_encoding_alias('cp838', name)
 
 
-class IBM25546Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'iso_2022_kr', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'iso_2022_kr', errors)
+def ibm_9066(name):
+    aliases = ['ibm9066', 'cp9066']
+    if name.lower() in aliases:
+        return add_encoding_alias('cp838', name)
 
 
 def ibm_25546(name):
     aliases = ['ibm25546', 'cp25546']
     if name.lower() in aliases:
-        return IBM25546Codec()
-
-
-class IBM33722Codec(codecs.Codec):
-    def encode(self, input, errors='strict'):  # noqa
-        return codecs.encode(input, 'euc_jp', errors)
-
-    def decode(self, input, errors='strict'):  # noqa
-        return codecs.decode(input, 'euc_jp', errors)
+        return add_encoding_alias('iso_2022_kr', name)
 
 
 def ibm_33722(name):
     aliases = ['ibm33722', 'cp33722']
     if name.lower() in aliases:
-        return IBM33722Codec()
+        return add_encoding_alias('euc_jp', name)
+
+
+__all__ = [
+    'ibm_utf_32_be',
+    'ibm_utf_32_le',
+    'ibm_utf_32',
+    'ibm_utf_16_be',
+    'ibm_utf_16_le',
+    'ibm_utf_16',
+    'ibm_utf_8',
+    'ibm_latin1',
+    'ibm_latin9',
+    'ibm_37',
+    'ibm_39',
+    'ibm_813',
+    'ibm_859',
+    'ibm_867',
+    'ibm_874',
+    'ibm_912',
+    'ibm_915',
+    'ibm_916',
+    'ibm_920',
+    'ibm_921',
+    'ibm_922',
+    'ibm_923',
+    'ibm_924',
+    'ibm_943',
+    'ibm_947',
+    'ibm_951',
+    'ibm_954',
+    'ibm_964',
+    'ibm_970',
+    'ibm_1088',
+    'ibm_1089',
+    'ibm_1098',
+    'ibm_1114',
+    'ibm_1115',
+    'ibm_1124',
+    'ibm_1351',
+    'ibm_1362',
+    'ibm_1363',
+    'ibm_1375',
+    'ibm_1380',
+    'ibm_1381',
+    'ibm_1383',
+    'ibm_1385',
+    'ibm_1386',
+    'ibm_1390',
+    'ibm_1392',
+    'ibm_5050',
+    'ibm_5054',
+    'ibm_5346',
+    'ibm_5347',
+    'ibm_5348',
+    'ibm_5349',
+    'ibm_5350',
+    'ibm_5351',
+    'ibm_5352',
+    'ibm_5353',
+    'ibm_5354',
+    'ibm_5488',
+    'ibm_9030',
+    'ibm_9066',
+    'ibm_25546',
+    'ibm_33722',
+]
