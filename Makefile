@@ -156,7 +156,7 @@ safety-review: safety-check ## Review a pyup.io safety report.
 .PHONY: check-code
 check-code: clean-flake8 ## Check code with some static analysis.
 	mkdir -p $(FLAKE8_REPORT_DIR)
-	$(VENV_ACTIVATE); flake8 --format=codeclimate --output-file=$(FLAKE8_REPORT_DIR)/codeclimate.json ./src/ || true
+	$(VENV_ACTIVATE); flake8 --output-file=$(FLAKE8_REPORT_DIR)/codeclimate.json ./src/ || true
 	$(VENV_ACTIVATE); flake8 --output-file=$(FLAKE8_REPORT_DIR)/quality.txt ./src/ || true
 	$(VENV_ACTIVATE); flake8 --format=html --htmldir=$(FLAKE8_REPORT_DIR)/html  ./src/ || true
 
