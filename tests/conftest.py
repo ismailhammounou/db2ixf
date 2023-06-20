@@ -1,9 +1,7 @@
 # coding: utf-8
 """Conftest pytest module, see pytest doc"""
-from db2ixf import IXFParser
 from pathlib import Path
 from pytest import fixture
-from tests import RESOURCES_DIR
 
 
 @fixture(scope='function')
@@ -17,9 +15,6 @@ def test_output_dir(request, pytestconfig):
     Parameters
     ----------
     request : pytest.FixtureRequest
-
-
-
         The pytest request object.
     pytestconfig : _pytest.config.Config
         The pytest configuration object.
@@ -56,14 +51,3 @@ def test_output_dir(request, pytestconfig):
 
     # Clean up the output directory after the test completes
     # shutil.rmtree(output_dir)
-
-
-@fixture(scope='function')
-def parser():
-    """Init the parser"""
-    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
-
-    with open(ixf_file, mode='rb'):
-        parser = IXFParser(ixf_file)
-
-    return parser
