@@ -161,9 +161,9 @@ check-code: clean-flake8 ## Check code with some static analysis.
 	$(VENV_ACTIVATE); flake8 --format=html --htmldir=$(FLAKE8_REPORT_DIR)/html  ./src/ || true
 
 .PHONY: test
-test: check-code ## Launch tests with coverage.
+test: clean-test check-code ## Launch tests with coverage.
 	$(VENV_ACTIVATE); pytest -vv -rA \
-	--durations 0 --continue-on-collection-errors \
+	--continue-on-collection-errors \
 	--numprocesses logical --maxprocesses 1 --dist loadfile \
 	--asyncio-mode strict \
 	--cov
@@ -173,7 +173,7 @@ test-with-report: clean-test check-code ## Launch tests with coverage reports.
 	mkdir -p $(TEST_TARGET_DIR)
 	mkdir -p $(COVERAGE_REPORT_DIR)/html
 	$(VENV_ACTIVATE); pytest -vv -rA --basetemp $(TEST_TARGET_DIR) \
-	--durations=0 --continue-on-collection-errors \
+	--continue-on-collection-errors \
 	--numprocesses logical --maxprocesses 1 --dist loadfile \
 	--asyncio-mode strict \
 	--html=$(PYTEST_REPORT_DIR)/pytests.html --self-contained-html \
