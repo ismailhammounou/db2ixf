@@ -219,24 +219,6 @@ def get_batch(generator: Generator, size: int = 500) -> Dict[str, list]:
         yield batch
 
 
-def get_ccsid_from_header(header: dict) -> Tuple[int, int]:
-    """
-    Get the coded character set identifiers for single and double
-    bytes data type. Which means the code page for singular/double byte
-    data type.
-    """
-    sbcp = str(header['IXFHSBCP'], 'utf-8').strip()
-    dbcp = str(header['IXFHDBCP'], 'utf-8').strip()
-
-    sbcp = int(sbcp) if sbcp else 0
-    dbcp = int(dbcp) if dbcp else 0
-
-    if sbcp == 0:
-        dbcp = 0
-
-    return sbcp, dbcp
-
-
 def get_ccsid_from_column(column: dict) -> Tuple[int, int]:
     """
     Get the coded character set identifiers for single and double bytes
@@ -247,9 +229,6 @@ def get_ccsid_from_column(column: dict) -> Tuple[int, int]:
 
     sbcp = int(sbcp) if sbcp else 0
     dbcp = int(dbcp) if dbcp else 0
-
-    if sbcp == 0:
-        dbcp = 0
 
     return sbcp, dbcp
 
