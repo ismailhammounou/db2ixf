@@ -171,7 +171,7 @@ test: clean-test check-code ## Launch tests with coverage.
 	--cov
 
 .PHONY: test-with-report
-test-with-report: clean-test check-code ## Launch tests with coverage reports.
+test-with-report: clean-test clean-pyc clean-dist check-code ## Launch tests with coverage reports.
 	mkdir -p $(TEST_TARGET_DIR)
 	mkdir -p $(COVERAGE_REPORT_DIR)/html
 	$(VENV_ACTIVATE); pytest -vv -rA \
