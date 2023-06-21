@@ -58,8 +58,9 @@ class IXFParser:
     end_data_records: bool
     """Flag the end of data records in the input ixf file."""
     current_row: dict
-    """Contains parsed data extracted from a data record of the input ixf 
-    file."""
+    """
+    Contains parsed data extracted from a data record of the input ixf file.
+    """
     number_rows: int
     """Number of rows extracted from the input ixf file."""
 
