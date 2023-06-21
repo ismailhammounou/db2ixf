@@ -164,7 +164,9 @@ check-code: clean-flake8 ## Check code with some static analysis.
 test: clean-test check-code ## Launch tests with coverage.
 	$(VENV_ACTIVATE); pytest -vv -rA \
 	--continue-on-collection-errors \
-	--numprocesses logical --maxprocesses 1 --dist loadfile \
+	--numprocesses logical \
+	--maxprocesses 1 \
+	--dist loadfile \
 	--asyncio-mode strict \
 	--cov
 
@@ -172,9 +174,12 @@ test: clean-test check-code ## Launch tests with coverage.
 test-with-report: clean-test check-code ## Launch tests with coverage reports.
 	mkdir -p $(TEST_TARGET_DIR)
 	mkdir -p $(COVERAGE_REPORT_DIR)/html
-	$(VENV_ACTIVATE); pytest -vv -rA --basetemp $(TEST_TARGET_DIR) \
+	$(VENV_ACTIVATE); pytest -vv -rA \
+	--basetemp $(TEST_TARGET_DIR) \
 	--continue-on-collection-errors \
-	--numprocesses logical --maxprocesses 1 --dist loadfile \
+	--numprocesses logical \
+	--maxprocesses 1 \
+	--dist loadfile \
 	--asyncio-mode strict \
 	--html=$(PYTEST_REPORT_DIR)/pytests.html --self-contained-html \
 	--junitxml=$(PYTEST_REPORT_DIR)/junit.xml \
