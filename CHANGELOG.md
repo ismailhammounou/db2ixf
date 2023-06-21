@@ -6,54 +6,74 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the
-changes for the upcoming release may be found
-in [here](https://github.com/ismailhammounou/db2ixf/tree/main/resources/changelog)
-.
+This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
-## [0.2.0](https://github.com/ismailhammounou/db2ixf/tree/0.2.0) - 2023-06-17
 
+## [0.2.1](https://github.com/ismailhammounou/db2ixf/tree/0.2.1) - 2023-06-21
+
+### Added
+
+- Add ixf sample data (
+  db2) [db2ixf-25](https://github.com/ismailhammounou/db2ixf/issues/25)
+- Add more unit tests to improve
+  coverage [db2ixf-26](https://github.com/ismailhammounou/db2ixf/issues/26)
+- Add tests in CI
+  pipeline [db2ixf-27](https://github.com/ismailhammounou/db2ixf/issues/27)
+
+### Changed
+
+- Improve ibm codecs
+  mappin [db2ixf-28](https://github.com/ismailhammounou/db2ixf/issues/28)
+
+### Fixed
+
+- fix issues with some data type
+  collector [db2ixf-29](https://github.com/ismailhammounou/db2ixf/issues/29)
+
+## [0.2.0](https://github.com/ismailhammounou/db2ixf/tree/0.2.0) - 2023-06-17
 
 ### Added
 
 - Add unit tests [db2ixf-3](https://github.com/ismailhammounou/db2ixf/issues/3)
-- Add ibm encoding to use on the fly by reading ixf file [db2ixf-23](https://github.com/ismailhammounou/db2ixf/issues/23)
-
+- Add ibm encoding to use on the fly by reading ixf
+  file [db2ixf-23](https://github.com/ismailhammounou/db2ixf/issues/23)
 
 ### Changed
 
-- improve CLI and adapt it [db2ixf-24](https://github.com/ismailhammounou/db2ixf/issues/24)
-
+- improve CLI and adapt
+  it [db2ixf-24](https://github.com/ismailhammounou/db2ixf/issues/24)
 
 ### Removed
 
-- Delete encoding because IXF file contains the encoding [db2ixf-20](https://github.com/ismailhammounou/db2ixf/issues/20)
-- Drop support for python 3.7 [db2ixf-22](https://github.com/ismailhammounou/db2ixf/issues/22)
-
+- Delete encoding because IXF file contains the
+  encoding [db2ixf-20](https://github.com/ismailhammounou/db2ixf/issues/20)
+- Drop support for python
+  3.7 [db2ixf-22](https://github.com/ismailhammounou/db2ixf/issues/22)
 
 ## [0.1.7](https://github.com/ismailhammounou/db2ixf/tree/0.1.7) - 2023-06-06
 
-
 ### Added
 
-- Add support for CLOB data type [db2ixf-16](https://github.com/ismailhammounou/db2ixf/issues/16)
-- Add support for BLOB data type [db2ixf-17](https://github.com/ismailhammounou/db2ixf/issues/17)
-- Add support for binary data type [db2ixf-19](https://github.com/ismailhammounou/db2ixf/issues/19)
-
+- Add support for CLOB data
+  type [db2ixf-16](https://github.com/ismailhammounou/db2ixf/issues/16)
+- Add support for BLOB data
+  type [db2ixf-17](https://github.com/ismailhammounou/db2ixf/issues/17)
+- Add support for binary data
+  type [db2ixf-19](https://github.com/ismailhammounou/db2ixf/issues/19)
 
 ### Changed
 
-- Improve documentation [db2ixf-18](https://github.com/ismailhammounou/db2ixf/issues/18)
-
+- Improve
+  documentation [db2ixf-18](https://github.com/ismailhammounou/db2ixf/issues/18)
 
 ## [0.1.6](https://github.com/ismailhammounou/db2ixf/tree/0.1.6) - 2023-06-05
 
-
 ### Fixed
 
-- Fix bug with parquet_version param default value and pass it to pyarrow parquet writer [db2ixf-15](https://github.com/ismailhammounou/db2ixf/issues/15)
-
+- Fix bug with parquet_version param default value and pass it to pyarrow
+  parquet
+  writer [db2ixf-15](https://github.com/ismailhammounou/db2ixf/issues/15)
 
 ## [0.1.5](https://github.com/ismailhammounou/db2ixf/tree/0.1.5) - 2023-06-05
 
