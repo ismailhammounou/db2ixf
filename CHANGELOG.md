@@ -21,7 +21,7 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 ### Changed
 
-- Improve ibm codecs mappin [db2ixf-28](https://github.com/ismailhammounou/db2ixf/issues/28)
+- Improve ibm codecs mapping [db2ixf-28](https://github.com/ismailhammounou/db2ixf/issues/28)
 
 
 ### Fixed
