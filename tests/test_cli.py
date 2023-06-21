@@ -5,7 +5,7 @@ import subprocess
 from tests import RESOURCES_DIR
 
 
-def test_cli_db2ixf_conversion_to_json(test_output_dir):
+def test_cli_conversion_to_json(test_output_dir):
     """Test CLI db2ixf conversion to json."""
     # Input file in IXF
     ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
@@ -29,7 +29,7 @@ def test_cli_db2ixf_conversion_to_json(test_output_dir):
 
 
 @pytest.mark.parametrize('separator', ['$', '#'])
-def test_cli_db2ixf_conversion_to_csv(test_output_dir, separator):
+def test_cli_conversion_to_csv(test_output_dir, separator):
     """Test CLI db2ixf conversion to csv."""
     # Input file in IXF
     ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
@@ -62,7 +62,7 @@ parquet_param_data = [
 
 
 @pytest.mark.parametrize('parquet_version, size', parquet_param_data)
-def test_cli_db2ixf_conversion_to_parquet(
+def test_cli_conversion_to_parquet(
         test_output_dir,
         parquet_version,
         size):

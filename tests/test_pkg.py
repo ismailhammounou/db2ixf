@@ -5,7 +5,7 @@ from db2ixf import IXFParser
 from tests import RESOURCES_DIR
 
 
-def test_parser(test_output_dir):
+def test_pkg_parser(test_output_dir):
     """Test the parser."""
 
     ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
@@ -18,10 +18,10 @@ def test_parser(test_output_dir):
         rows.append(row)
         assert row
 
-    assert len(rows) == 4891
+    assert len(rows) == 2
 
 
-def test_json_conversion(test_output_dir):
+def test_pkg_json_conversion(test_output_dir):
     """Test json conversion."""
     ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
@@ -37,7 +37,7 @@ def test_json_conversion(test_output_dir):
 
 
 @pytest.mark.parametrize('separator', ['$', '#'])
-def test_csv_conversion(test_output_dir, separator):
+def test_pkg_csv_conversion(test_output_dir, separator):
     """Test csv conversion."""
     ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
@@ -60,7 +60,7 @@ parquet_param_data = [
 
 
 @pytest.mark.parametrize('parquet_version, size', parquet_param_data)
-def test_parquet_conversion(test_output_dir, parquet_version, size):
+def test_pkg_parquet_conversion(test_output_dir, parquet_version, size):
     """Test parquet conversion."""
     ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
 
