@@ -5,16 +5,15 @@ from db2ixf.exceptions import (LargeObjectLengthException,
                                BinaryLengthException,
                                CLOBCodePageException,
                                CharLengthException,
-                               VarCharLengthException,
-                               BlobBinaryStringException)
+                               VarCharLengthException)
 from db2ixf.helpers import get_ccsid_from_column
 from db2ixf.logger import logger
 from struct import unpack
 from typing import Union
 
 
-def collect_binary(c, fields, pos) -> bytes:
-    """Collects BINARY data type from ixf as a bytes.
+def collect_binary(c, fields, pos) -> str:
+    """Collects BINARY data type from ixf as a string.
 
     Parameters
     ----------
@@ -27,7 +26,7 @@ def collect_binary(c, fields, pos) -> bytes:
 
     Returns
     -------
-    bytes:
+    str:
         a binary string data.
     """
     length = int(c['IXFCLENG'])
@@ -35,7 +34,7 @@ def collect_binary(c, fields, pos) -> bytes:
         msg = 'Length of a binary data types should not exceed 254 bytes.'
         raise BinaryLengthException(msg)
 
-    field = fields[pos:pos + length]
+    field = str(fields[pos:pos + length], 'utf-8')
 
     return field
 
@@ -176,7 +175,7 @@ def collect_char(c, fields, pos) -> str:
 
     Returns
     -------
-    str:
+    str
         String.
     """
     length = int(c['IXFCLENG'])
@@ -190,7 +189,7 @@ def collect_char(c, fields, pos) -> str:
         field = fields[pos:pos + length].decode(f'cp{dbcp}')
     else:
         if sbcp == 0:
-            field = bin(int(fields[pos:pos + length], 2))
+            field = str(fields[pos:pos + length], 'utf-8')
         else:
             field = fields[pos:pos + length].decode(f'cp{sbcp}')
 
@@ -213,6 +212,11 @@ def collect_varchar(c, fields, pos) -> str:
     -------
     str:
         String.
+
+    Raises
+    ------
+    VarCharLengthException
+        Length of var char exceeds maximum length.
     """
     max_length = int(c['IXFCLENG'])
     # if max_length > 254:
@@ -233,7 +237,7 @@ def collect_varchar(c, fields, pos) -> str:
         field = fields[pos:pos + length].decode(f'cp{dbcp}')
     else:
         if sbcp == 0:
-            field = bin(int(fields[pos:pos + length], 2))
+            field = str(fields[pos:pos + length], 'utf-8')
         else:
             field = fields[pos:pos + length].decode(f'cp{sbcp}')
 
@@ -327,8 +331,6 @@ def collect_clob(c, fields, pos) -> str:
 
     Raises
     ------
-    ExceedingDefinedMaximumLengthException
-        When the maximum length exceeds the defined limit which is 32767 bytes.
     LargeObjectLengthException
         When the length of the large object exceeds the maximum length.
     CLOBCodePageException
@@ -379,18 +381,12 @@ def collect_blob(c, fields, pos) -> str:
     Returns
     -------
     str
-        string representing the BLOB (Blob Large Object) or a string
-        of bit data.
+        string representing the BLOB (Blob Large Object).
 
     Raises
     ------
-    ExceedingDefinedMaximumLengthException
-        When the maximum length exceeds the defined limit which is 32767 bytes.
     LargeObjectLengthException
         When the length of the large object exceeds the maximum length.
-    BlobBinaryStringException
-        When the Blob content does not contain bit data (string binary) when
-        single byte code page equals to 0.
     """
     max_length = int(c['IXFCLENG'])
     # if max_length > 32767:
@@ -404,21 +400,6 @@ def collect_blob(c, fields, pos) -> str:
         raise LargeObjectLengthException(msg)
 
     pos += 4
-
-    data = fields[pos:pos + length]
-
-    sbcp, _ = get_ccsid_from_column(c)
-
-    if sbcp == 0:
-        try:
-            field = bin(int(data, 2))
-        except BlobBinaryStringException as e:
-            msg = f'Blob data type should be bit data (binary string) when ' \
-                  f'the single byte code page (IXFCSBCP) equals to 0 but in ' \
-                  f'this case it is not a bit data (={data})'
-            logger.error(msg)
-            raise BlobBinaryStringException(msg)
-    else:
-        field = data.decode(f'cp{sbcp}')
+    field = str(fields[pos:pos + length], 'utf-8')
 
     return field.strip()
