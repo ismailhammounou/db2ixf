@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import sys
 
+from pyarrow.lib import RecordBatch
+
 import csv
 import json
 import pyarrow.parquet
@@ -33,7 +35,7 @@ from db2ixf.logger import logger
 from os import PathLike
 from pathlib import Path
 from pyarrow.parquet import ParquetWriter
-from typing import Union, List, BinaryIO, TextIO
+from typing import Union, List, BinaryIO, TextIO, Iterable
 
 
 class IXFParser:
@@ -546,6 +548,48 @@ class IXFParser:
         logger.info('Finished writing parquet file')
 
         return 0
+
+    def to_pyarrow(self, batch_size: int = 500) -> Iterable[RecordBatch]:
+        """Parse and convert to a list of pyarrow record batch.
+
+        Parameters
+        ----------
+        batch_size : int
+            Number of rows to extract before conversion operation.
+            If None, the number of rows will be equal to 500. It is used for
+            memory optimization.
+
+        Returns
+        -------
+        Iterable[RecordBatch]:
+            Iterable of pyarrow Record Batches.
+        """
+        if batch_size is None:
+            batch_size = 500
+
+        logger.info("Start parsing")
+        logger.debug("Put the pointer at the beginning of the ixf file")
+        self.file.seek(0)
+        logger.debug("Parse header record")
+        self.parse_header()
+        logger.debug("Parse table record")
+        self.parse_table()
+        logger.debug("Parse column descriptor records")
+        self.parse_columns()
+
+        parquet_schema = pyarrow.schema(
+            get_pyarrow_schema(self.columns_info).items()
+        )
+
+        for batch in get_batch(self.parse_data, size=batch_size):
+            data = [pyarrow.array(v) for v in batch.values()]
+            pa_record_batch = pyarrow.record_batch(
+                data=data,
+                schema=parquet_schema
+            )
+            yield pa_record_batch
+
+        logger.info(f'Number of rows is: {self.number_rows}')
 
 
 __all__ = ['IXFParser']
