@@ -36,6 +36,7 @@ classifiers = [
 dependencies = [
     'ebcdic',
     'pyarrow',
+    'deltalake',
     'typer[all]',
 ]
 

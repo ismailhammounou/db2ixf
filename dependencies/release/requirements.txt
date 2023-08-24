@@ -1,4 +1,5 @@
 ### Project dependencies
 ebcdic
 pyarrow
+deltalake
 typer[all]
