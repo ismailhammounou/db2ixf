@@ -3,7 +3,8 @@
 import pyarrow
 from db2ixf.constants import IXF_DTYPES
 from db2ixf.exceptions import NotValidDataPrecisionException
-from typing import Generator, Dict, BinaryIO, Tuple
+from pyarrow import Schema
+from typing import Generator, Dict, BinaryIO, Tuple, List
 
 
 def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
@@ -163,8 +164,8 @@ def merge_dicts(dicts: list[dict]) -> dict[str, list]:
     return result
 
 
-def get_batch(generator: Generator, size: int = 500) -> Dict[str, list]:
-    """Batch generator. It yields a batch of rows in a single dictionary.
+def get_array_batch(generator: Generator, size: int = 1000) -> Dict[str, list]:
+    """Array batch generator. It yields a batch of rows in a single dictionary.
 
     It gets a list of size '`size`' containing rows from the data source
     generator then merge all rows in one dictionary which is the yielded one.
@@ -175,7 +176,7 @@ def get_batch(generator: Generator, size: int = 500) -> Dict[str, list]:
     generator : Generator
         Python generator that yields individual rows from the source data.
     size : int, optional
-        Size of each batch (number of rows per batch). Default is 500.
+        Size of each batch (number of rows per batch). Default is 1000.
 
     Yields
     ------
@@ -188,7 +189,7 @@ def get_batch(generator: Generator, size: int = 500) -> Dict[str, list]:
     Get a batch generator from a data generator and process the batches:
 
     >>> data_generator = some_data_generator  # Assuming yields rows  # noqa
-    >>> batch_generator = get_batch(data_generator, size=100)
+    >>> batch_generator = get_array_batch(data_generator, size=100)
 
     >>> for b in batch_generator:
     ...     # Process the batch of rows
@@ -216,6 +217,33 @@ def get_batch(generator: Generator, size: int = 500) -> Dict[str, list]:
     # Yield the remaining rows as the last batch
     if rows:
         batch = merge_dicts(rows)
+        yield batch
+
+
+def get_batch(generator: Generator, size: int = 1000) -> List[dict]:
+    """Batch generator. It yields batch of rows/dictionaries as a list.
+
+    Parameters
+    ----------
+    generator : Generator
+        Python generator that yields individual rows from the source data.
+    size : int, optional
+        Size of each batch (number of rows per batch). Default is 500.
+
+    Returns
+    -------
+    List[dict]
+        List of rows.
+    """
+    batch = []
+    for i, row in enumerate(generator()):
+        batch.append(row)
+        if (i + 1) % size == 0:
+            yield batch
+            batch = []
+
+    # Yield the remaining rows as the last batch
+    if batch:
         yield batch
 
 
@@ -249,3 +277,83 @@ def get_record_length_and_type(file: BinaryIO) -> Tuple[int, str]:
     recl: int = int(file.read(6))
     rect: str = file.read(1).decode("utf-8")
     return recl, rect
+
+
+def deltalake_fix_ns_timestamps(schema: Schema) -> Schema:
+    """Fix issue with timestamps in deltalake.
+
+    Deltalake has issue with timestamps in nanoseconds and it does not yet
+    support it, so this function changes the pyarrow timestamp datatype
+    in nanoseconds to microseconds. pyarrow timestamp datatype in microseconds
+    is supported.
+
+    Parameters
+    ----------
+    schema : Schema
+        Pyarrow schema
+
+    Returns
+    -------
+    Schema:
+        Pyarrow schema with fix
+    """
+    for i, f in enumerate(schema):
+        if f.type == pyarrow.timestamp('ns'):
+            new_field = pyarrow.field(f.name, pyarrow.timestamp('us'))
+            schema = schema.set(i, new_field)
+    return schema
+
+
+def deltalake_fix_time(schema: Schema) -> Schema:
+    """Fix issue with time in deltalake.
+
+    Deltalake does not support time datatype so we will try to use string to
+    temporary fix the issue. Pyarrow schema has time64 and time32 datatypes but
+    it is complicated for now to cast them to timestamp because the later is
+    supported by deltalake. For this later reason, this function will use
+    string datatype to replace time datatypes.
+
+    Parameters
+    ----------
+    schema : Schema
+        Pyarrow schema
+
+    Returns
+    -------
+    Schema:
+        Pyarrow schema with the fix.
+    """
+    time_datatypes = [
+        pyarrow.time64('ns'),
+        pyarrow.time64('us'),
+        pyarrow.time32('ms'),
+        pyarrow.time32('s')
+    ]
+    for i, f in enumerate(schema):
+        if f.type in time_datatypes:
+            new_field = pyarrow.field(f.name, pyarrow.string())
+            schema = schema.set(i, new_field)
+    return schema
+
+
+def apply_schema_fixes(schema: Schema) -> Schema:
+    """Apply all fixes on pyarrow schema to adapt to deltalake.
+
+    Fixes issues in deltalake support for nanoseconds unit for time and
+    timestamp datatype.
+
+    Parameters
+    ----------
+    schema : Schema
+        Pyarrow schema
+
+    Returns
+    -------
+    Schema:
+        Pyarrow schema with all fixes
+    """
+
+    fixes = [deltalake_fix_ns_timestamps, deltalake_fix_time]
+    for fix in fixes:
+        schema = fix(schema)
+    return schema
