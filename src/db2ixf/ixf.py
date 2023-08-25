@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import sys
 
-from pyarrow.lib import RecordBatch
-
 import csv
+import deltalake
 import json
-import pyarrow.parquet
+import pathlib
 from db2ixf.collectors import (collect_bigint,
                                collect_char,
                                collect_date,
@@ -29,13 +28,19 @@ from db2ixf.constants import (HEADER_RECORD_TYPE,
 from db2ixf.encoders import CustomJSONEncoder
 from db2ixf.exceptions import (NotValidColumnDescriptorException,
                                UnknownDataTypeException)
-from db2ixf.helpers import (get_batch,
-                            get_pyarrow_schema)
+from db2ixf.helpers import (get_pyarrow_schema, get_array_batch,
+                            apply_schema_fixes)
 from db2ixf.logger import logger
 from os import PathLike
 from pathlib import Path
+from pyarrow import Schema, RecordBatch, schema, array, record_batch
+from pyarrow.filesystem import FileSystem
 from pyarrow.parquet import ParquetWriter
-from typing import Union, List, BinaryIO, TextIO, Iterable
+from typing import Union, List, BinaryIO, TextIO, Literal, Optional, Iterable
+
+L = Literal['error', 'append', 'overwrite', 'ignore']
+D = Union[str, pathlib.Path, deltalake.table.DeltaTable]
+T = Iterable[RecordBatch]
 
 
 class IXFParser:
@@ -53,8 +58,9 @@ class IXFParser:
     """Contains table informations from input ixf file."""
     columns_info: List[dict]
     """Contains columns description from input ixf file."""
-    schema: dict
-    """Schema extracted from metadata in the input ixf file."""
+    parquet_schema: Schema
+    """Schema extracted from metadata in the input ixf file and converted to
+    parquet one."""
     current_data_record: dict
     """Contains current data record from input ixf file."""
     end_data_records: bool
@@ -90,7 +96,7 @@ class IXFParser:
         self.header_info = {}
         self.table_info = {}
         self.columns_info = []
-        self.schema = {}
+        self.parquet_schema = schema([])
         self.current_data_record = {}
         self.end_data_records = False
         self.current_row = {}
@@ -474,11 +480,34 @@ class IXFParser:
 
         return 0
 
+    def _pyarrow_record_batches(self,
+                                pyarrow_schema: Schema,
+                                batch_size: int = 1000) -> T:
+        """
+
+        Parameters
+        ----------
+        pyarrow_schema : Schema
+            Pyarrow schema.
+        batch_size : int
+            Number of rows to extract before writing to the parquet file.
+            It is used for memory optimization.
+
+        Yields
+        ------
+        Iterable[RecordBatch]
+            Pyarrow record batch.
+        """
+        for batch in get_array_batch(self.parse_data, size=batch_size):
+            data = [array(v) for v in batch.values()]
+            pa_record_batch = record_batch(data=data, schema=pyarrow_schema)
+            yield pa_record_batch
+
     def to_parquet(self,
                    output: Union[str, Path, PathLike, BinaryIO],
-                   batch_size: int = 500,
-                   parquet_version: str = '1.0') -> int:
-        """Parse and convert to parquet
+                   batch_size: int = 1000,
+                   parquet_version: str = '2.4') -> int:
+        """Parse and convert to parquet.
 
         Parameters
         ----------
@@ -486,11 +515,9 @@ class IXFParser:
             Output file. It is better to use file-like object.
         batch_size : int
             Number of rows to extract before writing to the parquet file.
-            If None, the number of rows will be equal to 500. It is used for
-            memory optimization.
+            It is used for memory optimization.
         parquet_version : str
-            Parquet version. Default is `1.0`. Please look at pyarrow
-            documentation.
+            Parquet version. Please look at pyarrow documentation.
 
         Returns
         -------
@@ -511,12 +538,7 @@ class IXFParser:
                 raise ValueError(msg)
         except Exception as e:
             logger.error(e)
-
-        if batch_size is None:
-            batch_size = 500
-
-        if parquet_version is None:
-            parquet_version = '1.0'
+            sys.exit(1)
 
         logger.info("Start parsing")
         logger.debug("Put the pointer at the beginning of the ixf file")
@@ -529,19 +551,21 @@ class IXFParser:
         self.parse_columns()
 
         logger.debug("Start writing in the parquet file")
-        parquet_schema = pyarrow.schema(
+        self.parquet_schema = schema(
             get_pyarrow_schema(self.columns_info).items()
         )
+
         with output as of:
             with ParquetWriter(
-                    of, parquet_schema, flavor='spark', version=parquet_version
+                    of,
+                    self.parquet_schema,
+                    flavor='spark',
+                    version=parquet_version
             ) as writer:
-                for batch in get_batch(self.parse_data, size=batch_size):
-                    data = [pyarrow.array(v) for v in batch.values()]
-                    batch = pyarrow.record_batch(
-                        data=data,
-                        schema=parquet_schema
-                    )
+                record_batches = self._pyarrow_record_batches(
+                    self.parquet_schema, batch_size
+                )
+                for batch in record_batches:
                     writer.write_batch(batch)
 
         logger.info(f'Number of rows is: {self.number_rows}')
@@ -549,14 +573,14 @@ class IXFParser:
 
         return 0
 
-    def to_pyarrow(self, batch_size: int = 500) -> Iterable[RecordBatch]:
+    def to_pyarrow(self, batch_size: int = 1000) -> T:
         """Parse and convert to a list of pyarrow record batch.
 
         Parameters
         ----------
         batch_size : int
             Number of rows to extract before conversion operation.
-            If None, the number of rows will be equal to 500. It is used for
+            If None, the number of rows will be equal to 1000. It is used for
             memory optimization.
 
         Returns
@@ -564,8 +588,6 @@ class IXFParser:
         Iterable[RecordBatch]:
             Iterable of pyarrow Record Batches.
         """
-        if batch_size is None:
-            batch_size = 500
 
         logger.info("Start parsing")
         logger.debug("Put the pointer at the beginning of the ixf file")
@@ -577,19 +599,83 @@ class IXFParser:
         logger.debug("Parse column descriptor records")
         self.parse_columns()
 
-        parquet_schema = pyarrow.schema(
+        self.parquet_schema = schema(
             get_pyarrow_schema(self.columns_info).items()
         )
 
-        for batch in get_batch(self.parse_data, size=batch_size):
-            data = [pyarrow.array(v) for v in batch.values()]
-            pa_record_batch = pyarrow.record_batch(
-                data=data,
-                schema=parquet_schema
-            )
+        record_batches = self._pyarrow_record_batches(
+            self.parquet_schema,
+            batch_size
+        )
+        for pa_record_batch in record_batches:
             yield pa_record_batch
 
-        logger.info(f'Number of rows is: {self.number_rows}')
+    def to_deltalake(self,
+                     table_or_uri: D,
+                     partition_by: Optional[Union[List[str], str]] = None,
+                     filesystem: Optional[FileSystem] = None,
+                     mode: L = "error",
+                     batch_size: int = 1000,
+                     **kwargs) -> None:
+        """Parse and convert to a deltalake table.
+
+        Parameters
+        ----------
+        table_or_uri : Union[str, pathlib.Path, deltalake.table.DeltaTable]
+            URI of a table or a DeltaTable object.
+        partition_by : Optional[Union[List[str], str]]
+            List of columns to partition the table by. Only required when
+            creating a new table.
+        filesystem : Optional[pyarrow._fs.FileSystem]
+             Optional filesystem to pass to PyArrow. If not provided will be
+             inferred from uri. The file system has to be rooted in the
+             table root. Use the pyarrow.fs.SubTreeFileSystem, to adopt
+             the root of pyarrow file systems.
+        mode : Literal['error', 'append', 'overwrite', 'ignore']
+            How to handle existing data.
+            Default is to error if table already exists.
+                If 'append', will add new data.
+                If 'overwrite', will replace table with new data.
+                If 'ignore', will not write anything if table already exists.
+        batch_size : int
+            Number of rows to extract before conversion operation.
+            If None, the number of rows will be equal to 10000. It is used for
+            memory optimization.
+        **kwargs : Optional[dict]
+            Some of the arguments you can give to this function
+            [`deltalake.write_deltalake`]
+            (https://delta-io.github.io/delta-rs/python/api_reference.html#writing-deltatables).
+            Please, do not duplicate with the ones used in this function.
+        """
+        logger.info("Start parsing")
+        logger.debug("Put the pointer at the beginning of the ixf file")
+        self.file.seek(0)
+        logger.debug("Parse header record")
+        self.parse_header()
+        logger.debug("Parse table record")
+        self.parse_table()
+        logger.debug("Parse column descriptor records")
+        self.parse_columns()
+
+        logger.debug("Getting Pyarrow schema")
+        self.parquet_schema = schema(
+            get_pyarrow_schema(self.columns_info).items()
+        )
+
+        logger.debug("Apply fixes on pyarrow schema for deltalake adaptation")
+        fixed_schema = apply_schema_fixes(self.parquet_schema)
+
+        logger.info("Start writing to deltalake")
+        deltalake.write_deltalake(
+            table_or_uri,
+            self._pyarrow_record_batches(fixed_schema, batch_size),
+            schema=fixed_schema,
+            partition_by=partition_by,
+            filesystem=filesystem,
+            mode=mode,
+            **kwargs
+        )
+        logger.info("End writing to deltalake")
 
 
 __all__ = ['IXFParser']

@@ -1,4 +1,3 @@
-
 [![Language](https://img.shields.io/pypi/pyversions/db2ixf?color=ffde57&logo=python&style=for-the-badge)](https://www.python.org/)
 [![License](https://img.shields.io/pypi/l/db2ixf?color=3775A9&style=for-the-badge&logo=unlicense)](https://www.gnu.org/licenses/agpl-3.0)
 
@@ -6,9 +5,7 @@
 [![Release](https://img.shields.io/github/v/release/ismailhammounou/db2ixf?display_name=tag&sort=semver&style=for-the-badge&logo=semver)](https://github.com/ismailhammounou/db2ixf/releases/latest)
 [![Pypi](https://img.shields.io/pypi/v/db2ixf?color=3775A9&logo=pypi&style=for-the-badge)](https://pypi.org/project/db2ixf/)
 
-
 [![Downloads](https://img.shields.io/pypi/dm/db2ixf?style=for-the-badge)](https://pypi.org/project/db2ixf/)
-
 
 # DB2IXF Parser
 
@@ -33,8 +30,9 @@ converting it to various formats, including JSON, CSV, and Parquet.
   input, enabling direct parsing of IXF data from file objects, making it
   convenient for handling large datasets without the need for intermediate file
   storage.
-- **Minimal dependencies**: The package has only 3 dependencies (pyarrow,
-  typer and ebcdic) which are automatically installed alongside the package.
+- **Minimal dependencies**: The package has only 4 dependencies (deltalake,
+  pyarrow, typer and ebcdic) which are automatically installed alongside the
+  package.
 - **CLI**: command line tool called ``db2ixf`` comes with the package.
 
 ## Hypothesis
@@ -145,6 +143,21 @@ path = Path('path/to/IXF/file.XXX.IXF')
 with open(path, mode='rb') as f:
     parser = IXFParser(f)
     output_path = Path('path/to/output/file.parquet')
+    with open(output_path, mode='wb') as output_file:
+        parser.to_parquet(output_file)
+```
+
+#### Converting to Deltalake
+
+```python
+# coding=utf-8
+from pathlib import Path
+from db2ixf import IXFParser
+
+path = Path('path/to/IXF/file.XXX.IXF')
+with open(path, mode='rb') as f:
+    parser = IXFParser(f)
+    output_path = Path('path/to/output/deltalake')
     with open(output_path, mode='wb') as output_file:
         parser.to_parquet(output_file)
 ```
