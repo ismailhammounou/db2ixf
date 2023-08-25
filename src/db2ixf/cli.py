@@ -155,7 +155,7 @@ def parquet(
                                help='Parquet version. Please look '
                                     'at pyarrow documentation.',
                                rich_help_panel='Command Options',
-                           )] = '1.0',
+                           )] = '2.4',
         batch_size: Annotated[Union[int, None],
                               typer.Option(
                                   '--batch-size',
@@ -165,7 +165,7 @@ def parquet(
                                        'to the parquet file, It is used '
                                        'for memory optimization.',
                                   rich_help_panel='Command Options',
-                              )] = 500,
+                              )] = 1000,
         verbose: Annotated[int,
                            typer.Option(
                                '--verbose',
@@ -184,10 +184,10 @@ def parquet(
         output /= filename
 
     if version is None:
-        version = '1.0'
+        version = '2.4'
 
     if batch_size is None:
-        batch_size = 500
+        batch_size = 1000
 
     if verbose > 2:
         logger.setLevel(VERBOSE_MAPPING[2])
