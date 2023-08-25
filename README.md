@@ -17,7 +17,7 @@ DB2IXF parser is an open-source python package that simplifies the parsing and
 processing of IBM Integration eXchange Format (IXF) files. IXF is a file format
 used by IBM's DB2 database system for data import and export operations. This
 package provides a streamlined solution for extracting data from IXF files and
-converting it to various formats, including JSON, CSV, and Parquet.
+converting it to various formats, including JSON, CSV, Parquet and Deltalake.
 
 ## Features
 
@@ -157,9 +157,8 @@ from db2ixf import IXFParser
 path = Path('path/to/IXF/file.XXX.IXF')
 with open(path, mode='rb') as f:
     parser = IXFParser(f)
-    output_path = Path('path/to/output/deltalake')
-    with open(output_path, mode='wb') as output_file:
-        parser.to_parquet(output_file)
+    output_path = 'path/to/output/deltalake'
+    parser.to_deltalake(output_path)
 ```
 
 For a detailed story and usage, please refer to the
@@ -196,6 +195,8 @@ create a powerful and dependable tool for working with DB2's IXF files.
 - [x] ~~Support multiprocessing.~~
 - [x] ~~Support archived inputs: only python not CLI ?~~
 - [x] Add logging.
+- [x] Add support for deltalake
+- [x] Add support for pyarrow
 
 ## License
 
