@@ -75,3 +75,21 @@ def test_pkg_parquet_conversion(test_output_dir, parquet_version, size):
                                  parquet_version=parquet_version) == 0
         assert output.exists()
         assert output.is_file()
+
+
+size_data = [10, 100, 1000, 10000, 100000, 1000000]
+
+
+@pytest.mark.parametrize('size', size_data)
+def test_pkg_deltalake_conversion(test_output_dir, size):
+    """Test deltalake conversion."""
+    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
+
+    with open(ixf_file, mode='rb'):
+        parser = IXFParser(ixf_file)
+
+    output = test_output_dir / 'deltalake'
+
+    parser.to_deltalake(output, batch_size=size)
+    assert output.exists()
+    assert output.is_dir()
