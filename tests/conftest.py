@@ -1,5 +1,6 @@
 # coding: utf-8
 """Conftest pytest module, see pytest doc"""
+import shutil
 from pathlib import Path
 from pytest import fixture
 
@@ -19,19 +20,10 @@ def test_output_dir(request, pytestconfig):
     pytestconfig : _pytest.config.Config
         The pytest configuration object.
 
-    Returns
-    -------
-    pathlib.Path
-        The path to the created output directory.
-
     Yields
     ------
     pathlib.Path
         The path to the created output directory.
-
-    Notes
-    -----
-    The output directory is automatically cleaned up after the test completes.
     """
 
     # Get the name of the test function
@@ -51,3 +43,20 @@ def test_output_dir(request, pytestconfig):
 
     # Clean up the output directory after the test completes
     # shutil.rmtree(output_dir)
+
+
+@fixture(scope='session')
+def test_delete_test_dir(pytestconfig):
+    """Fixture to delete test directory at the beginning of a test session.
+
+    Parameters
+    ----------
+    pytestconfig : _pytest.config.Config
+        The pytest configuration object.
+    """
+    # Get the root directory of the project
+    root_dir = Path(pytestconfig.rootpath)
+
+    output_dir = root_dir / 'target' / 'test'
+
+    shutil.rmtree(output_dir)
