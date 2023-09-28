@@ -480,9 +480,9 @@ class IXFParser:
 
         return 0
 
-    def _pyarrow_record_batches(self,
-                                pyarrow_schema: Schema,
-                                batch_size: int = 1000) -> T:
+    def pyarrow_record_batches(self,
+                               pyarrow_schema: Schema,
+                               batch_size: int = 1000) -> T:
         """
 
         Parameters
@@ -562,7 +562,7 @@ class IXFParser:
                     flavor='spark',
                     version=parquet_version
             ) as writer:
-                record_batches = self._pyarrow_record_batches(
+                record_batches = self.pyarrow_record_batches(
                     self.parquet_schema, batch_size
                 )
                 for batch in record_batches:
@@ -603,7 +603,7 @@ class IXFParser:
             get_pyarrow_schema(self.columns_info).items()
         )
 
-        record_batches = self._pyarrow_record_batches(
+        record_batches = self.pyarrow_record_batches(
             self.parquet_schema,
             batch_size
         )
@@ -668,7 +668,7 @@ class IXFParser:
         logger.info("Start writing to deltalake")
         deltalake.write_deltalake(
             table_or_uri,
-            self._pyarrow_record_batches(fixed_schema, batch_size),
+            self.pyarrow_record_batches(fixed_schema, batch_size),
             schema=fixed_schema,
             partition_by=partition_by,
             filesystem=filesystem,
