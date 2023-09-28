@@ -100,11 +100,36 @@ with open(path, mode='rb') as f:
 In this example, the parsed data is converted to Parquet format using
 the `to_parquet` method and saved to the specified output file.
 
+---
+
+#### Converting to Deltalake
+
+If you prefer to store the parsed data in Deltalake format, you can use the
+following example:
+
+```python
+# coding=utf-8
+from pathlib import Path
+from db2ixf.ixf import IXFParser
+
+path = Path('Path/to/IXF/FILE/XXX.IXF')
+with open(path, mode='rb') as f:
+    parser = IXFParser(f)
+    output_path = Path('Path/To/Output/Table')
+    parser.to_deltalake(output_path)
+```
+
+In this example, the parsed data is converted to Deltalake format using
+the `to_deltalake` method and saved to the specified output path.
+
+You can also use a string but Path is better in case you work on a local
+filesystem. When we use a string, it is often for a remote storage and in this
+case you can either use filesystem argument or let `deltalake` package infer it
+from the uri.
+
 The IXF Parser package provides flexibility in terms of input and output
 options, allowing you to easily parse and process IXF files according to your
 needs.
-
----
 
 ## CLI
 
@@ -213,3 +238,6 @@ These are complete examples for all the commands:
 
     Before using one of the examples, please, try `db2ixf <command> --help` to
     get details on how to use the command.
+
+!!! info CLI does not support the deltalake format. In case, you need support
+please create a ticket in Github.

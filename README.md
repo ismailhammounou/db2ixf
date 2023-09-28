@@ -33,7 +33,8 @@ converting it to various formats, including JSON, CSV, Parquet and Deltalake.
 - **Minimal dependencies**: The package has only 4 dependencies (deltalake,
   pyarrow, typer and ebcdic) which are automatically installed alongside the
   package.
-- **CLI**: command line tool called ``db2ixf`` comes with the package.
+- **CLI**: command line tool called ``db2ixf`` comes with the package. (_Does
+  not support Deltalake format_)
 
 ## Hypothesis
 
@@ -157,7 +158,7 @@ from db2ixf import IXFParser
 path = Path('path/to/IXF/file.XXX.IXF')
 with open(path, mode='rb') as f:
     parser = IXFParser(f)
-    output_path = 'path/to/output/deltalake'
+    output_path = 'path/to/output/'
     parser.to_deltalake(output_path)
 ```
 
