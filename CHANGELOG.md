@@ -9,25 +9,40 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
-## [0.2.1](https://github.com/ismailhammounou/db2ixf/tree/0.2.1) - 2023-06-21
 
+## [0.3.0](https://github.com/ismailhammounou/db2ixf/tree/0.3.0) - 2023-09-28
 
 ### Added
 
-- Add ixf sample data (db2) [db2ixf-25](https://github.com/ismailhammounou/db2ixf/issues/25)
-- Add more unit tests to improve coverage [db2ixf-26](https://github.com/ismailhammounou/db2ixf/issues/26)
-- Add tests in CI pipeline [db2ixf-27](https://github.com/ismailhammounou/db2ixf/issues/27)
+- Add documentation for
+  deltalake [db2ixf-31](https://github.com/ismailhammounou/db2ixf/issues/34)
+- Expose pyarrow record batches output so can be used with
+  polars/deltalake [db2ixf-31](https://github.com/ismailhammounou/db2ixf/issues/31)
+- Add doc about pyarrow record batch
+  output [db2ixf-32](https://github.com/ismailhammounou/db2ixf/issues/32)
+- add support for
+  deltalake [db2ixf-33](https://github.com/ismailhammounou/db2ixf/issues/33)
 
+## [0.2.1](https://github.com/ismailhammounou/db2ixf/tree/0.2.1) - 2023-06-21
+
+### Added
+
+- Add ixf sample data (
+  db2) [db2ixf-25](https://github.com/ismailhammounou/db2ixf/issues/25)
+- Add more unit tests to improve
+  coverage [db2ixf-26](https://github.com/ismailhammounou/db2ixf/issues/26)
+- Add tests in CI
+  pipeline [db2ixf-27](https://github.com/ismailhammounou/db2ixf/issues/27)
 
 ### Changed
 
-- Improve ibm codecs mapping [db2ixf-28](https://github.com/ismailhammounou/db2ixf/issues/28)
-
+- Improve ibm codecs
+  mapping [db2ixf-28](https://github.com/ismailhammounou/db2ixf/issues/28)
 
 ### Fixed
 
-- fix issues with some data type collector [db2ixf-29](https://github.com/ismailhammounou/db2ixf/issues/29)
-
+- fix issues with some data type
+  collector [db2ixf-29](https://github.com/ismailhammounou/db2ixf/issues/29)
 
 ## [0.2.0](https://github.com/ismailhammounou/db2ixf/tree/0.2.0) - 2023-06-17
 
