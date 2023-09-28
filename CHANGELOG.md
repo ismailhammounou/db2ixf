@@ -15,7 +15,7 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 ### Added
 
 - Add documentation for
-  deltalake [db2ixf-31](https://github.com/ismailhammounou/db2ixf/issues/34)
+  deltalake [db2ixf-34](https://github.com/ismailhammounou/db2ixf/issues/34)
 - Expose pyarrow record batches output so can be used with
   polars/deltalake [db2ixf-31](https://github.com/ismailhammounou/db2ixf/issues/31)
 - Add doc about pyarrow record batch
