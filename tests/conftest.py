@@ -29,6 +29,9 @@ def test_output_dir(request, pytestconfig):
     # Get the name of the test function
     test_name = request.node.name
 
+    # Handling unsupported naming by other tools/packages
+    test_name = test_name.replace("[", "-").replace("]", "").strip()
+
     # Get the root directory of the project
     root_dir = Path(pytestconfig.rootpath)
 
