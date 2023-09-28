@@ -100,7 +100,6 @@ with open(path, mode='rb') as f:
 In this example, the parsed data is converted to Parquet format using
 the `to_parquet` method and saved to the specified output file.
 
-
 #### Converting to Deltalake
 
 If you prefer to store the parsed data in Deltalake format, you can use the
@@ -125,6 +124,33 @@ You can also use a string but Path is better in case you work on a local
 filesystem. When we use a string, it is often for a remote storage and in this
 case you can either use filesystem argument or let `deltalake` package infer it
 from the uri.
+
+##### Converting to Pyarrow
+
+If you prefer to go deep and you want use pyarrow objects. you can parse the IXF
+file then get a list of pyarrow record batches.
+
+```python
+# coding=utf-8
+from pathlib import Path
+from db2ixf.ixf import IXFParser
+
+path = Path('Path/to/IXF/FILE/XXX.IXF')
+with open(path, mode='rb') as f:
+    parser = IXFParser(f)
+    for pa_record_batch in parser.to_pyarrow(2000):
+        """
+        Do something with the pyarrow record batch `pa_record_batch` 
+        like transform it to pandas dataframe or use polars to do some 
+        transformations
+        """
+        pass
+```
+
+This snippet of code reads an IXF file and parse it sequentially using python
+generators, it parses by 2000 records and it transform all parsed records to
+pyarrow RecordBatches that you can use for any kind of transformation, you can
+for exemple use polars to do transformations or use pandas dataframe...etc.
 
 ---
 
