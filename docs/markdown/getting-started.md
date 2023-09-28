@@ -100,7 +100,6 @@ with open(path, mode='rb') as f:
 In this example, the parsed data is converted to Parquet format using
 the `to_parquet` method and saved to the specified output file.
 
----
 
 #### Converting to Deltalake
 
@@ -126,6 +125,8 @@ You can also use a string but Path is better in case you work on a local
 filesystem. When we use a string, it is often for a remote storage and in this
 case you can either use filesystem argument or let `deltalake` package infer it
 from the uri.
+
+---
 
 The IXF Parser package provides flexibility in terms of input and output
 options, allowing you to easily parse and process IXF files according to your
@@ -239,5 +240,7 @@ These are complete examples for all the commands:
     Before using one of the examples, please, try `db2ixf <command> --help` to
     get details on how to use the command.
 
-!!! info CLI does not support the deltalake format. In case, you need support
-please create a ticket in Github.
+!!! info
+
+    CLI does not support the deltalake format. In case, you need support
+    please create a ticket in Github.
