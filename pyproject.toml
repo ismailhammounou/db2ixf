@@ -46,10 +46,10 @@ dependencies = [
 db2ixf = 'db2ixf.cli:app'
 
 [project.urls]
-homepage = 'https://pypi.org/project/db2ixf/'
-documentation = 'https://ismailhammounou.github.io/db2ixf/'
-repository = 'https://github.com/ismailhammounou/db2ixf.git'
-changelog = 'https://github.com/ismailhammounou/db2ixf/blob/main/CHANGELOG.md'
+Changelog = 'https://github.com/ismailhammounou/db2ixf/blob/main/CHANGELOG.md'
+Documentation = 'https://ismailhammounou.github.io/db2ixf/'
+Homepage = 'https://pypi.org/project/db2ixf/'
+Repository = 'https://github.com/ismailhammounou/db2ixf.git'
 
 
 
