@@ -1,6 +1,6 @@
 # coding=utf-8
 """Create helper function for schema generation and others."""
-import pyarrow
+import pyarrow as pa
 from db2ixf.constants import IXF_DTYPES
 from db2ixf.exceptions import NotValidDataPrecisionException
 from pyarrow import Schema, RecordBatch, array, record_batch
@@ -23,19 +23,19 @@ def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
     """
 
     mapper = {
-        'DATE': pyarrow.date32(),
-        'TIME': pyarrow.time64('ns'),
-        'TIMESTAMP': pyarrow.timestamp('ns'),
-        'BLOB': pyarrow.large_binary(),
-        'CLOB': pyarrow.large_string(),
-        'VARCHAR': pyarrow.string(),
-        'CHAR': pyarrow.string(),
-        'FLOATING POINT': pyarrow.float64(),
-        'DECIMAL': pyarrow.decimal128(19),
-        'BIGINT': pyarrow.int64(),
-        'INTEGER': pyarrow.int32(),
-        'SMALLINT': pyarrow.int16(),
-        'BINARY': pyarrow.binary(254),
+        'DATE': pa.date32(),
+        'TIME': pa.time64('ns'),
+        'TIMESTAMP': pa.timestamp('ns'),
+        'BLOB': pa.large_binary(),
+        'CLOB': pa.large_string(),
+        'VARCHAR': pa.string(),
+        'CHAR': pa.string(),
+        'FLOATING POINT': pa.float64(),
+        'DECIMAL': pa.decimal128(19),
+        'BIGINT': pa.int64(),
+        'INTEGER': pa.int32(),
+        'SMALLINT': pa.int16(),
+        'BINARY': pa.binary(254),
     }
 
     schema = {}
@@ -46,30 +46,30 @@ def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
 
         if ctype == 912:
             length = int(c['IXFCLENG'])
-            dtype = pyarrow.binary(length)
+            dtype = pa.binary(length)
 
         if ctype == 480:
             length = int(c['IXFCLENG'])
-            dtype = pyarrow.float32() if length == 4 else dtype
+            dtype = pa.float32() if length == 4 else dtype
 
         if ctype == 484:
             precision = int(c['IXFCLENG'][0:3])
             scale = int(c['IXFCLENG'][3:5])
             if scale == 0:
-                dtype = pyarrow.int64()
+                dtype = pa.int64()
             else:
-                dtype = pyarrow.decimal256(precision, scale)
+                dtype = pa.decimal256(precision, scale)
 
         if ctype == 392:
             fsp = int(c['IXFCLENG'])
             if fsp == 0:
-                dtype = pyarrow.timestamp('s')
+                dtype = pa.timestamp('s')
             elif 0 < fsp <= 3:
-                dtype = pyarrow.timestamp('ms')
+                dtype = pa.timestamp('ms')
             elif 3 < fsp <= 6:
-                dtype = pyarrow.timestamp('us')
+                dtype = pa.timestamp('us')
             elif 6 < fsp <= 12:
-                dtype = pyarrow.timestamp('ns')
+                dtype = pa.timestamp('ns')
             else:
                 msg = f'Precision of the decimal column {cname} is not' \
                       f' valid, it should be <= 12'
@@ -298,8 +298,8 @@ def deltalake_fix_ns_timestamps(schema: Schema) -> Schema:
         Pyarrow schema with fix
     """
     for i, f in enumerate(schema):
-        if f.type == pyarrow.timestamp('ns'):
-            new_field = pyarrow.field(f.name, pyarrow.timestamp('us'))
+        if f.type == pa.timestamp('ns'):
+            new_field = pa.field(f.name, pa.timestamp('us'))
             schema = schema.set(i, new_field)
     return schema
 
@@ -326,14 +326,14 @@ def deltalake_fix_time(schema: Schema) -> Schema:
         Pyarrow schema with the fix.
     """
     time_datatypes = [
-        pyarrow.time64('ns'),
-        pyarrow.time64('us'),
-        pyarrow.time32('ms'),
-        pyarrow.time32('s')
+        pa.time64('ns'),
+        pa.time64('us'),
+        pa.time32('ms'),
+        pa.time32('s')
     ]
     for i, f in enumerate(schema):
         if f.type in time_datatypes:
-            new_field = pyarrow.field(f.name, pyarrow.string())
+            new_field = pa.field(f.name, pa.string())
             schema = schema.set(i, new_field)
     return schema
 
