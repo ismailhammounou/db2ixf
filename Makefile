@@ -128,7 +128,7 @@ clean-local-ghp: ## Clean local documentation branches.
 .PHONY: clean-remote-ghp
 clean-remote-ghp: ## Clean remote documentation branches.
 	git push origin --delete gh-pages || true
-	git branch origin --delete github-pages || true
+	git push origin --delete github-pages || true
 
 
 
