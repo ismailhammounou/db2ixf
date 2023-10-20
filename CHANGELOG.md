@@ -10,7 +10,16 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
 
-## [0.3.0](https://github.com/ismailhammounou/db2ixf/tree/0.3.0) - 2023-09-28
+## [0.4.0](https://github.com/ismailhammounou/db2ixf/tree/0.4.0) - 2023-10-20
+
+### Changed
+
+- Refactor code so internals of the package can be used
+  easily [db2ixf-35](https://github.com/ismailhammounou/db2ixf/issues/35)
+- Refactor code, format it and get rid of unused variables
+  ...etc [db2ixf-36](https://github.com/ismailhammounou/db2ixf/issues/36)
+
+## [0.3.1](https://github.com/ismailhammounou/db2ixf/tree/0.3.1) - 2023-09-28
 
 ### Added
 
