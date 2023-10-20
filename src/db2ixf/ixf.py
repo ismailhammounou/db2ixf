@@ -28,19 +28,19 @@ from db2ixf.constants import (HEADER_RECORD_TYPE,
 from db2ixf.encoders import CustomJSONEncoder
 from db2ixf.exceptions import (NotValidColumnDescriptorException,
                                UnknownDataTypeException)
-from db2ixf.helpers import (get_pyarrow_schema, get_array_batch,
-                            apply_schema_fixes)
+from db2ixf.helpers import (get_pyarrow_schema,
+                            apply_schema_fixes,
+                            pyarrow_record_batches)
 from db2ixf.logger import logger
 from os import PathLike
 from pathlib import Path
-from pyarrow import Schema, RecordBatch, schema, array, record_batch
+from pyarrow import Schema, schema, RecordBatch
 from pyarrow.filesystem import FileSystem
 from pyarrow.parquet import ParquetWriter
-from typing import Union, List, BinaryIO, TextIO, Literal, Optional, Iterable
+from typing import (Union, List, BinaryIO, TextIO, Literal, Optional, Iterable)
 
 L = Literal['error', 'append', 'overwrite', 'ignore']
 D = Union[str, pathlib.Path, deltalake.table.DeltaTable]
-T = Iterable[RecordBatch]
 
 
 class IXFParser:
@@ -295,23 +295,14 @@ class IXFParser:
 
         return r
 
-    def parse_data(self, record_type: dict = None) -> dict:
+    def parse_data(self) -> dict:
         """Parse data records.
-
-        Parameters
-        ----------
-        record_type : dict
-            Dictionary containing the names of the record fields and
-            their length.
 
         Yields
         ------
         dict
             Parsed row data from IXF file.
         """
-        if record_type is None:
-            record_type = DATA_RECORD_TYPE
-
         # Init the state
         self.number_rows = 0
 
@@ -480,29 +471,6 @@ class IXFParser:
 
         return 0
 
-    def pyarrow_record_batches(self,
-                               pyarrow_schema: Schema,
-                               batch_size: int = 1000) -> T:
-        """
-
-        Parameters
-        ----------
-        pyarrow_schema : Schema
-            Pyarrow schema.
-        batch_size : int
-            Number of rows to extract before writing to the parquet file.
-            It is used for memory optimization.
-
-        Yields
-        ------
-        Iterable[RecordBatch]
-            Pyarrow record batch.
-        """
-        for batch in get_array_batch(self.parse_data, size=batch_size):
-            data = [array(v) for v in batch.values()]
-            pa_record_batch = record_batch(data=data, schema=pyarrow_schema)
-            yield pa_record_batch
-
     def to_parquet(self,
                    output: Union[str, Path, PathLike, BinaryIO],
                    batch_size: int = 1000,
@@ -562,8 +530,10 @@ class IXFParser:
                     flavor='spark',
                     version=parquet_version
             ) as writer:
-                record_batches = self.pyarrow_record_batches(
-                    self.parquet_schema, batch_size
+                record_batches = pyarrow_record_batches(
+                    self.parse_data,
+                    self.parquet_schema,
+                    batch_size
                 )
                 for batch in record_batches:
                     writer.write_batch(batch)
@@ -573,7 +543,7 @@ class IXFParser:
 
         return 0
 
-    def to_pyarrow(self, batch_size: int = 1000) -> T:
+    def to_pyarrow(self, batch_size: int = 1000) -> Iterable[RecordBatch]:
         """Parse and convert to a list of pyarrow record batch.
 
         Parameters
@@ -603,7 +573,8 @@ class IXFParser:
             get_pyarrow_schema(self.columns_info).items()
         )
 
-        record_batches = self.pyarrow_record_batches(
+        record_batches = pyarrow_record_batches(
+            self.parse_data,
             self.parquet_schema,
             batch_size
         )
@@ -668,7 +639,7 @@ class IXFParser:
         logger.info("Start writing to deltalake")
         deltalake.write_deltalake(
             table_or_uri,
-            self.pyarrow_record_batches(fixed_schema, batch_size),
+            pyarrow_record_batches(self.parse_data, fixed_schema, batch_size),
             schema=fixed_schema,
             partition_by=partition_by,
             filesystem=filesystem,
