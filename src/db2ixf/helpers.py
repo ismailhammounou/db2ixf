@@ -3,8 +3,8 @@
 import pyarrow
 from db2ixf.constants import IXF_DTYPES
 from db2ixf.exceptions import NotValidDataPrecisionException
-from pyarrow import Schema
-from typing import Generator, Dict, BinaryIO, Tuple, List
+from pyarrow import Schema, RecordBatch, array, record_batch
+from typing import Generator, Dict, BinaryIO, Tuple, List, Iterable
 
 
 def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
@@ -311,7 +311,9 @@ def deltalake_fix_time(schema: Schema) -> Schema:
     temporary fix the issue. Pyarrow schema has time64 and time32 datatypes but
     it is complicated for now to cast them to timestamp because the later is
     supported by deltalake. For this later reason, this function will use
-    string datatype to replace time datatypes.
+    pyarrow string datatype to replace pyarrow time datatypes until casting
+    pyarrow time datatype as a datetime is possible in deltalake or support of
+    pyarrow time datatype in deltalake is added.
 
     Parameters
     ----------
@@ -357,3 +359,29 @@ def apply_schema_fixes(schema: Schema) -> Schema:
     for fix in fixes:
         schema = fix(schema)
     return schema
+
+
+def pyarrow_record_batches(data_parser: Generator,
+                           pyarrow_schema: Schema,
+                           batch_size: int = 1000) -> Iterable[RecordBatch]:
+    """
+
+    Parameters
+    ----------
+    data_parser : Generator
+        IXF data parser.
+    pyarrow_schema : Schema
+        Pyarrow schema.
+    batch_size : int
+        Number of rows to extract before writing to the parquet file.
+        It is used for memory optimization.
+
+    Yields
+    ------
+    Iterable[RecordBatch]
+        Pyarrow record batch.
+    """
+    for batch in get_array_batch(data_parser, size=batch_size):
+        data = [array(v) for v in batch.values()]
+        pa_record_batch = record_batch(data=data, schema=pyarrow_schema)
+        yield pa_record_batch
