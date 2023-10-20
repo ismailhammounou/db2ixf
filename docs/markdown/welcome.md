@@ -7,8 +7,13 @@
 [![Release](https://img.shields.io/github/v/release/ismailhammounou/db2ixf?display_name=tag&sort=semver&style=for-the-badge&logo=semver)](https://github.com/ismailhammounou/db2ixf/releases/latest)
 [![Pypi](https://img.shields.io/pypi/v/db2ixf?color=3775A9&logo=pypi&style=for-the-badge)](https://pypi.org/project/db2ixf/)
 
-
 [![Downloads](https://img.shields.io/pypi/dm/db2ixf?style=for-the-badge)](https://pypi.org/project/db2ixf/)
+[![Contributors](https://img.shields.io/github/contributors/ismailhammounou/db2ixf?style=for-the-badge)](https://github.com/ismailhammounou/db2ixf/graphs/contributors)
+
+[![Documentation](https://img.shields.io/badge/here-here?style=for-the-badge&logo=book&label=documentation&color=purple
+)](https://ismailhammounou.github.io/db2ixf/)
+
+
 
 ---
 
