@@ -20,7 +20,8 @@ from db2ixf.collectors import (collect_bigint,
                                collect_floating_point,
                                collect_blob,
                                collect_clob,
-                               collect_binary)
+                               collect_binary,
+                               collect_longvarchar)
 from db2ixf.constants import (HEADER_RECORD_TYPE,
                               TABLE_RECORD_TYPE,
                               COL_DESCRIPTOR_RECORD_TYPE,
