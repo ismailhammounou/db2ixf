@@ -244,6 +244,50 @@ def collect_varchar(c, fields, pos) -> str:
     return field.strip()
 
 
+def collect_longvarchar(c, fields, pos) -> str:
+    """Collects LONGVARCHAR data type from ixf as a string.
+
+    Parameters
+    ----------
+    c : dict
+        Column descriptor extracted from IXF file.
+    fields : str
+        Bytes string containing data of the row.
+    pos : int
+        Position of the column in the `fields`.
+
+    Returns
+    -------
+    str:
+        String.
+
+    Raises
+    ------
+    VarCharLengthException
+        Length of var char exceeds maximum length.
+    """
+    max_length = int(c['IXFCLENG'])
+    
+    length = int(unpack('<h', fields[pos:pos + 2])[0])
+    if length > max_length:
+        msg = f'Length {length} exceeds the maximum length {max_length}.'
+        raise VarCharLengthException(msg)
+
+    pos += 2
+
+    sbcp, dbcp = get_ccsid_from_column(c)
+
+    if dbcp != 0:
+        field = fields[pos:pos + length].decode(f'cp{dbcp}')
+    else:
+        if sbcp == 0:
+            field = str(fields[pos:pos + length], 'utf-8')
+        else:
+            field = fields[pos:pos + length].decode(f'cp{sbcp}')
+
+    return field.strip()
+
+
 def collect_date(c, fields, pos) -> date:
     """Collects DATE data type from ixf as a date object.
 

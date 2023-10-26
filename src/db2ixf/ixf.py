@@ -270,6 +270,7 @@ class IXFParser:
                 408: collect_clob,
                 448: collect_varchar,
                 452: collect_char,
+                456: collect_longvarchar,
                 480: collect_floating_point,
                 484: collect_decimal,
                 492: collect_bigint,
