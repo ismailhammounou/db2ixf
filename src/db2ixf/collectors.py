@@ -448,4 +448,4 @@ def collect_blob(c, fields, pos) -> str:
         else:
             field = fields[pos:pos + length].decode(f'cp{sbcp}')
 
-        return field.strip()
+    return field.strip()
