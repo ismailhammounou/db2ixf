@@ -8,6 +8,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
+## [0.5.1](https://github.com/ismailhammounou/db2ixf/tree/0.5.1) - 2023-10-31
+
+
+### Fixed
+
+- Fix error with blob_collector [db2ixf-38](https://github.com/ismailhammounou/db2ixf/issues/38)
+
 
 ## [0.5.0](https://github.com/ismailhammounou/db2ixf/tree/0.5.0) - 2023-10-26
 
