@@ -588,6 +588,8 @@ class IXFParser:
                      partition_by: Optional[Union[List[str], str]] = None,
                      filesystem: Optional[FileSystem] = None,
                      mode: L = "error",
+                     overwrite_schema: bool = True,
+                     large_dtypes: bool = True,
                      batch_size: int = 1000,
                      **kwargs) -> None:
         """Parse and convert to a deltalake table.
@@ -610,6 +612,10 @@ class IXFParser:
                 If 'append', will add new data.
                 If 'overwrite', will replace table with new data.
                 If 'ignore', will not write anything if table already exists.
+        overwrite_schema : bool
+            If True, allows updating the schema of the table.
+        large_dtypes : bool
+            If True, the table schema is checked against large_dtypes.
         batch_size : int
             Number of rows to extract before conversion operation.
             If None, the number of rows will be equal to 10000. It is used for
@@ -646,6 +652,8 @@ class IXFParser:
             partition_by=partition_by,
             filesystem=filesystem,
             mode=mode,
+            overwrite_schema=overwrite_schema,
+            large_dtypes=large_dtypes,
             **kwargs
         )
         logger.info("End writing to deltalake")
