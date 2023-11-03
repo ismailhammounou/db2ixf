@@ -1,5 +1,7 @@
 # coding=utf-8
 """Contains some encoders used to output data in some formats."""
+import base64
+import chardet
 import json
 from datetime import date, datetime, time
 
@@ -10,4 +12,12 @@ class CustomJSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, (date, time, datetime)):
             return o.isoformat()
+        elif isinstance(o, bytes):
+            try:
+                encoding = chardet.detect(o)["encoding"]
+                if encoding:
+                    return o.decode(encoding)
+                return base64.b64encode(o).decode('utf-8')
+            except UnicodeDecodeError:
+                return base64.b64encode(o).decode('utf-8')
         return super().default(o)
