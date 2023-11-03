@@ -8,6 +8,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
+## [0.7.0](https://github.com/ismailhammounou/db2ixf/tree/0.7.0) - 2023-11-03
+
+
+### Changed
+
+- Disable using large datatypes by default and enable schema_overwrite by default [db2ixf-43](https://github.com/ismailhammounou/db2ixf/issues/43)
+
 ## [0.6.0](https://github.com/ismailhammounou/db2ixf/tree/0.6.0) - 2023-11-03
 
 
