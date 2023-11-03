@@ -25,8 +25,8 @@ including JSON, CSV, Parquet and Deltalake.
 ## Features
 
 - **Parse IXF files**: The package allows you to parse IXF files and extract the rows of data stored within them.
-- **Convert to multiple formats**: The parsed data can be easily converted to JSON, CSV, or Parquet format, providing
-  flexibility for further analysis and integration with other systems.
+- **Convert to multiple formats**: The parsed data can be easily converted to _JSON_, _CSV_, _Parquet_, or _Deltalake_
+  format, providing flexibility for further analysis and integration with other systems.
 - **Support for file-like objects**: IXF Parser supports file-like objects as input, enabling direct parsing of IXF data
   from file objects, making it convenient for handling large datasets without the need for intermediate file storage.
 - **Minimal dependencies**: The package has few dependencies (ebcdic, pyarrow, deltalake, chardet, typer) which are
