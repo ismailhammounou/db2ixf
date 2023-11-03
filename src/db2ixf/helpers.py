@@ -36,7 +36,7 @@ def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
         'BIGINT': pa.int64(),
         'INTEGER': pa.int32(),
         'SMALLINT': pa.int16(),
-        'BINARY': pa.binary(254),
+        'BINARY': pa.binary(),
     }
 
     schema = {}
