@@ -8,6 +8,19 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
+## [0.6.0](https://github.com/ismailhammounou/db2ixf/tree/0.6.0) - 2023-11-03
+
+
+### Changed
+
+- Add more arguments to deltalake output to control schema and larger datatypes [db2ixf-40](https://github.com/ismailhammounou/db2ixf/issues/40)
+
+
+### Fixed
+
+- Fix bug in blob_collector and binary_collector [db2ixf-39](https://github.com/ismailhammounou/db2ixf/issues/39)
+- Improve json encoder to handle binary data [db2ixf-41](https://github.com/ismailhammounou/db2ixf/issues/41)
+
 ## [0.5.1](https://github.com/ismailhammounou/db2ixf/tree/0.5.1) - 2023-10-31
 
 
