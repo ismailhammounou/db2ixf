@@ -34,7 +34,7 @@ def collect_binary(c, fields, pos) -> str:
         msg = 'Length of a binary data types should not exceed 254 bytes.'
         raise BinaryLengthException(msg)
 
-    field = str(fields[pos:pos + length], 'utf-8')
+    field = fields[pos:pos + length]
 
     return field
 
@@ -219,11 +219,6 @@ def collect_varchar(c, fields, pos) -> str:
 		Length of var char exceeds maximum length.
 	"""
     max_length = int(c['IXFCLENG'])
-    # if max_length > 254:
-    #     msg = f'Max length of a varchar data type (={max_length}) ' \
-    #           f'must be less than 254 bytes.'
-    #     raise ExceedingDefinedMaximumLengthException(msg)
-
     length = int(unpack('<h', fields[pos:pos + 2])[0])
     if length > max_length:
         msg = f'Length {length} exceeds the maximum length {max_length}.'
@@ -444,8 +439,8 @@ def collect_blob(c, fields, pos) -> str:
         field = fields[pos:pos + length].decode(f'cp{dbcp}')
     else:
         if sbcp == 0:
-            field = str(fields[pos:pos + length], 'utf-8')
+            field = fields[pos:pos + length]
         else:
             field = fields[pos:pos + length].decode(f'cp{sbcp}')
 
-    return field.strip()
+    return field
