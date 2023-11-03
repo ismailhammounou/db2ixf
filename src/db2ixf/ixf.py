@@ -589,7 +589,7 @@ class IXFParser:
                      filesystem: Optional[FileSystem] = None,
                      mode: L = "error",
                      overwrite_schema: bool = True,
-                     large_dtypes: bool = True,
+                     large_dtypes: bool = False,
                      batch_size: int = 1000,
                      **kwargs) -> None:
         """Parse and convert to a deltalake table.
