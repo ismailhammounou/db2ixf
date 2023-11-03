@@ -163,7 +163,7 @@ check-code: clean-flake8 ## Check code with some static analysis.
 
 .PHONY: test
 test: clean-test check-code ## Launch tests with coverage.
-	$(VENV_ACTIVATE); pytest -vv -rA \
+	$(VENV_ACTIVATE); pytest -vvv -rA \
 	--continue-on-collection-errors \
 	--numprocesses logical \
 	--maxprocesses 1 \
