@@ -8,11 +8,8 @@
 [![Downloads](https://img.shields.io/pypi/dm/db2ixf?style=for-the-badge)](https://pypi.org/project/db2ixf/)
 [![Contributors](https://img.shields.io/github/contributors/ismailhammounou/db2ixf?style=for-the-badge)](https://github.com/ismailhammounou/db2ixf/graphs/contributors)
 
-
 [![Documentation](https://img.shields.io/badge/here-here?style=for-the-badge&logo=book&label=documentation&color=purple
 )](https://ismailhammounou.github.io/db2ixf/)
-
-
 
 # DB2IXF Parser
 
@@ -20,28 +17,21 @@
   <img src="https://github.com/ismailhammounou/db2ixf/blob/main/resources/images/db2ixf-logo.png?raw=true" alt="Logo" width="300" height="300">
 </div>
 
-DB2IXF parser is an open-source python package that simplifies the parsing and
-processing of IBM Integration eXchange Format (IXF) files. IXF is a file format
-used by IBM's DB2 database system for data import and export operations. This
-package provides a streamlined solution for extracting data from IXF files and
-converting it to various formats, including JSON, CSV, Parquet and Deltalake.
+DB2IXF parser is an open-source python package that simplifies the parsing and processing of IBM Integration eXchange
+Format (IXF) files. IXF is a file format used by IBM's DB2 database system for data import and export operations. This
+package provides a streamlined solution for extracting data from IXF files and converting it to various formats,
+including JSON, CSV, Parquet and Deltalake.
 
 ## Features
 
-- **Parse IXF files**: The package allows you to parse IXF files and extract the
-  rows of data stored within them.
-- **Convert to multiple formats**: The parsed data can be easily converted to
-  JSON, CSV, or Parquet format, providing flexibility for further analysis and
-  integration with other systems.
-- **Support for file-like objects**: IXF Parser supports file-like objects as
-  input, enabling direct parsing of IXF data from file objects, making it
-  convenient for handling large datasets without the need for intermediate file
-  storage.
-- **Minimal dependencies**: The package has only 4 dependencies (deltalake,
-  pyarrow, typer and ebcdic) which are automatically installed alongside the
-  package.
-- **CLI**: command line tool called ``db2ixf`` comes with the package. (_Does
-  not support Deltalake format_)
+- **Parse IXF files**: The package allows you to parse IXF files and extract the rows of data stored within them.
+- **Convert to multiple formats**: The parsed data can be easily converted to JSON, CSV, or Parquet format, providing
+  flexibility for further analysis and integration with other systems.
+- **Support for file-like objects**: IXF Parser supports file-like objects as input, enabling direct parsing of IXF data
+  from file objects, making it convenient for handling large datasets without the need for intermediate file storage.
+- **Minimal dependencies**: The package has few dependencies (ebcdic, pyarrow, deltalake, chardet, typer) which are
+  automatically installed alongside the package.
+- **CLI**: command line tool called ``db2ixf`` comes with the package. (_Does not support Deltalake format_)
 
 ## Hypothesis
 
@@ -174,20 +164,18 @@ For a detailed story and usage, please refer to the
 
 ## Contributing
 
-IXF Parser is actively seeking contributions to enhance its features and
-reliability. Your participation is valuable in shaping the future of the
-project.
+IXF Parser is actively seeking contributions to enhance its features and reliability. Your participation is valuable in
+shaping the future of the project.
 
-We appreciate your feedback, bug reports, and feature requests. If you encounter
-any issues or have ideas for improvement, please open an issue on the
+We appreciate your feedback, bug reports, and feature requests. If you encounter any issues or have ideas for
+improvement, please open an issue on the
 [GitHub repository](https://github.com/ismailhammounou/db2ixf/issues).
 
-For any questions or assistance during the contribution process, feel free to
-reach out by opening an issue on the
+For any questions or assistance during the contribution process, feel free to reach out by opening an issue on the
 [GitHub repository](https://github.com/ismailhammounou/db2ixf/issues).
 
-Thank you for considering contributing to IXF Parser. Let's work together to
-create a powerful and dependable tool for working with DB2's IXF files.
+Thank you for considering contributing to IXF Parser. Let's work together to create a powerful and dependable tool for
+working with DB2's IXF files.
 
 ### Todo
 
@@ -213,16 +201,13 @@ IXF Parser is released under the
 
 ## Support
 
-If you encounter any issues or have questions about using IXF Parser, please
-open an issue on the
-[GitHub repository](https://github.com/ismailhammounou/db2ixf/issues). We will
-do our best to address them promptly.
+If you encounter any issues or have questions about using IXF Parser, please open an issue on the
+[GitHub repository](https://github.com/ismailhammounou/db2ixf/issues). We will do our best to address them promptly.
 
 ## Conclusion
 
-IXF Parser offers a convenient solution for parsing and processing IBM DB2's IXF
-files. With its ease of use and support for various output formats, it provides
-a valuable tool for working with DB2 data. We hope that you find this package
+IXF Parser offers a convenient solution for parsing and processing IBM DB2's IXF files. With its ease of use and support
+for various output formats, it provides a valuable tool for working with DB2 data. We hope that you find this package
 useful in your data analysis and integration workflows.
 
 Give it a try and let us know your feedback. Happy parsing!
