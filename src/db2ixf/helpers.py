@@ -3,11 +3,11 @@
 import pyarrow as pa
 from db2ixf.constants import IXF_DTYPES
 from db2ixf.exceptions import NotValidDataPrecisionException
-from pyarrow import Schema, RecordBatch, array, record_batch
-from typing import Generator, Dict, BinaryIO, Tuple, List, Iterable
+from pyarrow import array, record_batch, RecordBatch, Schema
+from typing import BinaryIO, Dict, Generator, Iterable, List, Tuple
 
 
-def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
+def get_pyarrow_schema(cols: List[dict]) -> Dict[str, object]:
     """
     Creates a pyarrow schema of the columns extracted from IXF file.
 
@@ -81,7 +81,7 @@ def get_pyarrow_schema(cols: list[dict]) -> dict[str, object]:
     return schema
 
 
-def get_pandas_schema(cols: list[dict]) -> dict[str, object]:
+def get_pandas_schema(cols: List[dict]) -> Dict[str, object]:
     """Creates a pandas schema of the columns extracted from IXF file.
 
     Parameters
@@ -134,7 +134,7 @@ def get_pandas_schema(cols: list[dict]) -> dict[str, object]:
     return schema
 
 
-def merge_dicts(dicts: list[dict]) -> dict[str, list]:
+def merge_dicts(dicts: List[dict]) -> Dict[str, list]:
     """
     Merge a list of dictionaries into a single dictionary where each key is
     mapped to a list of its values.
@@ -363,9 +363,11 @@ def apply_schema_fixes(schema: Schema) -> Schema:
     return schema
 
 
-def pyarrow_record_batches(data_parser: Generator,
-                           pyarrow_schema: Schema,
-                           batch_size: int = 1000) -> Iterable[RecordBatch]:
+def pyarrow_record_batches(
+        data_parser: Generator,
+        pyarrow_schema: Schema,
+        batch_size: int = 1000
+) -> Iterable[RecordBatch]:
     """
 
     Parameters
