@@ -10,11 +10,10 @@ ifeq ($(OS),Windows_NT)
 	VENV_BIN = $(PROJECT_ROOT)/venv/Scripts
 endif
 
+# Version of the used tools
+PYTHON_VERSION = 3.9
 
 # Project Directories
-DEV_DEPENDENCIES_DIR = $(PROJECT_ROOT)/dependencies/dev
-DEPENDENCIES_DIR = $(PROJECT_ROOT)/dependencies/release
-
 REPORT_TARGET_DIR = $(PROJECT_ROOT)/target/report
 PYTEST_REPORT_DIR = $(REPORT_TARGET_DIR)/pytest
 COVERAGE_REPORT_DIR = $(REPORT_TARGET_DIR)/coverage
@@ -55,14 +54,17 @@ info: ## Show this information
 #   ENV
 # ============================
 $(VENV_DIR):
-	conda create --verbose --prefix $(VENV_DIR) --no-default-packages --yes
-	$(VENV_ACTIVATE); python -m pip install -U -e . -r $(DEV_DEPENDENCIES_DIR)/requirements.txt -c $(DEV_DEPENDENCIES_DIR)/constraints.txt
+	conda create --verbose --no-default-packages --yes --prefix $(VENV_DIR)
+	cp -f .condarc venv/.condarc || true
+	cp -f pip.conf venv/pip.conf || true
+	cp -f pip.conf venv/pip.ini || true
+	$(VENV_ACTIVATE); python -m pip install -U -e . -r requirements.dev.txt -c constraints.txt
 
 venv: $(VENV_DIR) ## Create virtualenv
 
 .PHONY: update
 update: venv ## Update dependencies
-	$(VENV_ACTIVATE); python -m pip install -U -e . -r $(DEV_DEPENDENCIES_DIR)/requirements.txt -c $(DEV_DEPENDENCIES_DIR)/constraints.txt
+	$(VENV_ACTIVATE); python -m pip install -U -e . -r requirements.dev.txt -c constraints.txt
 
 .PHONY: freeze
 freeze: ## List dependencies
@@ -106,6 +108,7 @@ clean-docs: ## Clean documentation site directory.
 
 .PHONY: clean-test
 clean-test:  ## Clean test target directory
+	@find . -name '.coverage*' -exec rm -rf {} +
 	rm -rf $(TEST_TARGET_DIR) || true
 
 .PHONY: clean-security
@@ -140,7 +143,7 @@ safety-check: clean-security ## Check dependencies vulnerabilities using pyup.io
 	@echo "----------------------------------------------------------------------------------------"
 	@echo "------------------------          VULNERABILITY CHECK         --------------------------"
 	@echo "----------------------------------------------------------------------------------------"
-	mkdir -p $(SECURITY_REPORT_DIR)
+	mkdir -p $(SECURITY_REPORT_DIR) || true
 	$(VENV_ACTIVATE); safety check --full-report -i 51457 || true
 	$(VENV_ACTIVATE); safety check --full-report --output=text -i 51457  > $(SECURITY_REPORT_DIR)/safety-report.txt
 	$(VENV_ACTIVATE); safety check --output=json -i 51457 --save-json=$(SECURITY_REPORT_DIR)

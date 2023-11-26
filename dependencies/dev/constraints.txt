@@ -1,2 +1,0 @@
-### Project constraints
--c ../release/constraints.txt

@@ -538,5 +538,8 @@ resources/tools/*
 resources/data/*
 
 ## Contributing
-contributing/anaconda/*
 tests/resources/data/sample-confidential.ixf
+
+## Others
+.condarc
+pip.conf
