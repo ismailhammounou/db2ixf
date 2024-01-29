@@ -111,6 +111,34 @@ class VarCharLengthException(Exception):
         super().__init__(self.message)
 
 
+class VarGraphicLengthException(Exception):
+    """
+    Exception raised when encountering VARGRAPHIC data type with a length
+    exceeding the maximum length.
+
+    Read the
+    [doc](https://www.ibm.com/docs/en/db2/11.5?topic=format-pcixf-data-types).
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+class VarGraphicCodePageException(Exception):
+    """
+    Exception raised when encountering VARGRAPHIC data type with DBCS code page,
+    found using IXFCDBCP key, equals to 0.
+
+    Read the
+    [doc](https://www.ibm.com/docs/en/db2/11.5?topic=format-pcixf-data-types).
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
 class CLOBCodePageException(Exception):
     """
     Exception raised when encountering CLOB data type where SBCP and DBCP are
