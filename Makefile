@@ -198,12 +198,12 @@ test-with-report: clean-test clean-pyc clean-dist check-code ## Launch tests wit
 # ============================
 .PHONY: build-package
 build-package: clean-pyc clean-dist ## Build the python package.
-	$(VENV_ACTIVATE); python -m pip install --upgrade build -c $(DEV_DEPENDENCIES_DIR)/constraints.txt
+	$(VENV_ACTIVATE); python -m pip install --upgrade build -c constraints.txt
 	$(VENV_ACTIVATE); python -m build --no-isolation
 
 .PHONY: deploy-package
 deploy-package: ## Deploy the python package
-	$(VENV_ACTIVATE); python -m pip install --upgrade twine -c $(DEV_DEPENDENCIES_DIR)/constraints.txt
+	$(VENV_ACTIVATE); python -m pip install --upgrade twine -c constraints.txt
 	echo "Deployment: Twine uploads to PyPI"
 	$(VENV_ACTIVATE); python -m twine upload --verbose dist/*
 
