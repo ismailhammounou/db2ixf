@@ -3,6 +3,7 @@
 
 
 # Dev
+safety<=2.3.5
 babel>=2.9.0
 certifi>=2023.7.22
 GitPython>=3.1.33

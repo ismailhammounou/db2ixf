@@ -144,9 +144,8 @@ safety-check: clean-security ## Check dependencies vulnerabilities using pyup.io
 	@echo "------------------------          VULNERABILITY CHECK         --------------------------"
 	@echo "----------------------------------------------------------------------------------------"
 	mkdir -p $(SECURITY_REPORT_DIR) || true
-	$(VENV_ACTIVATE); safety check --full-report -i 51457 || true
-	$(VENV_ACTIVATE); safety check --full-report --output=text -i 51457  > $(SECURITY_REPORT_DIR)/safety-report.txt
 	$(VENV_ACTIVATE); safety check --output=json -i 51457 --save-json=$(SECURITY_REPORT_DIR)
+	#$(VENV_ACTIVATE); safety scan --detailed-output --save-as json $(SECURITY_REPORT_DIR)/safety-report.json
 
 .PHONY: safety-review
 safety-review: safety-check ## Review a pyup.io safety report.
