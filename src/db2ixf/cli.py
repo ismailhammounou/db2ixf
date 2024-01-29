@@ -6,7 +6,7 @@ from db2ixf import IXFParser
 from db2ixf._version import version_tuple as vt
 from db2ixf.logger import logger
 from pathlib import Path
-from typing import Annotated, Union, Optional
+from typing import Annotated, Optional, Union
 
 __version__ = f'{vt[0]}.{vt[1]}.{vt[2]}'
 

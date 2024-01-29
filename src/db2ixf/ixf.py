@@ -8,37 +8,22 @@ import csv
 import deltalake
 import json
 import pathlib
-from db2ixf.collectors import (collect_bigint,
-                               collect_char,
-                               collect_date,
-                               collect_decimal,
-                               collect_integer,
-                               collect_time,
-                               collect_timestamp,
-                               collect_varchar,
-                               collect_smallint,
-                               collect_floating_point,
-                               collect_blob,
-                               collect_clob,
-                               collect_binary,
-                               collect_longvarchar)
-from db2ixf.constants import (HEADER_RECORD_TYPE,
-                              TABLE_RECORD_TYPE,
-                              COL_DESCRIPTOR_RECORD_TYPE,
-                              DATA_RECORD_TYPE)
+from db2ixf.collectors import (
+    collect_bigint, collect_binary, collect_blob, collect_char, collect_clob, collect_date,
+    collect_decimal, collect_floating_point, collect_integer, collect_longvarchar, collect_smallint, collect_time,
+    collect_timestamp, collect_varchar, collect_vargraphic,
+)
+from db2ixf.constants import (COL_DESCRIPTOR_RECORD_TYPE, DATA_RECORD_TYPE, HEADER_RECORD_TYPE, TABLE_RECORD_TYPE)
 from db2ixf.encoders import CustomJSONEncoder
-from db2ixf.exceptions import (NotValidColumnDescriptorException,
-                               UnknownDataTypeException)
-from db2ixf.helpers import (get_pyarrow_schema,
-                            apply_schema_fixes,
-                            pyarrow_record_batches)
+from db2ixf.exceptions import (NotValidColumnDescriptorException, UnknownDataTypeException)
+from db2ixf.helpers import (apply_schema_fixes, get_pyarrow_schema, pyarrow_record_batches)
 from db2ixf.logger import logger
 from os import PathLike
 from pathlib import Path
-from pyarrow import Schema, schema, RecordBatch
+from pyarrow import RecordBatch, Schema, schema
 from pyarrow.filesystem import FileSystem
 from pyarrow.parquet import ParquetWriter
-from typing import (Union, List, BinaryIO, TextIO, Literal, Optional, Iterable)
+from typing import (BinaryIO, Iterable, List, Literal, Optional, TextIO, Union)
 
 L = Literal['error', 'append', 'overwrite', 'ignore']
 D = Union[str, pathlib.Path, deltalake.table.DeltaTable]
@@ -272,6 +257,7 @@ class IXFParser:
                 448: collect_varchar,
                 452: collect_char,
                 456: collect_longvarchar,
+                464: collect_vargraphic,
                 480: collect_floating_point,
                 484: collect_decimal,
                 492: collect_bigint,
@@ -410,9 +396,7 @@ class IXFParser:
 
         return 0
 
-    def to_csv(self,
-               output: Union[str, Path, PathLike, TextIO],
-               sep: str = '|') -> int:
+    def to_csv(self, output: Union[str, Path, PathLike, TextIO], sep: str = '|') -> int:
         """Parse and convert to CSV.
 
         Parameters
@@ -473,10 +457,12 @@ class IXFParser:
 
         return 0
 
-    def to_parquet(self,
-                   output: Union[str, Path, PathLike, BinaryIO],
-                   batch_size: int = 1000,
-                   parquet_version: str = '2.4') -> int:
+    def to_parquet(
+            self,
+            output: Union[str, Path, PathLike, BinaryIO],
+            batch_size: int = 1000,
+            parquet_version: str = '2.4'
+    ) -> int:
         """Parse and convert to parquet.
 
         Parameters
@@ -583,15 +569,17 @@ class IXFParser:
         for pa_record_batch in record_batches:
             yield pa_record_batch
 
-    def to_deltalake(self,
-                     table_or_uri: D,
-                     partition_by: Optional[Union[List[str], str]] = None,
-                     filesystem: Optional[FileSystem] = None,
-                     mode: L = "error",
-                     overwrite_schema: bool = True,
-                     large_dtypes: bool = False,
-                     batch_size: int = 1000,
-                     **kwargs) -> None:
+    def to_deltalake(
+            self,
+            table_or_uri: D,
+            partition_by: Optional[Union[List[str], str]] = None,
+            filesystem: Optional[FileSystem] = None,
+            mode: L = "error",
+            overwrite_schema: bool = True,
+            large_dtypes: bool = False,
+            batch_size: int = 1000,
+            **kwargs
+    ) -> None:
         """Parse and convert to a deltalake table.
 
         Parameters

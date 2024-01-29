@@ -1,11 +1,12 @@
 # coding=utf-8
 """Collects data from the fields extracted from the data records (D)."""
-from datetime import datetime, date, time
-from db2ixf.exceptions import (LargeObjectLengthException,
-                               BinaryLengthException,
-                               CLOBCodePageException,
-                               CharLengthException,
-                               VarCharLengthException)
+from datetime import date, datetime, time
+from db2ixf.exceptions import (
+    BinaryLengthException, CharLengthException,
+    CLOBCodePageException, LargeObjectLengthException,
+    VarCharLengthException, VarGraphicCodePageException,
+    VarGraphicLengthException,
+)
 from db2ixf.helpers import get_ccsid_from_column
 from db2ixf.logger import logger
 from struct import unpack
@@ -39,7 +40,7 @@ def collect_binary(c, fields, pos) -> str:
     return field
 
 
-def collect_smallint(c, fields, pos) -> int:
+def collect_smallint(c, fields, pos) -> int:  # noqa
     """Collects SMALLINT data type from ixf as an integer.
 
 	Parameters
@@ -60,7 +61,7 @@ def collect_smallint(c, fields, pos) -> int:
     return field
 
 
-def collect_integer(c, fields, pos) -> int:
+def collect_integer(c, fields, pos) -> int:  # noqa
     """Collects INTEGER data type from ixf as an integer.
 
 	Parameters
@@ -81,7 +82,7 @@ def collect_integer(c, fields, pos) -> int:
     return field
 
 
-def collect_bigint(c, fields, pos) -> int:
+def collect_bigint(c, fields, pos) -> int:  # noqa
     """Collects BIGINT data type from ixf as an integer.
 
 	Parameters
@@ -283,7 +284,47 @@ def collect_longvarchar(c, fields, pos) -> str:
     return field.strip()
 
 
-def collect_date(c, fields, pos) -> date:
+def collect_vargraphic(c, fields, pos) -> str:
+    """Collects VARGRAPHIC data type from ixf as a string.
+
+	Parameters
+	----------
+	c : dict
+		Column descriptor extracted from IXF file.
+	fields : str
+		Bytes string containing data of the row.
+	pos : int
+		Position of the column in the `fields`.
+
+	Returns
+	-------
+	str:
+		String.
+
+	Raises
+	------
+	VarGraphicLengthException
+		Length of var graphic exceeds maximum length.
+	"""
+    max_length = int(c['IXFCLENG'])
+    length = int(unpack('<h', fields[pos:pos + 2])[0])
+    if length > max_length:
+        msg = f'Length {length} exceeds the maximum length {max_length}.'
+        raise VarGraphicLengthException(msg)
+
+    pos += 2
+
+    _, dbcp = get_ccsid_from_column(c)
+
+    if dbcp != 0:
+        field = fields[pos:pos + (length * 2)].decode(f'cp{dbcp}')
+        return field.strip()
+
+    _msg = f'The string in double-byte characters has DBCS code page equals to 0'
+    raise VarGraphicCodePageException(_msg)
+
+
+def collect_date(c, fields, pos) -> date:  # noqa
     """Collects DATE data type from ixf as a date object.
 
 	Parameters
@@ -300,11 +341,11 @@ def collect_date(c, fields, pos) -> date:
 	date:
 		Date of format yyyy-mm-dd.
 	"""
-    field = str(fields[pos:pos + 10], encoding='utf-8')
+    field = str(fields[pos:pos + 10], encoding='utf-8').strip()
     return datetime.strptime(field, '%Y-%m-%d').date()
 
 
-def collect_time(c, fields, pos) -> time:
+def collect_time(c, fields, pos) -> time:  # noqa
     """Collects TIME data type from ixf as a time object.
 
 	Parameters
@@ -321,11 +362,11 @@ def collect_time(c, fields, pos) -> time:
 	time:
 		Time of format HH:MM:SS.
 	"""
-    field = str(fields[pos:pos + 8], encoding='utf-8')
+    field = str(fields[pos:pos + 8], encoding='utf-8').strip()
     return datetime.strptime(field, '%H.%M.%S').time()
 
 
-def collect_timestamp(c, fields, pos) -> datetime:
+def collect_timestamp(c, fields, pos) -> datetime:  # noqa
     """Collects TIMESTAMP data type from ixf as a datetime object.
 
 	Parameters
@@ -340,15 +381,18 @@ def collect_timestamp(c, fields, pos) -> datetime:
 	Returns
 	-------
 	timestamp:
-		Timestamp of format yyyy-mm-dd-HH.MM.SS.UUUUUU
+		Timestamp of format yyyy-mm-dd-HH.MM.SS.UUUUUU or yyyy-mm-dd-HH.MM.SS
 
 	Raises
 	------
 	LargeObjectLengthException
 		When the length of the large object exceeds the maximum length.
 	"""
-    field = str(fields[pos:pos + 26], encoding='utf-8')
-    return datetime.strptime(field, '%Y-%m-%d-%H.%M.%S.%f')
+    field = str(fields[pos:pos + 26], encoding='utf-8').strip()
+    try:
+        return datetime.strptime(field, '%Y-%m-%d-%H.%M.%S.%f')
+    except ValueError:
+        return datetime.strptime(field, '%Y-%m-%d-%H.%M.%S')
 
 
 def collect_clob(c, fields, pos) -> str:

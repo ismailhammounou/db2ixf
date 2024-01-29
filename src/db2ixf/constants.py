@@ -1,6 +1,6 @@
 # coding=utf-8
 """Contains constants about mappers, schemas, metadata and others"""
-from datetime import date, time, datetime
+from datetime import date, datetime, time
 
 # Records
 HEADER_RECORD_TYPE = {
