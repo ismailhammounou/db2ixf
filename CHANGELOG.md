@@ -8,6 +8,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
+## [0.8.0](https://github.com/ismailhammounou/db2ixf/tree/0.8.0) - 2024-01-29
+
+
+### Added
+
+- Add support for VARGRAPHIC data type [db2ixf-45](https://github.com/ismailhammounou/db2ixf/issues/45)
+
 ## [0.7.1](https://github.com/ismailhammounou/db2ixf/tree/0.7.1) - 2023-11-24
 
 
