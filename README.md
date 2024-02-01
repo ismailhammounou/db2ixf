@@ -162,6 +162,23 @@ with open(path, mode='rb') as f:
 For a detailed story and usage, please refer to the
 [documentation](https://ismailhammounou.github.io/db2ixf/).
 
+#### Precautions
+
+````text
+Parsing can lead to data loss in case the found or the detected encoding is 
+not able to decode some extracted fields/columns. 
+
+Parser tries to decode using:
+  1. The found encoding (found in the column record)
+  2. Other encodings like cp437
+  3. The detected encoding using a third party package (chardet)
+  4. Encodings like utf-8 and utf-32
+  5. Ignore errors which can lead to data loss !
+
+Before using the package in production, try to test in debug mode so you can
+detect data loss.
+````
+
 ## Contributing
 
 IXF Parser is actively seeking contributions to enhance its features and reliability. Your participation is valuable in

@@ -8,8 +8,19 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
-## [0.8.0](https://github.com/ismailhammounou/db2ixf/tree/0.8.0) - 2024-01-29
 
+## [0.9.0](https://github.com/ismailhammounou/db2ixf/tree/0.9.0) - 2024-02-01
+
+### Added
+
+- Add support to error handling when facing UnicodeDecoding
+  errors [db2ixf-48](https://github.com/ismailhammounou/db2ixf/issues/48)
+
+### Fixed
+
+- Wrong alias of cp1252 to latin-1 [db2ixf-47](https://github.com/ismailhammounou/db2ixf/issues/47)
+
+## [0.8.0](https://github.com/ismailhammounou/db2ixf/tree/0.8.0) - 2024-01-29
 
 ### Added
 
@@ -17,25 +28,23 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 ## [0.7.1](https://github.com/ismailhammounou/db2ixf/tree/0.7.1) - 2023-11-24
 
-
 ### Fixed
 
 - Fix TypeError: 'type' object is not subscriptable [db2ixf-44](https://github.com/ismailhammounou/db2ixf/issues/44)
 
 ## [0.7.0](https://github.com/ismailhammounou/db2ixf/tree/0.7.0) - 2023-11-03
 
-
 ### Changed
 
-- Disable using large datatypes by default and enable schema_overwrite by default [db2ixf-43](https://github.com/ismailhammounou/db2ixf/issues/43)
+- Disable using large datatypes by default and enable schema_overwrite by
+  default [db2ixf-43](https://github.com/ismailhammounou/db2ixf/issues/43)
 
 ## [0.6.0](https://github.com/ismailhammounou/db2ixf/tree/0.6.0) - 2023-11-03
 
-
 ### Changed
 
-- Add more arguments to deltalake output to control schema and larger datatypes [db2ixf-40](https://github.com/ismailhammounou/db2ixf/issues/40)
-
+- Add more arguments to deltalake output to control schema and larger
+  datatypes [db2ixf-40](https://github.com/ismailhammounou/db2ixf/issues/40)
 
 ### Fixed
 
@@ -44,11 +53,9 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 ## [0.5.1](https://github.com/ismailhammounou/db2ixf/tree/0.5.1) - 2023-10-31
 
-
 ### Fixed
 
 - Fix error with blob_collector [db2ixf-38](https://github.com/ismailhammounou/db2ixf/issues/38)
-
 
 ## [0.5.0](https://github.com/ismailhammounou/db2ixf/tree/0.5.0) - 2023-10-26
 

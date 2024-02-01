@@ -1,10 +1,9 @@
-To begin using the IXF Parser package, follow the installation instructions
-below.
+To begin using the IXF Parser package, follow the installation instructions below.
 
 ## Installation
 
-Ensure that you have set up and activated a Python virtual environment. Then,
-use the following command to install the package:
+Ensure that you have set up and activated a Python virtual environment. Then, use the following command to install the
+package:
 
 ```bash
 pip install db2ixf
@@ -16,8 +15,8 @@ Below are examples demonstrating how to use the IXF Parser package:
 
 #### Parsing an IXF File
 
-You can parse an IXF file by providing a file-like object or a path to the file.
-Here's an example using a file-like object:
+You can parse an IXF file by providing a file-like object or a path to the file. Here's an example using a file-like
+object:
 
 ```python
 # coding=utf-8
@@ -32,14 +31,27 @@ with open(path, mode='rb') as f:
         print(row)
 ```
 
-In this example, the `IXFParser` is initialized with a file-like object `f`, and
-the `parse` method is used to retrieve the parsed rows as a list of
-dictionaries.
+In this example, the `IXFParser` is initialized with a file-like object `f`, and the `parse` method is used to retrieve
+the parsed rows as a list of dictionaries.
+
+???+ danger "Attention"
+
+    Parsing can lead to data loss in case the found or the detected encoding is 
+    not able to decode some extracted fields/columns. 
+    
+    Parser tries to decode using:
+      1. The found encoding (found in the column record)
+      2. Other encodings like cp437
+      3. The detected encoding using a third party package (chardet)
+      4. Encodings like utf-8 and utf-32
+      5. Ignore errors which can lead to data loss !
+    
+    Before use the package in production, try to test in debug mode so you can
+    detect data loss.
 
 #### Converting to JSON
 
-You can convert the parsed data to JSON format and save it to a file. Here's an
-example:
+You can convert the parsed data to JSON format and save it to a file. Here's an example:
 
 ```python
 # coding=utf-8
@@ -59,8 +71,7 @@ In this example, the parsed data is converted to JSON format using the
 
 #### Converting to CSV
 
-You can also convert the parsed data to CSV format and save it to a file. Here's
-an example:
+You can also convert the parsed data to CSV format and save it to a file. Here's an example:
 
 ```python
 # coding=utf-8
@@ -76,13 +87,12 @@ with open(path, mode='rb') as f:
 ```
 
 In this example, the parsed data is converted to CSV format using the `to_csv`
-method and saved to the specified output file. The `sep` parameter specifies the
-separator/delimiter to be used in the CSV file.
+method and saved to the specified output file. The `sep` parameter specifies the separator/delimiter to be used in the
+CSV file.
 
 #### Converting to Parquet
 
-If you prefer to store the parsed data in Parquet format, you can use the
-following example:
+If you prefer to store the parsed data in Parquet format, you can use the following example:
 
 ```python
 # coding=utf-8
@@ -97,13 +107,12 @@ with open(path, mode='rb') as f:
         parser.to_parquet(output_file)
 ```
 
-In this example, the parsed data is converted to Parquet format using
-the `to_parquet` method and saved to the specified output file.
+In this example, the parsed data is converted to Parquet format using the `to_parquet` method and saved to the specified
+output file.
 
 #### Converting to Deltalake
 
-If you prefer to store the parsed data in Deltalake format, you can use the
-following example:
+If you prefer to store the parsed data in Deltalake format, you can use the following example:
 
 ```python
 # coding=utf-8
@@ -117,18 +126,17 @@ with open(path, mode='rb') as f:
     parser.to_deltalake(output_path)
 ```
 
-In this example, the parsed data is converted to Deltalake format using
-the `to_deltalake` method and saved to the specified output path.
+In this example, the parsed data is converted to Deltalake format using the `to_deltalake` method and saved to the
+specified output path.
 
-You can also use a string but Path is better in case you work on a local
-filesystem. When we use a string, it is often for a remote storage and in this
-case you can either use filesystem argument or let `deltalake` package infer it
-from the uri.
+You can also use a string but Path is better in case you work on a local filesystem. When we use a string, it is often
+for a remote storage and in this case you can either use filesystem argument or let `deltalake` package infer it from
+the uri.
 
 ##### Converting to Pyarrow
 
-If you prefer to go deep and you want use pyarrow objects. you can parse the IXF
-file then get a list of pyarrow record batches.
+If you prefer to go deep and you want use pyarrow objects. you can parse the IXF file then get a list of pyarrow record
+batches.
 
 ```python
 # coding=utf-8
@@ -147,16 +155,14 @@ with open(path, mode='rb') as f:
         pass
 ```
 
-This snippet of code reads an IXF file and parse it sequentially using python
-generators, it parses by 2000 records and it transform all parsed records to
-pyarrow RecordBatches that you can use for any kind of transformation, you can
-for exemple use polars to do transformations or use pandas dataframe...etc.
+This snippet of code reads an IXF file and parse it sequentially using python generators, it parses by 2000 records and
+it transform all parsed records to pyarrow RecordBatches that you can use for any kind of transformation, you can for
+exemple use polars to do transformations or use pandas dataframe...etc.
 
 ---
 
-The IXF Parser package provides flexibility in terms of input and output
-options, allowing you to easily parse and process IXF files according to your
-needs.
+The IXF Parser package provides flexibility in terms of input and output options, allowing you to easily parse and
+process IXF files according to your needs.
 
 ## CLI
 
@@ -191,17 +197,15 @@ db2ixf --help
 
 ```
 
-The `db2ixf` command-line tool (CLI) is used for parsing and converting IXF (IBM
-DB2 Import/Export Format) files to various formats such as JSON, CSV, and
-Parquet. It provides an easy way to parse and convert IXF files to meet your
-data processing needs.
+The `db2ixf` command-line tool (CLI) is used for parsing and converting IXF (IBM DB2 Import/Export Format) files to
+various formats such as JSON, CSV, and Parquet. It provides an easy way to parse and convert IXF files to meet your data
+processing needs.
 
 **Options**:
 
 - `--version` or `-v`: Show the version of the CLI.
 - `--install-completion`: Install completion for the current shell.
-- `--show-completion`: Show completion for the current shell, to copy it or
-  customize the installation.
+- `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
 - `--help`: Show this message and exit.
 
 **Commands**:
