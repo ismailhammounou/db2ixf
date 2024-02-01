@@ -7,7 +7,7 @@ from db2ixf.exceptions import (
     VarCharLengthException, VarGraphicCodePageException,
     VarGraphicLengthException,
 )
-from db2ixf.helpers import get_ccsid_from_column
+from db2ixf.helpers import decode_field, get_ccsid_from_column
 from db2ixf.logger import logger
 from struct import unpack
 from typing import Union
@@ -30,9 +30,10 @@ def collect_binary(c, fields, pos) -> str:
 	str:
 		a binary string data.
 	"""
-    length = int(c['IXFCLENG'])
+    length = int(c["IXFCLENG"])
+
     if length > 254:
-        msg = 'Length of a binary data types should not exceed 254 bytes.'
+        msg = "Length of a binary data types should not exceed 254 bytes."
         raise BinaryLengthException(msg)
 
     field = fields[pos:pos + length]
@@ -57,7 +58,8 @@ def collect_smallint(c, fields, pos) -> int:  # noqa
 	int:
 		Integer.
 	"""
-    field = int(unpack('<h', fields[pos:pos + 2])[0])
+    field = int(unpack("<h", fields[pos:pos + 2])[0])
+
     return field
 
 
@@ -78,7 +80,8 @@ def collect_integer(c, fields, pos) -> int:  # noqa
 	int:
 		Integer.
 	"""
-    field = int(unpack('<i', fields[pos:pos + 4])[0])
+    field = int(unpack("<i", fields[pos:pos + 4])[0])
+
     return field
 
 
@@ -99,7 +102,8 @@ def collect_bigint(c, fields, pos) -> int:  # noqa
 	int:
 		Integer.
 	"""
-    field = int(unpack('<q', fields[pos:pos + 8])[0])
+    field = int(unpack("<q", fields[pos:pos + 8])[0])
+
     return field
 
 
@@ -120,8 +124,8 @@ def collect_decimal(c, fields, pos) -> Union[int, float]:
 	Union[int, float]:
 		Integer or Float
 	"""
-    p = int(c['IXFCLENG'][0:3])
-    s = int(c['IXFCLENG'][3:5])
+    p = int(c["IXFCLENG"][0:3])
+    s = int(c["IXFCLENG"][3:5])
     length = int((p + 2) / 2)
     field = fields[pos:pos + length]
 
@@ -156,9 +160,10 @@ def collect_floating_point(c, fields, pos) -> float:
 	float
 		A python float object.
 	"""
-    length = int(c['IXFCLENG'])
-    fmt = '!d' if length == 8 else '!f'
+    length = int(c["IXFCLENG"])
+    fmt = "!d" if length == 8 else "!f"
     field = float(unpack(fmt, fields[pos:pos + length])[0])
+
     return field
 
 
@@ -179,22 +184,23 @@ def collect_char(c, fields, pos) -> str:
 	str
 		String.
 	"""
-    length = int(c['IXFCLENG'])
+    length = int(c["IXFCLENG"])
+
     if length > 254:
-        msg = 'Length of a char data types should not exceed 254 bytes.'
+        msg = "Length of a char data types should not exceed 254 bytes."
         raise CharLengthException(msg)
 
     sbcp, dbcp = get_ccsid_from_column(c)
 
-    if dbcp != 0:
-        field = fields[pos:pos + length].decode(f'cp{dbcp}')
-    else:
-        if sbcp == 0:
-            field = str(fields[pos:pos + length], 'utf-8')
-        else:
-            field = fields[pos:pos + length].decode(f'cp{sbcp}')
+    field = fields[pos:pos + length]
 
-    return field.strip()
+    if dbcp != 0:
+        return decode_field(field, dbcp, "d")
+
+    if sbcp != 0:
+        return decode_field(field, sbcp)
+
+    return str(field, "utf-8")
 
 
 def collect_varchar(c, fields, pos) -> str:
@@ -219,25 +225,26 @@ def collect_varchar(c, fields, pos) -> str:
 	VarCharLengthException
 		Length of var char exceeds maximum length.
 	"""
-    max_length = int(c['IXFCLENG'])
-    length = int(unpack('<h', fields[pos:pos + 2])[0])
+    max_length = int(c["IXFCLENG"])
+
+    length = int(unpack("<h", fields[pos:pos + 2])[0])
     if length > max_length:
-        msg = f'Length {length} exceeds the maximum length {max_length}.'
+        msg = f"Length {length} exceeds the maximum length {max_length}."
         raise VarCharLengthException(msg)
 
     pos += 2
 
     sbcp, dbcp = get_ccsid_from_column(c)
 
-    if dbcp != 0:
-        field = fields[pos:pos + length].decode(f'cp{dbcp}')
-    else:
-        if sbcp == 0:
-            field = str(fields[pos:pos + length], 'utf-8')
-        else:
-            field = fields[pos:pos + length].decode(f'cp{sbcp}')
+    field = fields[pos:pos + length]
 
-    return field.strip()
+    if dbcp != 0:
+        return decode_field(field, dbcp, "d")
+
+    if sbcp != 0:
+        return decode_field(field, sbcp)
+
+    return str(field, "utf-8")
 
 
 def collect_longvarchar(c, fields, pos) -> str:
@@ -262,26 +269,26 @@ def collect_longvarchar(c, fields, pos) -> str:
 	VarCharLengthException
 		Length of var char exceeds maximum length.
 	"""
-    max_length = int(c['IXFCLENG'])
+    max_length = int(c["IXFCLENG"])
 
-    length = int(unpack('<h', fields[pos:pos + 2])[0])
+    length = int(unpack("<h", fields[pos:pos + 2])[0])
     if length > max_length:
-        msg = f'Length {length} exceeds the maximum length {max_length}.'
+        msg = f"Length {length} exceeds the maximum length {max_length}."
         raise VarCharLengthException(msg)
 
     pos += 2
 
     sbcp, dbcp = get_ccsid_from_column(c)
 
-    if dbcp != 0:
-        field = fields[pos:pos + length].decode(f'cp{dbcp}')
-    else:
-        if sbcp == 0:
-            field = str(fields[pos:pos + length], 'utf-8')
-        else:
-            field = fields[pos:pos + length].decode(f'cp{sbcp}')
+    field = fields[pos:pos + length]
 
-    return field.strip()
+    if dbcp != 0:
+        return decode_field(field, dbcp, "d")
+
+    if sbcp != 0:
+        return decode_field(field, sbcp)
+
+    return str(field, "utf-8")
 
 
 def collect_vargraphic(c, fields, pos) -> str:
@@ -306,21 +313,23 @@ def collect_vargraphic(c, fields, pos) -> str:
 	VarGraphicLengthException
 		Length of var graphic exceeds maximum length.
 	"""
-    max_length = int(c['IXFCLENG'])
-    length = int(unpack('<h', fields[pos:pos + 2])[0])
+    max_length = int(c["IXFCLENG"])
+
+    length = int(unpack("<h", fields[pos:pos + 2])[0])
     if length > max_length:
-        msg = f'Length {length} exceeds the maximum length {max_length}.'
+        msg = f"Length {length} exceeds the maximum length {max_length}."
         raise VarGraphicLengthException(msg)
 
     pos += 2
 
     _, dbcp = get_ccsid_from_column(c)
 
-    if dbcp != 0:
-        field = fields[pos:pos + (length * 2)].decode(f'cp{dbcp}')
-        return field.strip()
+    field = fields[pos:pos + (length * 2)]
 
-    _msg = f'The string in double-byte characters has DBCS code page equals to 0'
+    if dbcp != 0:
+        return decode_field(field, dbcp, "d")
+
+    _msg = f"The string in double-byte characters has DBCS code page equals to 0"
     raise VarGraphicCodePageException(_msg)
 
 
@@ -341,8 +350,9 @@ def collect_date(c, fields, pos) -> date:  # noqa
 	date:
 		Date of format yyyy-mm-dd.
 	"""
-    field = str(fields[pos:pos + 10], encoding='utf-8').strip()
-    return datetime.strptime(field, '%Y-%m-%d').date()
+    field = str(fields[pos:pos + 10], encoding="utf-8").strip()
+
+    return datetime.strptime(field, "%Y-%m-%d").date()
 
 
 def collect_time(c, fields, pos) -> time:  # noqa
@@ -362,8 +372,9 @@ def collect_time(c, fields, pos) -> time:  # noqa
 	time:
 		Time of format HH:MM:SS.
 	"""
-    field = str(fields[pos:pos + 8], encoding='utf-8').strip()
-    return datetime.strptime(field, '%H.%M.%S').time()
+    field = str(fields[pos:pos + 8], encoding="utf-8").strip()
+
+    return datetime.strptime(field, "%H.%M.%S").time()
 
 
 def collect_timestamp(c, fields, pos) -> datetime:  # noqa
@@ -388,42 +399,43 @@ def collect_timestamp(c, fields, pos) -> datetime:  # noqa
 	LargeObjectLengthException
 		When the length of the large object exceeds the maximum length.
 	"""
-    field = str(fields[pos:pos + 26], encoding='utf-8').strip()
+    field = str(fields[pos:pos + 26], encoding="utf-8").strip()
+
     try:
-        return datetime.strptime(field, '%Y-%m-%d-%H.%M.%S.%f')
+        return datetime.strptime(field, "%Y-%m-%d-%H.%M.%S.%f")
     except ValueError:
-        return datetime.strptime(field, '%Y-%m-%d-%H.%M.%S')
+        return datetime.strptime(field, "%Y-%m-%d-%H.%M.%S")
 
 
 def collect_clob(c, fields, pos) -> str:
     """Collects CLOB data type from ixf as a string object.
 
-	Parameters
-	----------
-	c : dict
-		Column descriptor extracted from IXF file.
-	fields : str
-		Bytes string containing data of the row.
-	pos : int
-		Position of the column in the `fields`.
+    Parameters
+    ----------
+    c : dict
+        Column descriptor extracted from IXF file.
+    fields : str
+        Bytes string containing data of the row.
+    pos : int
+        Position of the column in the `fields`.
 
-	Returns
-	-------
-	str
-		String representing the CLOB (Character Large Object).
+    Returns
+    -------
+    str
+        String representing the CLOB (Character Large Object).
 
-	Raises
-	------
-	LargeObjectLengthException
-		When the length of the large object exceeds the maximum length.
-	CLOBCodePageException
-		When SBCP and DBCP are simultaneously equal to 0.
-	"""
-    max_length = int(c['IXFCLENG'])
+    Raises
+    ------
+    LargeObjectLengthException
+        When the length of the large object exceeds the maximum length.
+    CLOBCodePageException
+        When SBCP and DBCP are simultaneously equal to 0.
+    """
+    max_length = int(c["IXFCLENG"])
 
-    length = int(unpack('<i', fields[pos:pos + 4])[0])
+    length = int(unpack("<i", fields[pos:pos + 4])[0])
     if length > max_length:
-        msg = f'Length {length} exceeds the maximum length {max_length}.'
+        msg = f"Length {length} exceeds the maximum length {max_length}."
         logger.error(msg)
         raise LargeObjectLengthException(msg)
 
@@ -431,47 +443,47 @@ def collect_clob(c, fields, pos) -> str:
 
     sbcp, dbcp = get_ccsid_from_column(c)
 
-    if dbcp != 0:
-        field = fields[pos:pos + length].decode(f'cp{dbcp}')
-    else:
-        if sbcp == 0:
-            msg = 'CLOB data type can not be a bit string as BLOB, ' \
-                  'the SBCP and DBCP should not simultaneously be equal to 0.'
-            logger.error(msg)
-            raise CLOBCodePageException(msg)
-        else:
-            field = fields[pos:pos + length].decode(f'cp{sbcp}')
+    field = fields[pos:pos + length]
 
-    return field.strip()
+    if dbcp != 0:
+        return decode_field(field, dbcp, "d")
+
+    if sbcp != 0:
+        return decode_field(field, sbcp)
+
+    msg = "CLOB data type can not be a bit string as BLOB, " \
+          "the SBCP and DBCP should not simultaneously be equal to 0."
+    logger.error(msg)
+    raise CLOBCodePageException(msg)
 
 
 def collect_blob(c, fields, pos) -> str:
     """Collects BLOB data type from ixf as a string.
 
-	Parameters
-	----------
-	c : dict
-		Column descriptor extracted from IXF file.
-	fields : str
-		Bytes string containing data of the row.
-	pos : int
-		Position of the column in the `fields`.
+    Parameters
+    ----------
+    c : dict
+        Column descriptor extracted from IXF file.
+    fields : str
+        Bytes string containing data of the row.
+    pos : int
+        Position of the column in the `fields`.
 
-	Returns
-	-------
-	str
-		string representing the BLOB (Blob Large Object).
+    Returns
+    -------
+    str
+        string representing the BLOB (Blob Large Object).
 
-	Raises
-	------
-	LargeObjectLengthException
-		When the length of the large object exceeds the maximum length.
-	"""
-    max_length = int(c['IXFCLENG'])
+    Raises
+    ------
+    LargeObjectLengthException
+        When the length of the large object exceeds the maximum length.
+    """
+    max_length = int(c["IXFCLENG"])
 
-    length = int(unpack('<i', fields[pos:pos + 4])[0])
+    length = int(unpack("<i", fields[pos:pos + 4])[0])
     if length > max_length:
-        msg = f'Length {length} exceeds the maximum length {max_length}.'
+        msg = f"Length {length} exceeds the maximum length {max_length}."
         logger.error(msg)
         raise LargeObjectLengthException(msg)
 
@@ -479,12 +491,12 @@ def collect_blob(c, fields, pos) -> str:
 
     sbcp, dbcp = get_ccsid_from_column(c)
 
+    field = fields[pos:pos + length]
+
     if dbcp != 0:
-        field = fields[pos:pos + length].decode(f'cp{dbcp}')
-    else:
-        if sbcp == 0:
-            field = fields[pos:pos + length]
-        else:
-            field = fields[pos:pos + length].decode(f'cp{sbcp}')
+        return decode_field(field, dbcp, "d")
+
+    if sbcp != 0:
+        return decode_field(field, sbcp)
 
     return field
