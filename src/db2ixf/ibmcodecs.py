@@ -5,12 +5,14 @@ import codecs
 
 def add_encoding_alias(old_name, new_name):
     old = codecs.lookup(old_name)
-    new = codecs.CodecInfo(old.encode, old.decode,
-                           streamreader=old.streamreader,
-                           streamwriter=old.streamwriter,
-                           incrementalencoder=old.incrementalencoder,
-                           incrementaldecoder=old.incrementaldecoder,
-                           name=new_name)
+    new = codecs.CodecInfo(
+        old.encode, old.decode,
+        streamreader=old.streamreader,
+        streamwriter=old.streamwriter,
+        incrementalencoder=old.incrementalencoder,
+        incrementaldecoder=old.incrementaldecoder,
+        name=new_name
+    )
     return new
 
 
@@ -57,7 +59,7 @@ def ibm_utf_8(name):
 
 
 def ibm_latin1(name):
-    aliases = ['ibm1252', 'cp1252']
+    aliases = ['ibm1252']
     if name.lower() in aliases:
         return add_encoding_alias('latin_1', name)
 
