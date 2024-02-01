@@ -436,5 +436,5 @@ def decode_field(field: str, cp: int, cpt: Literal["s", "d"] = "s"):
                         logger.debug("Trying utf-32 encoding")
                         return field.decode("utf-32")
                 except UnicodeDecodeError:
-                    logger.warning("Alert: eventual data loss, provide encoding !")
+                    logger.debug("Alert: eventual data loss, please provide encoding !")
                     return field.decode(f"cp{cp}", errors="ignore")
