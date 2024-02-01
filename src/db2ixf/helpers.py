@@ -1,10 +1,12 @@
 # coding=utf-8
 """Create helper function for schema generation and others."""
+import chardet
 import pyarrow as pa
 from db2ixf.constants import IXF_DTYPES
 from db2ixf.exceptions import NotValidDataPrecisionException
+from db2ixf.logger import logger
 from pyarrow import array, record_batch, RecordBatch, Schema
-from typing import BinaryIO, Dict, Generator, Iterable, List, Tuple
+from typing import BinaryIO, Dict, Generator, Iterable, List, Literal, Tuple
 
 
 def get_pyarrow_schema(cols: List[dict]) -> Dict[str, object]:
@@ -391,3 +393,48 @@ def pyarrow_record_batches(
         data = [array(v) for v in batch.values()]
         pa_record_batch = record_batch(data=data, schema=pyarrow_schema)
         yield pa_record_batch
+
+
+def decode_field(field: str, cp: int, cpt: Literal["s", "d"] = "s"):
+    """Try to decode the field using the provided codepage.
+
+    Parameters
+    ----------
+    field : str
+        Field containing data
+    cp : int
+        IBM code page
+    cpt : Literal["s", "d"]
+        Defaults to `s` which means single byte and `d` means double bytes
+
+    Returns
+    -------
+    str:
+        Decoded field
+    """
+    if cpt not in ["s", "d"]:
+        raise ValueError("Either 's' for single bytes or 'd' for double bytes")
+
+    try:
+        return field.decode(f"cp{cp}")
+    except UnicodeDecodeError:
+        logger.debug("Trying cp437 encoding")
+        try:
+            return field.decode(f"cp437")
+        except UnicodeDecodeError:
+            try:
+                logger.debug("Trying to detect the encoding")
+                _encoding = chardet.detect(field, True)["encoding"]
+                return field.decode(_encoding)
+            except UnicodeDecodeError as err:
+                logger.debug(f"Detected encoding fails: {err}")
+                try:
+                    if cpt == "s":
+                        logger.debug("Trying utf-8 encoding")
+                        return field.decode("utf-8")
+                    else:
+                        logger.debug("Trying utf-32 encoding")
+                        return field.decode("utf-32")
+                except UnicodeDecodeError:
+                    logger.warning("Alert: eventual data loss, provide encoding !")
+                    return field.decode(f"cp{cp}", errors="ignore")
