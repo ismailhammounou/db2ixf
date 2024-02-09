@@ -83,7 +83,7 @@ class IXFParser:
         self.end_data_records = False
         self.current_row = {}
         self.number_rows = 0
-        self.number_corrupted_rows = 0
+        self.number_corrupted_rows = -1  # Avoids counting the last line
 
     def parse_header(self, record_type: dict = None) -> dict:
         """Parse the header record.
@@ -268,9 +268,15 @@ class IXFParser:
 
                 r[col_name] = _func(c, self.current_data_record["IXFDCOLS"], pos)
             return r
-        except DataCollectorError as er:
-            logger.error(er)
+        except UnknownDataTypeException as er1:
+            logger.error(er1)
+            raise IXFParsingError(er1)
+        except DataCollectorError as er2:
+            logger.error(er2)
             return {}
+        except Exception as er3:
+            logger.error(er3)
+            raise IXFParsingError(er3)
 
     def parse_data(self) -> Iterable[Dict]:
         """Parse data records.
@@ -280,13 +286,9 @@ class IXFParser:
         dict
             Parsed row data from IXF file.
         """
-        # Init the state
-        self.number_rows = 0
-
         # Start parsing
         while not self.end_data_records:
             # Extract data
-            self.current_row = {}
             self.current_row = self.collect_data()
 
             # Do not accept empty dictionary

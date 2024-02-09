@@ -8,7 +8,7 @@ from db2ixf.logger import logger
 from pathlib import Path
 from typing import Annotated, Optional, Union
 
-__version__ = f'{vt[0]}.{vt[1]}.{vt[2]}'
+__version__ = f"{vt[0]}.{vt[1]}.{vt[2]}"
 
 # Define the mapping between verbose levels and logging levels
 VERBOSE_MAPPING = {
@@ -18,45 +18,45 @@ VERBOSE_MAPPING = {
 }
 
 app = typer.Typer(
-    name='db2ixf',
+    name="db2ixf",
     rich_markup_mode="markdown",
-    epilog='Made with heart :D'
+    epilog="Made with heart :D"
 )
 
 
-@app.command(epilog='Made with heart :D')
+@app.command(epilog="Made with heart :D")
 def json(
-        file: Annotated[Path,
-                        typer.Argument(
-                            help='Path to the ixf FILE.',
-                            exists=True,
-                            dir_okay=False,
-                            resolve_path=True,
-                            rich_help_panel='Required Arguments',
-                        )],
-        output: Annotated[Union[Path, None],
-                          typer.Argument(
-                              help='Path to the `json` OUTPUT file.',
-                              dir_okay=False,
-                              readable=False,
-                              resolve_path=True,
-                              rich_help_panel='Optional Arguments',
-                          )] = None,
-        verbose: Annotated[int,
-                           typer.Option(
-                               '--verbose',
-                               '-v',
-                               metavar='',
-                               help='Counter for verbosity level.',
-                               count=True,
-                           )] = 0,
+    file: Annotated[Path,
+                    typer.Argument(
+                        help="Path to the ixf FILE.",
+                        exists=True,
+                        dir_okay=False,
+                        resolve_path=True,
+                        rich_help_panel="Required Arguments",
+                    )],
+    output: Annotated[Union[Path, None],
+                      typer.Argument(
+                          help="Path to the `json` OUTPUT file.",
+                          dir_okay=False,
+                          readable=False,
+                          resolve_path=True,
+                          rich_help_panel="Optional Arguments",
+                      )] = None,
+    verbose: Annotated[int,
+                       typer.Option(
+                           "--verbose",
+                           "-v",
+                           metavar="",
+                           help="Counter for verbosity level.",
+                           count=True,
+                       )] = 0,
 ):
     """
     Parse ixf ``FILE`` and convert it to a **json** ``OUTPUT``.
     """
     if output is None:
         output = Path.cwd()
-        filename = file.name.lower().removesuffix('.ixf') + '.json'
+        filename = file.name.lower().removesuffix(".ixf") + ".json"
         output /= filename
 
     if verbose > 2:
@@ -64,116 +64,116 @@ def json(
     else:
         logger.setLevel(VERBOSE_MAPPING[verbose])
 
-    logger.info(f'IXF file: {file}')
-    logger.info(f'JSON file: {output}')
+    logger.info(f"IXF file: {file}")
+    logger.info(f"JSON file: {output}")
 
     parser = IXFParser(file)
     parser.to_json(output)
     raise typer.Exit()
 
 
-@app.command(epilog='Made with heart :D')
+@app.command(epilog="Made with heart :D")
 def csv(
-        file: Annotated[Path,
-                        typer.Argument(
-                            help='Path to the ixf FILE.',
-                            exists=True,
-                            dir_okay=False,
-                            resolve_path=True,
-                            rich_help_panel='Required Arguments',
-                        )],
-        output: Annotated[Union[Path, None],
-                          typer.Argument(
-                              help='Path to the `csv` OUTPUT file.',
-                              dir_okay=False,
-                              readable=False,
-                              resolve_path=True,
-                              rich_help_panel='Optional Arguments',
-                          )] = None,
-        sep: Annotated[Union[str, None],
+    file: Annotated[Path,
+                    typer.Argument(
+                        help="Path to the ixf FILE.",
+                        exists=True,
+                        dir_okay=False,
+                        resolve_path=True,
+                        rich_help_panel="Required Arguments",
+                    )],
+    output: Annotated[Union[Path, None],
+                      typer.Argument(
+                          help="Path to the `csv` OUTPUT file.",
+                          dir_okay=False,
+                          readable=False,
+                          resolve_path=True,
+                          rich_help_panel="Optional Arguments",
+                      )] = None,
+    sep: Annotated[Union[str, None],
+                   typer.Option(
+                       "--sep",
+                       "-s",
+                       help="Separator/Delimiter of the csv file.",
+                       rich_help_panel="Command Options",
+                   )] = "|",
+    verbose: Annotated[int,
                        typer.Option(
-                           '--sep',
-                           '-s',
-                           help='Separator/Delimiter of the csv file.',
-                           rich_help_panel='Command Options',
-                       )] = '|',
-        verbose: Annotated[int,
-                           typer.Option(
-                               '--verbose',
-                               '-v',
-                               metavar='',
-                               help='Counter for verbosity level.',
-                               count=True,
-                           )] = 0,
+                           "--verbose",
+                           "-v",
+                           metavar="",
+                           help="Counter for verbosity level.",
+                           count=True,
+                       )] = 0,
 ):
     """
     Parse ixf ``FILE`` and convert it to a **csv** ``OUTPUT``.
     """
     if output is None:
         output = Path.cwd()
-        filename = file.name.lower().removesuffix('.ixf') + '.csv'
+        filename = file.name.lower().removesuffix(".ixf") + ".csv"
         output /= filename
 
     if sep is None:
-        sep = '|'
+        sep = "|"
 
     if verbose > 2:
         logger.setLevel(VERBOSE_MAPPING[2])
     else:
         logger.setLevel(VERBOSE_MAPPING[verbose])
 
-    logger.info(f'IXF file: {file}')
-    logger.info(f'CSV file: {output}')
-    logger.info(f'CSV file separator/delimiter: {sep}')
+    logger.info(f"IXF file: {file}")
+    logger.info(f"CSV file: {output}")
+    logger.info(f"CSV file separator/delimiter: {sep}")
 
     parser = IXFParser(file)
     parser.to_csv(output, str(sep))
     raise typer.Exit()
 
 
-@app.command(epilog='Made with heart :D')
+@app.command(epilog="Made with heart :D")
 def parquet(
-        file: Annotated[Path,
-                        typer.Argument(
-                            help='Path to the ixf FILE.',
-                            exists=True,
-                            dir_okay=False,
-                            resolve_path=True,
-                            rich_help_panel='Required Arguments',
-                        )],
-        output: Annotated[Union[Path, None],
-                          typer.Argument(
-                              help='Path to the `parquet` OUTPUT file.',
-                              dir_okay=False,
-                              readable=False,
-                              resolve_path=True,
-                              rich_help_panel='Optional Arguments',
-                          )] = None,
-        version: Annotated[Union[str, None],
-                           typer.Option(
-                               '--version',
-                               help='Parquet version. Please look '
-                                    'at pyarrow documentation.',
-                               rich_help_panel='Command Options',
-                           )] = '2.4',
-        batch_size: Annotated[Union[int, None],
-                              typer.Option(
-                                  '--batch-size',
-                                  '-s',
-                                  help='Size of the batch: number of '
-                                       'rows to extract before writing '
-                                       'to the parquet file, It is used '
-                                       'for memory optimization.',
-                                  rich_help_panel='Command Options',
-                              )] = 1000,
-        verbose: Annotated[int,
-                           typer.Option(
-                               '--verbose',
-                               '-v',
-                               metavar='',
-                               help='Counter for verbosity level.',
-                               count=True,
-                           )] = 0,
+    file: Annotated[Path,
+                    typer.Argument(
+                        help="Path to the ixf FILE.",
+                        exists=True,
+                        dir_okay=False,
+                        resolve_path=True,
+                        rich_help_panel="Required Arguments",
+                    )],
+    output: Annotated[Union[Path, None],
+                      typer.Argument(
+                          help="Path to the `parquet` OUTPUT file.",
+                          dir_okay=False,
+                          readable=False,
+                          resolve_path=True,
+                          rich_help_panel="Optional Arguments",
+                      )] = None,
+    version: Annotated[Union[str, None],
+                       typer.Option(
+                           "--version",
+                           help="Parquet version. Please look "
+                                "at pyarrow documentation.",
+                           rich_help_panel="Command Options",
+                       )] = "2.4",
+    batch_size: Annotated[Union[int, None],
+                          typer.Option(
+                              "--batch-size",
+                              "-s",
+                              help="Size of the batch: number of "
+                                   "rows to extract before writing "
+                                   'to the parquet file, It is used '
+                                   'for memory optimization.',
+                              rich_help_panel='Command Options',
+                          )] = 1000,
+    verbose: Annotated[int,
+                       typer.Option(
+                           '--verbose',
+                           '-v',
+                           metavar='',
+                           help='Counter for verbosity level.',
+                           count=True,
+                       )] = 0,
 ):
     """
     Parse ixf ``FILE`` and convert it to a **parquet** ``OUTPUT``.
@@ -212,15 +212,15 @@ def version_callback(value: bool):
 
 @app.callback(invoke_without_command=True)
 def main(
-        ctx: typer.Context,
-        version: Annotated[Optional[bool],
-                           typer.Option(
-                               '--version',
-                               '-v',
-                               help='Show the version of the CLI.',
-                               callback=version_callback,
-                               is_eager=True,
-                           )] = None
+    ctx: typer.Context,
+    version: Annotated[Optional[bool],  # noqa
+                       typer.Option(
+                           '--version',
+                           '-v',
+                           help='Show the version of the CLI.',
+                           callback=version_callback,
+                           is_eager=True,
+                       )] = None
 ):
     """
     A command-line tool (**CLI**) for parsing and converting IXF (IBM DB2
