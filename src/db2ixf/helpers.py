@@ -8,7 +8,7 @@ from db2ixf.logger import logger
 from typing import BinaryIO, Dict, Iterable, List, Literal, Tuple
 
 
-def get_pyarrow_schema(cols: List[dict]) -> Dict[str, object]:
+def get_pyarrow_schema(cols: List[dict]) -> pa.Schema:
     """
     Creates a pyarrow schema of the columns extracted from IXF file.
 
