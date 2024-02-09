@@ -5,12 +5,12 @@ from pathlib import Path
 from pytest import fixture
 
 
-@fixture(scope='function')
+@fixture(scope="function")
 def test_output_dir(request, pytestconfig):
     """
     Fixture that creates an output directory for each test.
 
-    The output directory is created in the 'target/test' directory
+    The output directory is created in the `target/test` directory
     with the name of the test function.
 
     Parameters
@@ -36,7 +36,7 @@ def test_output_dir(request, pytestconfig):
     root_dir = Path(pytestconfig.rootpath)
 
     # Create the output directory path
-    output_dir = root_dir / 'target' / 'test' / test_name
+    output_dir = root_dir / "target" / "test" / test_name
 
     # Create the output directory
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -48,7 +48,7 @@ def test_output_dir(request, pytestconfig):
     # shutil.rmtree(output_dir)
 
 
-@fixture(scope='session')
+@fixture(scope="session")
 def test_delete_test_dir(pytestconfig):
     """Fixture to delete test directory at the beginning of a test session.
 
@@ -60,6 +60,6 @@ def test_delete_test_dir(pytestconfig):
     # Get the root directory of the project
     root_dir = Path(pytestconfig.rootpath)
 
-    output_dir = root_dir / 'target' / 'test'
+    output_dir = root_dir / "target" / "test"
 
     shutil.rmtree(output_dir)

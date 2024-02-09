@@ -8,9 +8,9 @@ from tests import RESOURCES_DIR
 def test_pkg_parser(test_output_dir):
     """Test the parser."""
 
-    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
+    ixf_file = RESOURCES_DIR / "data" / "sample.ixf"
 
-    with open(ixf_file, mode='rb'):
+    with open(ixf_file, mode="rb"):
         parser = IXFParser(ixf_file)
 
     rows = []
@@ -23,56 +23,58 @@ def test_pkg_parser(test_output_dir):
 
 def test_pkg_json_conversion(test_output_dir):
     """Test json conversion."""
-    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
+    ixf_file = RESOURCES_DIR / "data" / "sample.ixf"
 
-    with open(ixf_file, mode='rb'):
+    with open(ixf_file, mode="rb"):
         parser = IXFParser(ixf_file)
 
-    output = test_output_dir / 'result.json'
+    output = test_output_dir / "result.json"
 
-    with open(output, mode='wt', encoding='utf-8') as out:
-        assert parser.to_json(out) == 0
+    with open(output, mode="wt", encoding="utf-8") as out:
+        assert parser.to_json(out) is True
         assert output.exists()
         assert output.is_file()
 
 
-@pytest.mark.parametrize('separator', ['$', '#'])
+@pytest.mark.parametrize("separator", ["$", "#"])
 def test_pkg_csv_conversion(test_output_dir, separator):
     """Test csv conversion."""
-    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
+    ixf_file = RESOURCES_DIR / "data" / "sample.ixf"
 
-    with open(ixf_file, mode='rb'):
+    with open(ixf_file, mode="rb"):
         parser = IXFParser(ixf_file)
 
-    output = test_output_dir / 'result.csv'
+    output = test_output_dir / "result.csv"
 
-    with open(output, mode='wt', encoding='utf-8') as out:
-        assert parser.to_csv(out, sep=separator) == 0
+    with open(output, mode="wt", encoding="utf-8") as out:
+        assert parser.to_csv(out, sep=separator) is True
         assert output.exists()
         assert output.is_file()
 
 
 parquet_param_data = [
-    ('1.0', 100), ('2.4', 100), ('2.6', 100),
-    ('1.0', 500), ('2.4', 500), ('2.6', 500),
-    ('1.0', 1000), ('2.4', 1000), ('2.6', 1000),
+    ("1.0", 100), ("2.4", 100), ("2.6", 100),
+    ("1.0", 500), ("2.4", 500), ("2.6", 500),
+    ("1.0", 1000), ("2.4", 1000), ("2.6", 1000),
 ]
 
 
-@pytest.mark.parametrize('parquet_version, size', parquet_param_data)
+@pytest.mark.parametrize("parquet_version, size", parquet_param_data)
 def test_pkg_parquet_conversion(test_output_dir, parquet_version, size):
     """Test parquet conversion."""
-    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
+    ixf_file = RESOURCES_DIR / "data" / "sample.ixf"
 
-    with open(ixf_file, mode='rb'):
+    with open(ixf_file, mode="rb"):
         parser = IXFParser(ixf_file)
 
-    output = test_output_dir / 'result.parquet'
+    output = test_output_dir / "result.parquet"
 
-    with open(output, mode='wb') as out:
-        assert parser.to_parquet(out,
-                                 batch_size=size,
-                                 parquet_version=parquet_version) == 0
+    with open(output, mode="wb") as out:
+        assert parser.to_parquet(
+            out,
+            batch_size=size,
+            parquet_version=parquet_version
+        ) is True
         assert output.exists()
         assert output.is_file()
 
@@ -80,16 +82,16 @@ def test_pkg_parquet_conversion(test_output_dir, parquet_version, size):
 size_data = [10, 100, 1000, 10000, 100000, 1000000]
 
 
-@pytest.mark.parametrize('size', size_data)
+@pytest.mark.parametrize("size", size_data)
 def test_pkg_deltalake_conversion(test_output_dir, size):
     """Test deltalake conversion."""
-    ixf_file = RESOURCES_DIR / 'data' / 'sample.ixf'
+    ixf_file = RESOURCES_DIR / "data" / "sample.ixf"
 
-    with open(ixf_file, mode='rb'):
+    with open(ixf_file, mode="rb"):
         parser = IXFParser(ixf_file)
 
-    output = test_output_dir / 'deltalake'
+    output = test_output_dir / "deltalake"
 
-    parser.to_deltalake(output, batch_size=size)
+    assert parser.to_deltalake(output, batch_size=size) is True
     assert output.exists()
     assert output.is_dir()
