@@ -1,5 +1,6 @@
 # coding=utf-8
 """Contains constants about mappers, schemas, metadata and others"""
+import os
 from datetime import date, datetime, time
 
 # Records
@@ -126,6 +127,12 @@ IXF_TO_PYTHON_DTYPES = {
     'SMALLINT': int,
 }
 """Maps IXF data types to python ones"""
+
+# Data
+DB2IXF_ACCEPTED_CORRUPTION_RATE = int(os.getenv("DB2IXF_ACCEPTED_CORRUPTION_RATE", "1"))
+"""Accepted rate of corrupted data, attention to data loss !"""
+if not (0 <= DB2IXF_ACCEPTED_CORRUPTION_RATE <= 100):
+    raise ValueError("`DB2IXF_DATA_CORRUPTION_RATE` should be integer between 0 and 100")
 
 # Will need to delete this coz not necessary so skip it
 CCSID_TO_CODE_PAGE = {

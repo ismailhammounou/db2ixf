@@ -13,11 +13,12 @@ from db2ixf.collectors import (
     collect_varchar, collect_vargraphic,
 )
 from db2ixf.constants import (
-    COL_DESCRIPTOR_RECORD_TYPE, DATA_RECORD_TYPE, HEADER_RECORD_TYPE, TABLE_RECORD_TYPE,
+    COL_DESCRIPTOR_RECORD_TYPE, DATA_RECORD_TYPE, DB2IXF_ACCEPTED_CORRUPTION_RATE, HEADER_RECORD_TYPE,
+    TABLE_RECORD_TYPE,
 )
 from db2ixf.encoders import CustomJSONEncoder
 from db2ixf.exceptions import (
-    DataCollectorError, NotValidColumnDescriptorException, UnknownDataTypeException,
+    DataCollectorError, IXFParsingError, NotValidColumnDescriptorException, UnknownDataTypeException,
 )
 from db2ixf.helpers import (
     apply_schema_fixes, get_pyarrow_schema, pyarrow_record_batches,
@@ -322,7 +323,6 @@ class IXFParser:
         for r in self.parse_data():
             yield r
         logger.debug("Finished parsing")
-        logger.info(f"#rows = {self.number_rows}")
 
     def to_json(self, output: Union[str, Path, PathLike, TextIO]) -> bool:
         """Parse and convert to JSON.
@@ -364,6 +364,14 @@ class IXFParser:
                 first_row = False
             out.write("]")
         logger.debug("Finished writing json file")
+
+        total_rows = self.number_corrupted_rows + self.number_rows
+        logger.debug(f"Number of total rows = {total_rows}")
+        logger.debug(f"Number of healthy rows = {self.number_rows}")
+        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
+
+        if int(self.number_corrupted_rows / total_rows) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            raise IXFParsingError("More than 10% of corrupted rows")
 
         return True
 
@@ -409,6 +417,14 @@ class IXFParser:
             for r in self.parse():
                 writer.writerow(r.values())
         logger.debug("Finished writing csv file")
+
+        total_rows = self.number_corrupted_rows + self.number_rows
+        logger.debug(f"Number of total rows = {total_rows}")
+        logger.debug(f"Number of healthy rows = {self.number_rows}")
+        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
+
+        if int(self.number_corrupted_rows / total_rows) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            raise IXFParsingError("More than 10% of corrupted rows")
 
         return True
 
@@ -475,7 +491,13 @@ class IXFParser:
                     writer.write_batch(batch)
         logger.debug("Finished writing parquet file")
 
-        logger.info(f"#rows = {self.number_rows}")
+        total_rows = self.number_corrupted_rows + self.number_rows
+        logger.debug(f"Number of total rows = {total_rows}")
+        logger.debug(f"Number of healthy rows = {self.number_rows}")
+        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
+
+        if int(self.number_corrupted_rows / total_rows) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            raise IXFParsingError("More than 10% of corrupted rows")
 
         return True
 
@@ -557,7 +579,13 @@ class IXFParser:
         )
         logger.debug("End writing to deltalake")
 
-        logger.info(f"#rows = {self.number_rows}")
+        total_rows = self.number_corrupted_rows + self.number_rows
+        logger.debug(f"Number of total rows = {total_rows}")
+        logger.debug(f"Number of healthy rows = {self.number_rows}")
+        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
+
+        if int(self.number_corrupted_rows / total_rows) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            raise IXFParsingError("More than 10% of corrupted rows")
 
         return True
 

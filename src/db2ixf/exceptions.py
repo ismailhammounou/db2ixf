@@ -2,6 +2,11 @@
 """Custom exceptions for IXF parsing."""
 
 
+class IXFParsingError(Exception):
+    """Exception raised when facing issues with corrupted data of IXF file."""
+    pass
+
+
 class DataCollectorError(Exception):
     """Exception raised when facing issues with data collection from the IXF file
 
