@@ -8,6 +8,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
+## [0.10.1](https://github.com/ismailhammounou/db2ixf/tree/0.10.1) - 2024-02-09
+
+
+### Fixed
+
+- Fix error when checking data corruption rate against accepted one [db2ixf-53](https://github.com/ismailhammounou/db2ixf/issues/53)
+
 ## [0.10.0](https://github.com/ismailhammounou/db2ixf/tree/0.10.0) - 2024-02-09
 
 
