@@ -415,7 +415,7 @@ def decode_field(field: str, cp: int, cpt: Literal["s", "d"] = "s"):
     except UnicodeDecodeError:
         logger.debug("Trying cp437 encoding")
         try:
-            return field.decode(f"cp437")
+            return field.decode("cp437")
         except UnicodeDecodeError:
             try:
                 logger.debug("Trying to detect the encoding")

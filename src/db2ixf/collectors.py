@@ -343,7 +343,7 @@ def collect_vargraphic(c, fields, pos) -> str:
     if dbcp != 0:
         return decode_field(field, dbcp, "d")
 
-    _msg = f"The string in double-byte characters has DBCS code page equals to 0 (unknown encoding)"
+    _msg = "The string in double-byte characters has DBCS code page equals to 0 (unknown encoding)"
     raise DataCollectorError(_msg)
 
 
