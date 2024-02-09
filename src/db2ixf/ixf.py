@@ -370,8 +370,10 @@ class IXFParser:
         logger.debug(f"Number of healthy rows = {self.number_rows}")
         logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
 
-        if int(self.number_corrupted_rows / total_rows) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            raise IXFParsingError("More than 10% of corrupted rows")
+        cor_rate = self.number_corrupted_rows / total_rows * 100
+        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            logger.error(f"{cor_rate}% corrupted rows")
+            raise IXFParsingError(f"More than {DB2IXF_ACCEPTED_CORRUPTION_RATE}% of corrupted rows")
 
         return True
 
@@ -423,8 +425,10 @@ class IXFParser:
         logger.debug(f"Number of healthy rows = {self.number_rows}")
         logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
 
-        if int(self.number_corrupted_rows / total_rows) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            raise IXFParsingError("More than 10% of corrupted rows")
+        cor_rate = self.number_corrupted_rows / total_rows * 100
+        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            logger.error(f"{cor_rate}% corrupted rows")
+            raise IXFParsingError(f"More than {DB2IXF_ACCEPTED_CORRUPTION_RATE}% of corrupted rows")
 
         return True
 
@@ -496,8 +500,10 @@ class IXFParser:
         logger.debug(f"Number of healthy rows = {self.number_rows}")
         logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
 
-        if int(self.number_corrupted_rows / total_rows) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            raise IXFParsingError("More than 10% of corrupted rows")
+        cor_rate = self.number_corrupted_rows / total_rows * 100
+        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            logger.error(f"{cor_rate}% corrupted rows")
+            raise IXFParsingError(f"More than {DB2IXF_ACCEPTED_CORRUPTION_RATE}% of corrupted rows")
 
         return True
 
@@ -584,8 +590,10 @@ class IXFParser:
         logger.debug(f"Number of healthy rows = {self.number_rows}")
         logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
 
-        if int(self.number_corrupted_rows / total_rows) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            raise IXFParsingError("More than 10% of corrupted rows")
+        cor_rate = self.number_corrupted_rows / total_rows * 100
+        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            logger.error(f"{cor_rate}% corrupted rows")
+            raise IXFParsingError(f"More than {DB2IXF_ACCEPTED_CORRUPTION_RATE}% of corrupted rows")
 
         return True
 
