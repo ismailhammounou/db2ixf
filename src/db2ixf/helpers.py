@@ -195,7 +195,7 @@ def merge_dicts(dicts: List[dict]) -> Dict[str, list]:
     return result
 
 
-def get_array_batch(data_source: Iterable, size: int = 10000) -> Iterable[Dict]:
+def get_array_batch(data_source: Iterable, size: int = 10000) -> Iterable[dict]:
     """Array batch generator. It yields a batch of rows in a single dictionary.
 
     It gets a list of size `size` containing rows from the data source
@@ -428,8 +428,12 @@ def decode_field(field: str, cp: int, cpt: Literal["s", "d"] = "s"):
                         logger.debug("Trying utf-8 encoding")
                         return field.decode("utf-8")
                     else:
-                        logger.debug("Trying utf-32 encoding")
-                        return field.decode("utf-32")
+                        try:
+                            logger.debug("Trying utf-16 encoding")
+                            return field.decode("utf-16")
+                        except UnicodeDecodeError:
+                            logger.debug("Trying utf-32 encoding")
+                            return field.decode("utf-32")
                 except UnicodeDecodeError:
                     logger.debug("Alert: eventual data loss, please provide encoding !")
                     return field.decode(f"cp{cp}", errors="ignore")
