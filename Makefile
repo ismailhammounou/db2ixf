@@ -31,8 +31,12 @@ SRC_DIST_DIR = $(PROJECT_ROOT)/dist
 export PYTHONPATH := $(PROJECT_ROOT)/src/:$(PROJECT_ROOT)
 export PACKAGE_NAME = $(shell python setup.py --name 2> /dev/null)
 export FULL_PACKAGE_VERSION = $(shell python setup.py --version 2> /dev/null)
-export PACKAGE_VERSION = $(shell python setup.py --version 2> /dev/null | grep -Po '^\d.\d.\d')
-export SHORT_PACKAGE_VERSION = $(shell python setup.py --version 2> /dev/null | grep -Po '^\d.\d')
+export PACKAGE_VERSION = $(shell python setup.py --version 2> /dev/null | \
+							grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | \
+							cut -d '.' -f 1-3)
+export SHORT_PACKAGE_VERSION = $(shell python setup.py --version 2> /dev/null | \
+									grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | \
+									cut -d '.' -f 1-2)
 
 # Activate virtual environment
 VENV_ACTIVATE = source activate $(PROJECT_ROOT)/$(VENV_NAME)
@@ -46,7 +50,8 @@ all: info
 
 .PHONY: info
 info: ## Show this information
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 
 
