@@ -5,8 +5,7 @@ import pyarrow as pa
 from db2ixf.constants import IXF_DTYPES
 from db2ixf.exceptions import NotValidDataPrecisionException
 from db2ixf.logger import logger
-from pyarrow import array, record_batch, RecordBatch, Schema
-from typing import BinaryIO, Dict, Generator, Iterable, List, Literal, Tuple
+from typing import BinaryIO, Dict, Iterable, List, Literal, Tuple
 
 
 def get_pyarrow_schema(cols: List[dict]) -> Dict[str, object]:
@@ -25,63 +24,62 @@ def get_pyarrow_schema(cols: List[dict]) -> Dict[str, object]:
     """
 
     mapper = {
-        'DATE': pa.date32(),
-        'TIME': pa.time64('ns'),
-        'TIMESTAMP': pa.timestamp('ns'),
-        'BLOB': pa.large_binary(),
-        'CLOB': pa.large_string(),
-        'VARCHAR': pa.string(),
-        'CHAR': pa.string(),
-        'LONGVARCHAR': pa.string(),
-        'VARGRAPHIC': pa.string(),
-        'FLOATING POINT': pa.float64(),
-        'DECIMAL': pa.decimal128(19),
-        'BIGINT': pa.int64(),
-        'INTEGER': pa.int32(),
-        'SMALLINT': pa.int16(),
-        'BINARY': pa.binary(),
+        "DATE": pa.date32(),
+        "TIME": pa.time64("ns"),
+        "TIMESTAMP": pa.timestamp("ns"),
+        "BLOB": pa.large_binary(),
+        "CLOB": pa.large_string(),
+        "VARCHAR": pa.string(),
+        "CHAR": pa.string(),
+        "LONGVARCHAR": pa.string(),
+        "VARGRAPHIC": pa.string(),
+        "FLOATING POINT": pa.float64(),
+        "DECIMAL": pa.decimal128(19),
+        "BIGINT": pa.int64(),
+        "INTEGER": pa.int32(),
+        "SMALLINT": pa.int16(),
+        "BINARY": pa.binary(),
     }
 
-    schema = {}
+    _schema = {}
     for c in cols:
-        cname = c['IXFCNAME'].decode('utf-8').strip()
-        ctype = int(c['IXFCTYPE'])
+        cname = c["IXFCNAME"].decode("utf-8").strip()
+        ctype = int(c["IXFCTYPE"])
         dtype = mapper[IXF_DTYPES[ctype]]
 
         if ctype == 912:
-            length = int(c['IXFCLENG'])
+            length = int(c["IXFCLENG"])
             dtype = pa.binary(length)
 
         if ctype == 480:
-            length = int(c['IXFCLENG'])
+            length = int(c["IXFCLENG"])
             dtype = pa.float32() if length == 4 else dtype
 
         if ctype == 484:
-            precision = int(c['IXFCLENG'][0:3])
-            scale = int(c['IXFCLENG'][3:5])
+            precision = int(c["IXFCLENG"][0:3])
+            scale = int(c["IXFCLENG"][3:5])
             if scale == 0:
                 dtype = pa.int64()
             else:
                 dtype = pa.decimal256(precision, scale)
 
         if ctype == 392:
-            fsp = int(c['IXFCLENG'])
+            fsp = int(c["IXFCLENG"])
             if fsp == 0:
-                dtype = pa.timestamp('s')
+                dtype = pa.timestamp("s")
             elif 0 < fsp <= 3:
-                dtype = pa.timestamp('ms')
+                dtype = pa.timestamp("ms")
             elif 3 < fsp <= 6:
-                dtype = pa.timestamp('us')
+                dtype = pa.timestamp("us")
             elif 6 < fsp <= 12:
-                dtype = pa.timestamp('ns')
+                dtype = pa.timestamp("ns")
             else:
-                msg = f'Precision of the decimal column {cname} is not' \
-                      f' valid, it should be <= 12'
+                msg = f"Invalid time precision for {cname}, expected < 12"
                 raise NotValidDataPrecisionException(msg)
 
-        schema[cname] = dtype
+        _schema[cname] = dtype
 
-    return schema
+    return pa.schema(_schema.items())
 
 
 def get_pandas_schema(cols: List[dict]) -> Dict[str, object]:
@@ -99,43 +97,70 @@ def get_pandas_schema(cols: List[dict]) -> Dict[str, object]:
     """
 
     mapper = {
-        'DATE': 'datetime64[ns]',
-        'TIME': 'datetime64[ns]',
-        'TIMESTAMP': 'datetime64[ns]',
-        'BLOB': bytes,
-        'CLOB': object,
-        'VARCHAR': object,
-        'CHAR': object,
-        'LONGVARCHAR': object,
-        'VARGRAPHIC': object,
-        'FLOATING POINT': 'float64',
-        'DECIMAL': 'float32',
-        'BIGINT': 'int64',
-        'INTEGER': 'int64',
-        'SMALLINT': 'int64',
-        'BINARY': bytes,
+        "DATE": "datetime64[ns]",
+        "TIME": "datetime64[ns]",
+        "TIMESTAMP": "datetime64[ns]",
+        "BLOB": bytes,
+        "CLOB": object,
+        "VARCHAR": object,
+        "CHAR": object,
+        "LONGVARCHAR": object,
+        "VARGRAPHIC": object,
+        "FLOATING POINT": "float64",
+        "DECIMAL": "float32",
+        "BIGINT": "int64",
+        "INTEGER": "int64",
+        "SMALLINT": "int64",
+        "BINARY": bytes,
     }
 
     schema = {}
     for c in cols:
-        cname = str(c['IXFCNAME'], encoding='utf-8').strip()
-        ctype = int(c['IXFCTYPE'])
+        cname = str(c["IXFCNAME"], encoding="utf-8").strip()
+        ctype = int(c["IXFCTYPE"])
         dtype = mapper[IXF_DTYPES[ctype]]
 
         if ctype == 480:
-            length = int(c['IXFCLENG'])
-            dtype = 'float32' if length == 4 else dtype
+            length = int(c["IXFCLENG"])
+            dtype = "float32" if length == 4 else dtype
 
         if ctype == 484:
-            scale = int(c['IXFCLENG'][3:5])
+            scale = int(c["IXFCLENG"][3:5])
             if scale == 0:
-                dtype = 'int64'
+                dtype = "int64"
             else:
-                dtype = 'float32'
+                dtype = "float32"
 
         schema[cname] = dtype
 
     return schema
+
+
+def get_batch(data: Iterable[Dict], size: int = 10000) -> Iterable[List[Dict]]:
+    """Batch generator. It yields batch of rows/dictionaries as a list.
+
+    Parameters
+    ----------
+    data : Iterable[Dict]
+        Iterable of individual rows from the source data.
+    size : int, optional
+        Size of each batch (number of rows per batch).
+
+    Returns
+    -------
+    Iterable[List[Dict]]
+        Iterable of a list of rows.
+    """
+    batch = []
+    for i, row in enumerate(data):
+        batch.append(row)
+        if (i + 1) % size == 0:
+            yield batch
+            batch = []
+
+    # Yield the remaining rows as the last batch
+    if batch:
+        yield batch
 
 
 def merge_dicts(dicts: List[dict]) -> Dict[str, list]:
@@ -155,10 +180,10 @@ def merge_dicts(dicts: List[dict]) -> Dict[str, list]:
 
     Examples
     --------
-    >>> ex = [{'key1': 'value1', 'key2': 'value2'}] # noqa
-    >>> ex.append({'key1': 'value3', 'key2': 'value4'})
+    >>> ex = [{"key1": "value1", "key2": "value2"}] # noqa
+    >>> ex.append({"key1": "value3", "key2": "value4"})
     >>> merge_dicts(ex)
-    {'key1': ['value1', 'value3'], 'key2': ['value2', 'value4']}
+    {"key1": ["value1", "value3"], "key2": ["value2", "value4"]}
     """
 
     result = {}
@@ -170,23 +195,23 @@ def merge_dicts(dicts: List[dict]) -> Dict[str, list]:
     return result
 
 
-def get_array_batch(generator: Generator, size: int = 1000) -> Dict[str, list]:
+def get_array_batch(data_source: Iterable, size: int = 10000) -> Iterable[Dict]:
     """Array batch generator. It yields a batch of rows in a single dictionary.
 
-    It gets a list of size '`size`' containing rows from the data source
-    generator then merge all rows in one dictionary which is the yielded one.
+    It gets a list of size `size` containing rows from the data source
+    then merge all rows in one dictionary and yield it.
 
 
     Parameters
     ----------
-    generator : Generator
-        Python generator that yields individual rows from the source data.
+    data_source : Iterable
+        Iterable of individual rows from the source data.
     size : int, optional
         Size of each batch (number of rows per batch). Default is 1000.
 
     Yields
     ------
-    Generator[List, None, None]
+    Iterable[Dict]
         A generator that yields batches of rows, where each batch is a
         list of rows.
 
@@ -211,9 +236,8 @@ def get_array_batch(generator: Generator, size: int = 1000) -> Dict[str, list]:
     - The `merge_dicts` function should be implemented separately and used
       to merge the rows into a single dictionary.
     """
-
     rows = []
-    for i, row in enumerate(generator()):
+    for i, row in enumerate(data_source):
         rows.append(row)
         if (i + 1) % size == 0:
             batch = merge_dicts(rows)
@@ -226,40 +250,13 @@ def get_array_batch(generator: Generator, size: int = 1000) -> Dict[str, list]:
         yield batch
 
 
-def get_batch(generator: Generator, size: int = 1000) -> List[dict]:
-    """Batch generator. It yields batch of rows/dictionaries as a list.
-
-    Parameters
-    ----------
-    generator : Generator
-        Python generator that yields individual rows from the source data.
-    size : int, optional
-        Size of each batch (number of rows per batch). Default is 500.
-
-    Returns
-    -------
-    List[dict]
-        List of rows.
-    """
-    batch = []
-    for i, row in enumerate(generator()):
-        batch.append(row)
-        if (i + 1) % size == 0:
-            yield batch
-            batch = []
-
-    # Yield the remaining rows as the last batch
-    if batch:
-        yield batch
-
-
 def get_ccsid_from_column(column: dict) -> Tuple[int, int]:
     """
     Get the coded character set identifiers for single and double bytes
     data type. Which means the code page for singular/double byte data type.
     """
-    sbcp = str(column['IXFCSBCP'], 'utf-8').strip()
-    dbcp = str(column['IXFCDBCP'], 'utf-8').strip()
+    sbcp = str(column["IXFCSBCP"], "utf-8").strip()
+    dbcp = str(column["IXFCDBCP"], "utf-8").strip()
 
     sbcp = int(sbcp) if sbcp else 0
     dbcp = int(dbcp) if dbcp else 0
@@ -285,7 +282,7 @@ def get_record_length_and_type(file: BinaryIO) -> Tuple[int, str]:
     return recl, rect
 
 
-def deltalake_fix_ns_timestamps(schema: Schema) -> Schema:
+def deltalake_fix_ns_timestamps(schema: pa.Schema) -> pa.Schema:
     """Fix issue with timestamps in deltalake.
 
     Deltalake has issue with timestamps in nanoseconds and it does not yet
@@ -304,13 +301,13 @@ def deltalake_fix_ns_timestamps(schema: Schema) -> Schema:
         Pyarrow schema with fix
     """
     for i, f in enumerate(schema):
-        if f.type == pa.timestamp('ns'):
-            new_field = pa.field(f.name, pa.timestamp('us'))
+        if f.type == pa.timestamp("ns"):
+            new_field = pa.field(f.name, pa.timestamp("us"))
             schema = schema.set(i, new_field)
     return schema
 
 
-def deltalake_fix_time(schema: Schema) -> Schema:
+def deltalake_fix_time(schema: pa.Schema) -> pa.Schema:
     """Fix issue with time in deltalake.
 
     Deltalake does not support time datatype so we will try to use string to
@@ -328,14 +325,14 @@ def deltalake_fix_time(schema: Schema) -> Schema:
 
     Returns
     -------
-    Schema:
+    Schema
         Pyarrow schema with the fix.
     """
     time_datatypes = [
-        pa.time64('ns'),
-        pa.time64('us'),
-        pa.time32('ms'),
-        pa.time32('s')
+        pa.time64("ns"),
+        pa.time64("us"),
+        pa.time32("ms"),
+        pa.time32("s")
     ]
     for i, f in enumerate(schema):
         if f.type in time_datatypes:
@@ -344,7 +341,7 @@ def deltalake_fix_time(schema: Schema) -> Schema:
     return schema
 
 
-def apply_schema_fixes(schema: Schema) -> Schema:
+def apply_schema_fixes(schema: pa.Schema) -> pa.Schema:
     """Apply all fixes on pyarrow schema to adapt to deltalake.
 
     Fixes issues in deltalake support for nanoseconds unit for time and
@@ -368,16 +365,14 @@ def apply_schema_fixes(schema: Schema) -> Schema:
 
 
 def pyarrow_record_batches(
-        data_parser: Generator,
-        pyarrow_schema: Schema,
-        batch_size: int = 1000
-) -> Iterable[RecordBatch]:
-    """
+    data: Iterable[Dict], pyarrow_schema: pa.Schema, batch_size: int = 10000
+) -> Iterable[pa.RecordBatch]:
+    """Creates an Iterable of pyarrow record batches.
 
     Parameters
     ----------
-    data_parser : Generator
-        IXF data parser.
+    data : Iterable
+        IXF data.
     pyarrow_schema : Schema
         Pyarrow schema.
     batch_size : int
@@ -386,12 +381,12 @@ def pyarrow_record_batches(
 
     Yields
     ------
-    Iterable[RecordBatch]
+    RecordBatch
         Pyarrow record batch.
     """
-    for batch in get_array_batch(data_parser, size=batch_size):
-        data = [array(v) for v in batch.values()]
-        pa_record_batch = record_batch(data=data, schema=pyarrow_schema)
+    for batch in get_array_batch(data, size=batch_size):
+        data = [pa.array(v) for v in batch.values()]
+        pa_record_batch = pa.record_batch(data=data, schema=pyarrow_schema)
         yield pa_record_batch
 
 
@@ -413,7 +408,7 @@ def decode_field(field: str, cp: int, cpt: Literal["s", "d"] = "s"):
         Decoded field
     """
     if cpt not in ["s", "d"]:
-        raise ValueError("Either 's' for single bytes or 'd' for double bytes")
+        raise ValueError("Either `s` for single bytes or `d` for double bytes")
 
     try:
         return field.decode(f"cp{cp}")
