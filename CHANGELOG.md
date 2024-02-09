@@ -8,6 +8,23 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
+## [0.10.0](https://github.com/ismailhammounou/db2ixf/tree/0.10.0) - 2024-02-09
+
+
+### Added
+
+- Raise error in case of more than x% of corrupted extracted data [db2ixf-52](https://github.com/ismailhammounou/db2ixf/issues/52)
+
+
+### Changed
+
+- Refactor code and delete some code [db2ixf-50](https://github.com/ismailhammounou/db2ixf/issues/50)
+- Change parse to a generator to optimize the memory and let user more freedom [db2ixf-51](https://github.com/ismailhammounou/db2ixf/issues/51)
+
+
+### Fixed
+
+- Fix error with float collector unpack requires a buffer of 8 bytes [db2ixf-49](https://github.com/ismailhammounou/db2ixf/issues/49)
 
 ## [0.9.0](https://github.com/ismailhammounou/db2ixf/tree/0.9.0) - 2024-02-01
 
