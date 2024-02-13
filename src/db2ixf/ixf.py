@@ -83,7 +83,7 @@ class IXFParser:
         self.end_data_records = False
         self.current_row = {}
         self.number_rows = 0
-        self.number_corrupted_rows = -1  # Avoids counting the last line
+        self.number_corrupted_rows = -1  # Avoids counting the last line (EOF)
 
     def parse_header(self, record_type: dict = None) -> dict:
         """Parse the header record.
@@ -368,14 +368,29 @@ class IXFParser:
         logger.debug("Finished writing json file")
 
         total_rows = self.number_corrupted_rows + self.number_rows
+        if total_rows == 0:
+            logger.warning("Empty ixf file")
+            return True
+
         logger.debug(f"Number of total rows = {total_rows}")
         logger.debug(f"Number of healthy rows = {self.number_rows}")
         logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
 
         cor_rate = self.number_corrupted_rows / total_rows * 100
+
+        if int(cor_rate) != 0:
+            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
+
         if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            logger.error(f"{cor_rate}% corrupted rows")
-            raise IXFParsingError(f"More than {DB2IXF_ACCEPTED_CORRUPTION_RATE}% of corrupted rows")
+            _msg = f"Corrupted data ({cor_rate}%) > ({DB2IXF_ACCEPTED_CORRUPTION_RATE}%)" \
+                   f" accepted rate"
+            logger.error(_msg)
+            logger.warning(
+                "You can change the accepted rate of the corrupted data by setting "
+                "`DB2IXF_ACCEPTED_CORRUPTION_RATE` environment variable to a higher "
+                "value"
+            )
+            raise IXFParsingError(_msg)
 
         return True
 
@@ -423,14 +438,29 @@ class IXFParser:
         logger.debug("Finished writing csv file")
 
         total_rows = self.number_corrupted_rows + self.number_rows
+        if total_rows == 0:
+            logger.warning("Empty ixf file")
+            return True
+
         logger.debug(f"Number of total rows = {total_rows}")
         logger.debug(f"Number of healthy rows = {self.number_rows}")
         logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
 
         cor_rate = self.number_corrupted_rows / total_rows * 100
+
+        if int(cor_rate) != 0:
+            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
+
         if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            logger.error(f"{cor_rate}% corrupted rows")
-            raise IXFParsingError(f"More than {DB2IXF_ACCEPTED_CORRUPTION_RATE}% of corrupted rows")
+            _msg = f"Corrupted data ({cor_rate}%) > ({DB2IXF_ACCEPTED_CORRUPTION_RATE}%)" \
+                   f" accepted rate"
+            logger.error(_msg)
+            logger.warning(
+                "You can change the accepted rate of the corrupted data by setting "
+                "`DB2IXF_ACCEPTED_CORRUPTION_RATE` environment variable to a higher "
+                "value"
+            )
+            raise IXFParsingError(_msg)
 
         return True
 
@@ -498,14 +528,29 @@ class IXFParser:
         logger.debug("Finished writing parquet file")
 
         total_rows = self.number_corrupted_rows + self.number_rows
+        if total_rows == 0:
+            logger.warning("Empty ixf file")
+            return True
+
         logger.debug(f"Number of total rows = {total_rows}")
         logger.debug(f"Number of healthy rows = {self.number_rows}")
         logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
 
         cor_rate = self.number_corrupted_rows / total_rows * 100
+
+        if int(cor_rate) != 0:
+            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
+
         if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            logger.error(f"{cor_rate}% corrupted rows")
-            raise IXFParsingError(f"More than {DB2IXF_ACCEPTED_CORRUPTION_RATE}% of corrupted rows")
+            _msg = f"Corrupted data ({cor_rate}%) > ({DB2IXF_ACCEPTED_CORRUPTION_RATE}%)" \
+                   f" accepted rate"
+            logger.error(_msg)
+            logger.warning(
+                "You can change the accepted rate of the corrupted data by setting "
+                "`DB2IXF_ACCEPTED_CORRUPTION_RATE` environment variable to a higher "
+                "value"
+            )
+            raise IXFParsingError(_msg)
 
         return True
 
@@ -588,14 +633,29 @@ class IXFParser:
         logger.debug("End writing to deltalake")
 
         total_rows = self.number_corrupted_rows + self.number_rows
+        if total_rows == 0:
+            logger.warning("Empty ixf file")
+            return True
+
         logger.debug(f"Number of total rows = {total_rows}")
         logger.debug(f"Number of healthy rows = {self.number_rows}")
         logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
 
         cor_rate = self.number_corrupted_rows / total_rows * 100
+
+        if int(cor_rate) != 0:
+            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
+
         if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            logger.error(f"{cor_rate}% corrupted rows")
-            raise IXFParsingError(f"More than {DB2IXF_ACCEPTED_CORRUPTION_RATE}% of corrupted rows")
+            _msg = f"Corrupted data ({cor_rate}%) > ({DB2IXF_ACCEPTED_CORRUPTION_RATE}%)" \
+                   f" accepted rate"
+            logger.error(_msg)
+            logger.warning(
+                "You can change the accepted rate of the corrupted data by setting "
+                "`DB2IXF_ACCEPTED_CORRUPTION_RATE` environment variable to a higher "
+                "value"
+            )
+            raise IXFParsingError(_msg)
 
         return True
 
