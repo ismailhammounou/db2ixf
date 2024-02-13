@@ -394,6 +394,69 @@ class IXFParser:
 
         return True
 
+    # def to_jsonline(self, output: Union[str, Path, PathLike, TextIO]) -> bool:
+    #     """Parse and convert to JSON Line Object.
+    #
+    #     Parameters
+    #     ----------
+    #     output : Union[str, Path, PathLike, IO]
+    #         Output file. It is better to use file-like object.
+    #
+    #     Returns
+    #     -------
+    #     bool
+    #         True if the parsing and conversion are ok.
+    #     """
+    #     if isinstance(output, (str, Path, PathLike)):
+    #         output = open(output, mode="w", encoding="utf-8")
+    #
+    #     if not hasattr(output, "mode"):
+    #         msg = "File-like object should have `mode` attribute"
+    #         raise TypeError(msg)
+    #
+    #     if output.mode not in ["w", "wt"]:
+    #         msg = "File-like object should be opened in write and text mode"
+    #         raise ValueError(msg)
+    #
+    #     # Force utf-8 encoding for the json file
+    #     # (Maybe we will need to log without forcing)
+    #     if output.encoding != "utf-8":
+    #         raise ValueError("File-like object should be `utf-8` encoded")
+    #
+    #     logger.debug("Start writing in the json line file")
+    #     with output as out:
+    #         for r in self.parse():
+    #             json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
+    #             out.write("\n")
+    #     logger.debug("Finished writing json line file")
+    #
+    #     total_rows = self.number_corrupted_rows + self.number_rows
+    #     if total_rows == 0:
+    #         logger.warning("Empty ixf file")
+    #         return True
+    #
+    #     logger.debug(f"Number of total rows = {total_rows}")
+    #     logger.debug(f"Number of healthy rows = {self.number_rows}")
+    #     logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
+    #
+    #     cor_rate = self.number_corrupted_rows / total_rows * 100
+    #
+    #     if int(cor_rate) != 0:
+    #         logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
+    #
+    #     if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+    #         _msg = f"Corrupted data ({cor_rate}%) > ({DB2IXF_ACCEPTED_CORRUPTION_RATE}%)" \
+    #                f" accepted rate"
+    #         logger.error(_msg)
+    #         logger.warning(
+    #             "You can change the accepted rate of the corrupted data by setting "
+    #             "`DB2IXF_ACCEPTED_CORRUPTION_RATE` environment variable to a higher "
+    #             "value"
+    #         )
+    #         raise IXFParsingError(_msg)
+    #
+    #     return True
+
     def to_csv(self, output: Union[str, Path, PathLike, TextIO], sep: str = "|") -> bool:
         """Parse and convert to CSV.
 

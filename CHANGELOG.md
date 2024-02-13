@@ -8,6 +8,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
+## [0.10.2](https://github.com/ismailhammounou/db2ixf/tree/0.10.2) - 2024-02-13
+
+
+### Fixed
+
+- Handle division by zero when calculating number of rows [db2ixf-54](https://github.com/ismailhammounou/db2ixf/issues/54)
+
 ## [0.10.1](https://github.com/ismailhammounou/db2ixf/tree/0.10.1) - 2024-02-09
 
 
