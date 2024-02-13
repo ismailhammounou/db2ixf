@@ -56,7 +56,7 @@ def json(
     """
     if output is None:
         output = Path.cwd()
-        filename = file.name.lower().removesuffix(".ixf") + ".json"
+        filename = f"{file.name.removesuffix('.IXF').removesuffix('.ixf')}.json"
         output /= filename
 
     if verbose > 2:
@@ -111,7 +111,7 @@ def csv(
     """
     if output is None:
         output = Path.cwd()
-        filename = file.name.lower().removesuffix(".ixf") + ".csv"
+        filename = f"{file.name.removesuffix('.IXF').removesuffix('.ixf')}.csv"
         output /= filename
 
     if sep is None:
@@ -162,16 +162,16 @@ def parquet(
                               "-s",
                               help="Size of the batch: number of "
                                    "rows to extract before writing "
-                                   'to the parquet file, It is used '
-                                   'for memory optimization.',
-                              rich_help_panel='Command Options',
+                                   "to the parquet file, It is used "
+                                   "for memory optimization.",
+                              rich_help_panel="Command Options",
                           )] = 1000,
     verbose: Annotated[int,
                        typer.Option(
-                           '--verbose',
-                           '-v',
-                           metavar='',
-                           help='Counter for verbosity level.',
+                           "--verbose",
+                           "-v",
+                           metavar="",
+                           help="Counter for verbosity level.",
                            count=True,
                        )] = 0,
 ):
@@ -180,11 +180,11 @@ def parquet(
     """
     if output is None:
         output = Path.cwd()
-        filename = file.name.lower().removesuffix('.ixf') + '.parquet'
+        filename = f"{file.name.removesuffix('.IXF').removesuffix('.ixf')}.parquet"
         output /= filename
 
     if version is None:
-        version = '2.4'
+        version = "2.4"
 
     if batch_size is None:
         batch_size = 1000
@@ -194,10 +194,10 @@ def parquet(
     else:
         logger.setLevel(VERBOSE_MAPPING[verbose])
 
-    logger.info(f'IXF file: {file}')
-    logger.info(f'PARQUET file: {output}')
-    logger.info(f'PARQUET version: {version}')
-    logger.info(f'Batch size: {batch_size}')
+    logger.info(f"IXF file: {file}")
+    logger.info(f"PARQUET file: {output}")
+    logger.info(f"PARQUET version: {version}")
+    logger.info(f"Batch size: {batch_size}")
 
     parser = IXFParser(file)
     parser.to_parquet(output, int(batch_size), str(version))
@@ -215,9 +215,9 @@ def main(
     ctx: typer.Context,
     version: Annotated[Optional[bool],  # noqa
                        typer.Option(
-                           '--version',
-                           '-v',
-                           help='Show the version of the CLI.',
+                           "--version",
+                           "-v",
+                           help="Show the version of the CLI.",
                            callback=version_callback,
                            is_eager=True,
                        )] = None
@@ -232,12 +232,12 @@ def main(
     cmd = ctx.invoked_subcommand
 
     if cmd is None:
-        cmd = 'No command is given'
+        cmd = "No command is given"
 
-    logger.info('-------------------------------------------------------------')
+    logger.info("-------------------------------------------------------------")
     logger.info(f"{cli} is about to execute command: {cmd}")
-    logger.info('-------------------------------------------------------------')
+    logger.info("-------------------------------------------------------------")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app()
