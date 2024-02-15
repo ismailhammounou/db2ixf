@@ -2,23 +2,22 @@
 """Creates an PC/IXF parser"""
 from __future__ import annotations
 
+import gc
+
 import csv
 import deltalake
 import json
-import pyarrow as pa
-from db2ixf.collectors import (
-    collect_bigint, collect_binary, collect_blob, collect_char, collect_clob,
-    collect_date, collect_decimal, collect_floating_point, collect_integer,
-    collect_longvarchar, collect_smallint, collect_time, collect_timestamp,
-    collect_varchar, collect_vargraphic,
-)
+from collections import OrderedDict
+from db2ixf.collectors import collectors
 from db2ixf.constants import (
-    COL_DESCRIPTOR_RECORD_TYPE, DATA_RECORD_TYPE, DB2IXF_ACCEPTED_CORRUPTION_RATE, HEADER_RECORD_TYPE,
+    COL_DESCRIPTOR_RECORD_TYPE, DATA_RECORD_TYPE,
+    DB2IXF_ACCEPTED_CORRUPTION_RATE, HEADER_RECORD_TYPE,
     TABLE_RECORD_TYPE,
 )
 from db2ixf.encoders import CustomJSONEncoder
 from db2ixf.exceptions import (
-    DataCollectorError, IXFParsingError, NotValidColumnDescriptorException, UnknownDataTypeException,
+    DataCollectorError, IXFParsingError, NotValidColumnDescriptorException,
+    UnknownDataTypeException,
 )
 from db2ixf.helpers import (
     apply_schema_fixes, get_pyarrow_schema, pyarrow_record_batches,
@@ -27,9 +26,11 @@ from db2ixf.logger import logger
 from deltalake import DeltaTable
 from os import PathLike
 from pathlib import Path
+from pyarrow import Schema, schema
 from pyarrow.parquet import ParquetWriter
 from typing import (
-    Any, BinaryIO, Dict, Iterable, List, Literal, Optional, TextIO, Tuple, Union,
+    Any, BinaryIO, Dict, Iterable, List, Literal, Optional, TextIO, Tuple,
+    Union,
 )
 
 
@@ -42,24 +43,6 @@ class IXFParser:
     file : str, Path, PathLike or File-Like Object
         Input file and it is better to use file-like object.
     """
-    header_info: dict
-    """Contains header informations from input ixf file."""
-    table_info: dict
-    """Contains table informations from input ixf file."""
-    columns_info: List[dict]
-    """Contains columns description from input ixf file."""
-    pyarrow_schema: pa.Schema
-    """Schema extracted from metadata in the input ixf file and converted to parquet one."""
-    current_data_record: dict
-    """Contains current data record from input ixf file."""
-    end_data_records: bool
-    """Flag the end of data records in the input ixf file."""
-    current_row: dict
-    """Contains parsed data extracted from a data record of the input ixf file."""
-    number_rows: int
-    """Number of rows extracted from the input ixf file."""
-    number_corrupted_rows: int
-    """Number of corrupted rows that contain data we can not parse or handle."""
 
     def __init__(self, file: Union[str, Path, PathLike, BinaryIO]):
         """Init the instance."""
@@ -75,15 +58,25 @@ class IXFParser:
         self.file = file
 
         # State
-        self.header_info = {}
-        self.table_info = {}
-        self.columns_info = []
-        self.pyarrow_schema = pa.schema([])
-        self.current_data_record = {}
-        self.end_data_records = False
-        self.current_row = {}
-        self.number_rows = 0
-        self.number_corrupted_rows = -1  # Avoids counting the last line (EOF)
+        self.header_info: OrderedDict = OrderedDict()
+        """Contains header informations extracted from the ixf file."""
+        self.table_info: OrderedDict = OrderedDict()
+        """Contains table metadata extracted from the ixf file."""
+        self.columns_info: List[OrderedDict] = []
+        """Contains columns description extracted from the ixf file."""
+        self.pyarrow_schema: Schema = schema([])
+        """Pyarrow Schema extracted from the ixf file."""
+        self.current_data_record: OrderedDict = OrderedDict()
+        """Contains current data record extracted from ixf file."""
+        self.end_data_records: bool = False
+        """Flag the end of data records in the ixf file."""
+        self.current_row: OrderedDict = OrderedDict()
+        """Contains parsed data extracted from a data record of the ixf file."""
+        self.number_rows: int = 0
+        """Number of rows extracted from the ixf file."""
+        # Avoids counting the last line (EOF)
+        self.number_corrupted_rows: int = -1
+        """Number of corrupted rows in the ixf file."""
 
     def parse_header(self, record_type: dict = None) -> dict:
         """Parse the header record.
@@ -129,7 +122,7 @@ class IXFParser:
 
         return self.table_info
 
-    def parse_columns(self, record_type: dict = None) -> List[dict]:
+    def parse_columns(self, record_type: dict = None) -> List[OrderedDict]:
         """Parse the column records.
 
         Parameters
@@ -140,7 +133,7 @@ class IXFParser:
 
         Returns
         -------
-        list
+        List[OrderedDict]
             Column descriptors records of the input file.
 
         Raises
@@ -153,8 +146,7 @@ class IXFParser:
 
         # "IXFTCCNT" contains number of columns in the table
         for _ in range(0, int(self.table_info["IXFTCCNT"])):
-
-            column = {}
+            column = OrderedDict()
             for i, j in record_type.items():
                 column[i] = self.file.read(j)
 
@@ -171,11 +163,12 @@ class IXFParser:
 
             column["IXFCDSIZ"] = self.file.read(int(column["IXFCRECL"]) - 862)
 
-            self.columns_info.append(column)
+            self.columns_info.append(column.copy())
+            column.clear()
 
         return self.columns_info
 
-    def get_data_record(self, record_type: dict = None):
+    def get_data_record(self, record_type: dict = None) -> OrderedDict:
         """get one data record.
 
         Parameters
@@ -186,13 +179,13 @@ class IXFParser:
 
         Returns
         ------
-        dict
+        OrderedDict
             Dictionary containing current data record from IXF file.
         """
         if record_type is None:
             record_type = DATA_RECORD_TYPE
 
-        self.current_data_record = {}
+        self.current_data_record = OrderedDict()
         for key, val in record_type.items():
             self.current_data_record[key] = self.file.read(val)
 
@@ -201,31 +194,37 @@ class IXFParser:
         )
         return self.current_data_record
 
-    def collect_data(self) -> dict:
+    def collect_data(self) -> OrderedDict:
         """collect data from fields of the current data record.
 
         Returns
         -------
-        dict:
+        OrderedDict:
             Dictionary containing all extracted data from fields of
             the data record.
         """
         # Start Extraction
         try:
-            r = {}
+            self.current_row = OrderedDict()
             for c in self.columns_info:
+                # Extract some metadata about the column
                 col_name = str(c["IXFCNAME"], encoding="utf-8").strip()
                 col_type = int(c["IXFCTYPE"])
                 col_is_nullable = c["IXFCNULL"] == b"Y"
                 col_position = int(c["IXFCPOSN"])
 
+                # Init the data collection
+                self.current_row[col_name] = None
+
                 # Parse next data record in case a column is in position 1
                 if col_position == 1:
+                    self.current_data_record.clear()
                     self.get_data_record()
 
                 # Mark the end of data records: helps exit the while loop
                 if self.current_data_record["IXFDRECT"] != b"D":
                     self.end_data_records = True
+                    self.current_row = OrderedDict()
                     logger.debug("End of data records")
                     break
 
@@ -235,50 +234,43 @@ class IXFParser:
                 # Handle nullable
                 if col_is_nullable:
                     # Column is null
-                    if self.current_data_record["IXFDCOLS"][pos:pos + 2] == b"\xff\xff":
-                        r[col_name] = None
+                    _dr = self.current_data_record["IXFDCOLS"][pos:pos + 2]
+                    if _dr == b"\xff\xff":
+                        self.current_row[col_name] = None
                         continue
                     # Column is not null
-                    elif self.current_data_record["IXFDCOLS"][pos:pos + 2] == b"\x00\x00":
+                    elif _dr == b"\x00\x00":
                         pos += 2
 
                 # Collect data
-                switcher = {
-                    384: collect_date,
-                    388: collect_time,
-                    392: collect_timestamp,
-                    404: collect_blob,
-                    408: collect_clob,
-                    448: collect_varchar,
-                    452: collect_char,
-                    456: collect_longvarchar,
-                    464: collect_vargraphic,
-                    480: collect_floating_point,
-                    484: collect_decimal,
-                    492: collect_bigint,
-                    496: collect_integer,
-                    500: collect_smallint,
-                    912: collect_binary,
-                }
-
-                _func = switcher.get(col_type, None)
-                if _func is None:
-                    msg = f"The column {col_name} has unknown data type {col_type}"
+                collector = collectors.get(col_type, None)
+                if collector is None:
+                    msg = f"The column {col_name} has unknown " \
+                          f"data type {col_type}"
                     raise UnknownDataTypeException(msg)
 
-                r[col_name] = _func(c, self.current_data_record["IXFDCOLS"], pos)
-            return r
+                collected_data = collector(
+                    c, self.current_data_record["IXFDCOLS"], pos
+                )
+
+                self.current_row[col_name] = collected_data
+
+                del collected_data
+
+            return self.current_row
         except UnknownDataTypeException as er1:
             logger.error(er1)
+            self.current_row = OrderedDict()
             raise IXFParsingError(er1)
         except DataCollectorError as er2:
             logger.error(er2)
-            return {}
+            self.current_row = OrderedDict()
+            return self.current_row
         except Exception as er3:
             logger.error(er3)
             raise IXFParsingError(er3)
 
-    def parse_data(self) -> Iterable[Dict]:
+    def parse_data(self) -> Iterable[OrderedDict]:
         """Parse data records.
 
         Yields
@@ -289,7 +281,7 @@ class IXFParser:
         # Start parsing
         while not self.end_data_records:
             # Extract data
-            self.current_row = self.collect_data()
+            self.collect_data()
 
             # Do not accept empty dictionary
             if not self.current_row:
@@ -365,6 +357,8 @@ class IXFParser:
                 json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
                 first_row = False
             out.write("]")
+        # Add garbage collection step
+        gc.collect()
         logger.debug("Finished writing json file")
 
         total_rows = self.number_corrupted_rows + self.number_rows
@@ -382,82 +376,86 @@ class IXFParser:
             logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
 
         if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            _msg = f"Corrupted data ({cor_rate}%) > ({DB2IXF_ACCEPTED_CORRUPTION_RATE}%)" \
-                   f" accepted rate"
+            _msg = f"Corrupted data ({cor_rate}%) > " \
+                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
             logger.error(_msg)
             logger.warning(
-                "You can change the accepted rate of the corrupted data by setting "
-                "`DB2IXF_ACCEPTED_CORRUPTION_RATE` environment variable to a higher "
-                "value"
+                "You can change the accepted rate of the corrupted data "
+                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
+                "variable to a higher value"
             )
             raise IXFParsingError(_msg)
 
         return True
 
-    # def to_jsonline(self, output: Union[str, Path, PathLike, TextIO]) -> bool:
-    #     """Parse and convert to JSON Line Object.
-    #
-    #     Parameters
-    #     ----------
-    #     output : Union[str, Path, PathLike, IO]
-    #         Output file. It is better to use file-like object.
-    #
-    #     Returns
-    #     -------
-    #     bool
-    #         True if the parsing and conversion are ok.
-    #     """
-    #     if isinstance(output, (str, Path, PathLike)):
-    #         output = open(output, mode="w", encoding="utf-8")
-    #
-    #     if not hasattr(output, "mode"):
-    #         msg = "File-like object should have `mode` attribute"
-    #         raise TypeError(msg)
-    #
-    #     if output.mode not in ["w", "wt"]:
-    #         msg = "File-like object should be opened in write and text mode"
-    #         raise ValueError(msg)
-    #
-    #     # Force utf-8 encoding for the json file
-    #     # (Maybe we will need to log without forcing)
-    #     if output.encoding != "utf-8":
-    #         raise ValueError("File-like object should be `utf-8` encoded")
-    #
-    #     logger.debug("Start writing in the json line file")
-    #     with output as out:
-    #         for r in self.parse():
-    #             json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
-    #             out.write("\n")
-    #     logger.debug("Finished writing json line file")
-    #
-    #     total_rows = self.number_corrupted_rows + self.number_rows
-    #     if total_rows == 0:
-    #         logger.warning("Empty ixf file")
-    #         return True
-    #
-    #     logger.debug(f"Number of total rows = {total_rows}")
-    #     logger.debug(f"Number of healthy rows = {self.number_rows}")
-    #     logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
-    #
-    #     cor_rate = self.number_corrupted_rows / total_rows * 100
-    #
-    #     if int(cor_rate) != 0:
-    #         logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
-    #
-    #     if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-    #         _msg = f"Corrupted data ({cor_rate}%) > ({DB2IXF_ACCEPTED_CORRUPTION_RATE}%)" \
-    #                f" accepted rate"
-    #         logger.error(_msg)
-    #         logger.warning(
-    #             "You can change the accepted rate of the corrupted data by setting "
-    #             "`DB2IXF_ACCEPTED_CORRUPTION_RATE` environment variable to a higher "
-    #             "value"
-    #         )
-    #         raise IXFParsingError(_msg)
-    #
-    #     return True
+    def to_jsonline(self, output: Union[str, Path, PathLike, TextIO]) -> bool:
+        """Parse and convert to JSON Line Object.
 
-    def to_csv(self, output: Union[str, Path, PathLike, TextIO], sep: str = "|") -> bool:
+        Parameters
+        ----------
+        output : Union[str, Path, PathLike, IO]
+            Output file. It is better to use file-like object.
+
+        Returns
+        -------
+        bool
+            True if the parsing and conversion are ok.
+        """
+        if isinstance(output, (str, Path, PathLike)):
+            output = open(output, mode="w", encoding="utf-8")
+
+        if not hasattr(output, "mode"):
+            msg = "File-like object should have `mode` attribute"
+            raise TypeError(msg)
+
+        if output.mode not in ["w", "wt"]:
+            msg = "File-like object should be opened in write and text mode"
+            raise ValueError(msg)
+
+        # Force utf-8 encoding for the json file
+        # (Maybe we will need to log without forcing)
+        if output.encoding != "utf-8":
+            raise ValueError("File-like object should be `utf-8` encoded")
+
+        logger.debug("Start writing in the json line file")
+        with output as out:
+            for r in self.parse():
+                json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
+                out.write("\n")
+        # Add garbage collection step
+        gc.collect()
+        logger.debug("Finished writing json line file")
+
+        total_rows = self.number_corrupted_rows + self.number_rows
+        if total_rows == 0:
+            logger.warning("Empty ixf file")
+            return True
+
+        logger.debug(f"Number of total rows = {total_rows}")
+        logger.debug(f"Number of healthy rows = {self.number_rows}")
+        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
+
+        cor_rate = self.number_corrupted_rows / total_rows * 100
+
+        if int(cor_rate) != 0:
+            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
+
+        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            _msg = f"Corrupted data ({cor_rate}%) > " \
+                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
+            logger.error(_msg)
+            logger.warning(
+                "You can change the accepted rate of the corrupted data "
+                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
+                "variable to a higher value"
+            )
+            raise IXFParsingError(_msg)
+
+        return True
+
+    def to_csv(
+        self, output: Union[str, Path, PathLike, TextIO], sep: str = "|"
+    ) -> bool:
         """Parse and convert to CSV.
 
         Parameters
@@ -498,6 +496,8 @@ class IXFParser:
             writer.writerow(cols)
             for r in self.parse():
                 writer.writerow(r.values())
+        # Add garbage collection step
+        gc.collect()
         logger.debug("Finished writing csv file")
 
         total_rows = self.number_corrupted_rows + self.number_rows
@@ -515,13 +515,13 @@ class IXFParser:
             logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
 
         if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            _msg = f"Corrupted data ({cor_rate}%) > ({DB2IXF_ACCEPTED_CORRUPTION_RATE}%)" \
-                   f" accepted rate"
+            _msg = f"Corrupted data ({cor_rate}%) > " \
+                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
             logger.error(_msg)
             logger.warning(
-                "You can change the accepted rate of the corrupted data by setting "
-                "`DB2IXF_ACCEPTED_CORRUPTION_RATE` environment variable to a higher "
-                "value"
+                "You can change the accepted rate of the corrupted data "
+                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
+                "variable to a higher value"
             )
             raise IXFParsingError(_msg)
 
@@ -530,7 +530,7 @@ class IXFParser:
     def to_parquet(
         self,
         output: Union[str, Path, PathLike, BinaryIO],
-        batch_size: int = 10000,
+        batch_size: int = 1000,
         parquet_version: str = "2.4"
     ) -> bool:
         """Parse and convert to parquet.
@@ -588,6 +588,8 @@ class IXFParser:
                 )
                 for batch in record_batches:
                     writer.write_batch(batch)
+        # Add garbage collection step
+        gc.collect()
         logger.debug("Finished writing parquet file")
 
         total_rows = self.number_corrupted_rows + self.number_rows
@@ -605,13 +607,13 @@ class IXFParser:
             logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
 
         if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            _msg = f"Corrupted data ({cor_rate}%) > ({DB2IXF_ACCEPTED_CORRUPTION_RATE}%)" \
-                   f" accepted rate"
+            _msg = f"Corrupted data ({cor_rate}%) > " \
+                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
             logger.error(_msg)
             logger.warning(
-                "You can change the accepted rate of the corrupted data by setting "
-                "`DB2IXF_ACCEPTED_CORRUPTION_RATE` environment variable to a higher "
-                "value"
+                "You can change the accepted rate of the corrupted data "
+                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
+                "variable to a higher value"
             )
             raise IXFParsingError(_msg)
 
@@ -625,7 +627,7 @@ class IXFParser:
         overwrite_schema: bool = False,
         partition_filters: Optional[List[Tuple[str, str, Any]]] = None,
         large_dtypes: bool = False,
-        batch_size: int = 10000,
+        batch_size: int = 1000,
         **kwargs
     ) -> bool:
         """Parse and convert to a deltalake table.
@@ -657,7 +659,7 @@ class IXFParser:
         **kwargs : Optional[dict]
             Some of the arguments you can give to this function
             `deltalake.write_deltalake`. See doc in
-            https://delta-io.github.io/delta-rs/python/api_reference.html#writing-deltatables.
+            https://delta-io.github.io/delta-rs/python/api_reference.html.
             Please, do not duplicate with the ones used in this function.
 
         Returns
@@ -681,10 +683,14 @@ class IXFParser:
         fixed_schema = apply_schema_fixes(self.pyarrow_schema)
 
         logger.debug("Start writing to deltalake")
-        data = iter(pyarrow_record_batches(iter(self.parse_data()), fixed_schema, batch_size))
+        _data = iter(
+            pyarrow_record_batches(
+                iter(self.parse_data()), fixed_schema, batch_size
+            )
+        )
         deltalake.write_deltalake(
             table_or_uri=table_or_uri,
-            data=data,
+            data=_data,
             schema=fixed_schema,
             partition_by=partition_by,
             mode=mode,
@@ -693,6 +699,9 @@ class IXFParser:
             large_dtypes=large_dtypes,
             **kwargs
         )
+        # Add garbage collection step
+        del fixed_schema, _data
+        gc.collect()
         logger.debug("End writing to deltalake")
 
         total_rows = self.number_corrupted_rows + self.number_rows
@@ -710,13 +719,13 @@ class IXFParser:
             logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
 
         if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            _msg = f"Corrupted data ({cor_rate}%) > ({DB2IXF_ACCEPTED_CORRUPTION_RATE}%)" \
-                   f" accepted rate"
+            _msg = f"Corrupted data ({cor_rate}%) > " \
+                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
             logger.error(_msg)
             logger.warning(
-                "You can change the accepted rate of the corrupted data by setting "
-                "`DB2IXF_ACCEPTED_CORRUPTION_RATE` environment variable to a higher "
-                "value"
+                "You can change the accepted rate of the corrupted data "
+                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
+                "variable to a higher value"
             )
             raise IXFParsingError(_msg)
 

@@ -36,6 +36,21 @@ def test_pkg_json_conversion(test_output_dir):
         assert output.is_file()
 
 
+def test_pkg_jsonline_conversion(test_output_dir):
+    """Test json conversion."""
+    ixf_file = RESOURCES_DIR / "data" / "sample.ixf"
+
+    with open(ixf_file, mode="rb"):
+        parser = IXFParser(ixf_file)
+
+    output = test_output_dir / "result.jsonl"
+
+    with open(output, mode="wt", encoding="utf-8") as out:
+        assert parser.to_jsonline(out) is True
+        assert output.exists()
+        assert output.is_file()
+
+
 @pytest.mark.parametrize("separator", ["$", "#"])
 def test_pkg_csv_conversion(test_output_dir, separator):
     """Test csv conversion."""

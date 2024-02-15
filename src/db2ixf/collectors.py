@@ -2,7 +2,7 @@
 """Collects data from the fields extracted from the data records (D)."""
 from datetime import date, datetime, time
 from db2ixf.exceptions import DataCollectorError
-from db2ixf.helpers import decode_field, get_ccsid_from_column
+from db2ixf.helpers import decode_cell, get_ccsid_from_column
 from struct import unpack
 from typing import Union
 
@@ -174,7 +174,9 @@ def collect_floating_point(c, fields, pos) -> float:
         field = float(unpack(">d", fields[pos:pos + col_length])[0])
         return field
 
-    raise DataCollectorError(f"Expecting 4 or 8 bytes, found {col_length} bytes")
+    raise DataCollectorError(
+        f"Expecting 4 or 8 bytes, found {col_length} bytes"
+    )
 
 
 def collect_char(c, fields, pos) -> str:
@@ -210,10 +212,10 @@ def collect_char(c, fields, pos) -> str:
     field = fields[pos:pos + length]
 
     if dbcp != 0:
-        return decode_field(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d")
 
     if sbcp != 0:
-        return decode_field(field, sbcp)
+        return decode_cell(field, sbcp)
 
     return str(field, "utf-8")
 
@@ -254,10 +256,10 @@ def collect_varchar(c, fields, pos) -> str:
     field = fields[pos:pos + length]
 
     if dbcp != 0:
-        return decode_field(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d")
 
     if sbcp != 0:
-        return decode_field(field, sbcp)
+        return decode_cell(field, sbcp)
 
     return str(field, "utf-8")
 
@@ -297,10 +299,10 @@ def collect_longvarchar(c, fields, pos) -> str:
     field = fields[pos:pos + length]
 
     if dbcp != 0:
-        return decode_field(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d")
 
     if sbcp != 0:
-        return decode_field(field, sbcp)
+        return decode_cell(field, sbcp)
 
     return str(field, "utf-8")
 
@@ -341,9 +343,10 @@ def collect_vargraphic(c, fields, pos) -> str:
     field = fields[pos:pos + (length * 2)]
 
     if dbcp != 0:
-        return decode_field(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d")
 
-    _msg = "The string in double-byte characters has DBCS code page equals to 0 (unknown encoding)"
+    _msg = "The string in double-byte characters has DBCS code page " \
+           "equals to 0 (unknown encoding)"
     raise DataCollectorError(_msg)
 
 
@@ -436,8 +439,8 @@ def collect_clob(c, fields, pos) -> str:
     Raises
     ------
     DataCollectorError
-        When length of the large object exceeds the maximum length Or When SBCP and DBCP
-        are simultaneously equal to 0.
+        When length of the large object exceeds the maximum length Or
+        When SBCP and DBCP are simultaneously equal to 0.
     """
     max_length = int(c["IXFCLENG"])
 
@@ -453,13 +456,13 @@ def collect_clob(c, fields, pos) -> str:
     field = fields[pos:pos + length]
 
     if dbcp != 0:
-        return decode_field(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d")
 
     if sbcp != 0:
-        return decode_field(field, sbcp)
+        return decode_cell(field, sbcp)
 
-    msg = "CLOB data type can not be a bit string as BLOB, the SBCP and DBCP should not " \
-          "simultaneously be equal to 0."
+    msg = "CLOB data type can not be a bit string as BLOB, " \
+          "the SBCP and DBCP should not simultaneously be equal to 0."
     raise DataCollectorError(msg)
 
 
@@ -499,9 +502,31 @@ def collect_blob(c, fields, pos) -> str:
     field = fields[pos:pos + length]
 
     if dbcp != 0:
-        return decode_field(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d")
 
     if sbcp != 0:
-        return decode_field(field, sbcp)
+        return decode_cell(field, sbcp)
 
     return field
+
+
+# Map between ixf data type code and its collector
+collectors = {
+    384: collect_date,
+    388: collect_time,
+    392: collect_timestamp,
+    404: collect_blob,
+    408: collect_clob,
+    448: collect_varchar,
+    452: collect_char,
+    456: collect_longvarchar,
+    464: collect_vargraphic,
+    480: collect_floating_point,
+    484: collect_decimal,
+    492: collect_bigint,
+    496: collect_integer,
+    500: collect_smallint,
+    912: collect_binary,
+}
+
+__all__ = ["collectors"]

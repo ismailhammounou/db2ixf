@@ -28,6 +28,29 @@ def test_cli_conversion_to_json(test_output_dir):
     assert output_file.is_file()
 
 
+def test_cli_conversion_to_jsonline(test_output_dir):
+    """Test CLI db2ixf conversion to json."""
+    # Input file in IXF
+    ixf_file = RESOURCES_DIR / "data" / "sample.ixf"
+
+    # Output in json
+    output_file = test_output_dir / "result.jsonl"
+
+    # Run the db2ixf CLI command
+    command = [
+        "db2ixf",
+        "jsonline",
+        str(ixf_file),
+        str(output_file),
+    ]
+    result = subprocess.run(command, capture_output=True, text=True)
+
+    # Assert the expected output or behavior
+    assert result.returncode == 0  # Successful execution
+    assert output_file.exists()
+    assert output_file.is_file()
+
+
 @pytest.mark.parametrize("separator", ["$", "#"])
 def test_cli_conversion_to_csv(test_output_dir, separator):
     """Test CLI db2ixf conversion to csv."""

@@ -1,11 +1,9 @@
 # coding=utf-8
 """Centralized shared logger module"""
 import logging
-from db2ixf import __name__
-
 
 # Get a logger in debug level
-logger = logging.getLogger(f'{__name__}')
+logger = logging.getLogger("db2ixf")
 logger.setLevel(logging.ERROR)
 
 # Create formatter
@@ -20,4 +18,4 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 # What to import when doing `from db2ixf import *`
-__all__ = ['logger']
+__all__ = ["logger"]

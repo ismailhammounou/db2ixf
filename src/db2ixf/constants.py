@@ -1,89 +1,100 @@
 # coding=utf-8
 """Contains constants about mappers, schemas, metadata and others"""
 import os
+from collections import OrderedDict
 from datetime import date, datetime, time
 
 # Records
-HEADER_RECORD_TYPE = {
-    'IXFHRECL': 6,
-    'IXFHRECT': 1,
-    'IXFHID': 3,
-    'IXFHVERS': 4,
-    'IXFHPROD': 12,
-    'IXFHDATE': 8,
-    'IXFHTIME': 6,
-    'IXFHHCNT': 5,
-    'IXFHSBCP': 5,
-    'IXFHDBCP': 5,
-    'IXFHFIL1': 2
-}
+HEADER_RECORD_TYPE = OrderedDict(
+    {
+        'IXFHRECL': 6,
+        'IXFHRECT': 1,
+        'IXFHID': 3,
+        'IXFHVERS': 4,
+        'IXFHPROD': 12,
+        'IXFHDATE': 8,
+        'IXFHTIME': 6,
+        'IXFHHCNT': 5,
+        'IXFHSBCP': 5,
+        'IXFHDBCP': 5,
+        'IXFHFIL1': 2
+    }
+)
 """Length in bytes of the fields in the header record."""
 
-TABLE_RECORD_TYPE = {
-    'IXFTRECL': 6,
-    'IXFTRECT': 1,
-    'IXFTNAML': 3,
-    'IXFTNAME': 256,
-    'IXFTQULL': 3,
-    'IXFTQUAL': 256,
-    'IXFTSRC': 12,
-    'IXFTDATA': 1,
-    'IXFTFORM': 1,
-    'IXFTMFRM': 5,
-    'IXFTLOC': 1,
-    'IXFTCCNT': 5,
-    'IXFTFIL1': 2,
-    'IXFTDESC': 30,
-    'IXFTPKNM': 257,
-    'IXFTDSPC': 257,
-    'IXFTISPC': 257,
-    'IXFTLSPC': 257
-}
+TABLE_RECORD_TYPE = OrderedDict(
+    {
+        'IXFTRECL': 6,
+        'IXFTRECT': 1,
+        'IXFTNAML': 3,
+        'IXFTNAME': 256,
+        'IXFTQULL': 3,
+        'IXFTQUAL': 256,
+        'IXFTSRC': 12,
+        'IXFTDATA': 1,
+        'IXFTFORM': 1,
+        'IXFTMFRM': 5,
+        'IXFTLOC': 1,
+        'IXFTCCNT': 5,
+        'IXFTFIL1': 2,
+        'IXFTDESC': 30,
+        'IXFTPKNM': 257,
+        'IXFTDSPC': 257,
+        'IXFTISPC': 257,
+        'IXFTLSPC': 257
+    }
+)
 """Length in bytes of the fields in the table record."""
 
-COL_DESCRIPTOR_RECORD_TYPE = {
-    'IXFCRECL': 6,
-    'IXFCRECT': 1,
-    'IXFCNAML': 3,
-    'IXFCNAME': 256,
-    'IXFCNULL': 1,
-    'IXFCDEF': 1,
-    'IXFCSLCT': 1,
-    'IXFCKPOS': 2,
-    'IXFCCLAS': 1,
-    'IXFCTYPE': 3,
-    'IXFCSBCP': 5,
-    'IXFCDBCP': 5,
-    'IXFCLENG': 5,
-    'IXFCDRID': 3,
-    'IXFCPOSN': 6,
-    'IXFCDESC': 30,
-    'IXFCLOBL': 20,
-    'IXFCUDTL': 3,
-    'IXFCUDTN': 256,
-    'IXFCDEFL': 3,
-    'IXFCDEFV': 254,
-    'IXFCREF': 1,
-    'IXFCNDIM': 2
-    # 'IXFCDSIZ' : variable   ## this att is determined at runtime
-}
+COL_DESCRIPTOR_RECORD_TYPE = OrderedDict(
+    {
+        'IXFCRECL': 6,
+        'IXFCRECT': 1,
+        'IXFCNAML': 3,
+        'IXFCNAME': 256,
+        'IXFCNULL': 1,
+        'IXFCDEF': 1,
+        'IXFCSLCT': 1,
+        'IXFCKPOS': 2,
+        'IXFCCLAS': 1,
+        'IXFCTYPE': 3,
+        'IXFCSBCP': 5,
+        'IXFCDBCP': 5,
+        'IXFCLENG': 5,
+        'IXFCDRID': 3,
+        'IXFCPOSN': 6,
+        'IXFCDESC': 30,
+        'IXFCLOBL': 20,
+        'IXFCUDTL': 3,
+        'IXFCUDTN': 256,
+        'IXFCDEFL': 3,
+        'IXFCDEFV': 254,
+        'IXFCREF': 1,
+        'IXFCNDIM': 2
+        # 'IXFCDSIZ' : variable   ## this att is determined at runtime
+    }
+)
 """Length in bytes of the fields in the column descriptor record."""
 
-DATA_RECORD_TYPE = {
-    'IXFDRECL': 6,
-    'IXFDRECT': 1,
-    'IXFDRID': 3,
-    'IXFDFIL1': 4
-    # 'IXFDCOLS': variable  ## this att is determined at runtime
-}
+DATA_RECORD_TYPE = OrderedDict(
+    {
+        'IXFDRECL': 6,
+        'IXFDRECT': 1,
+        'IXFDRID': 3,
+        'IXFDFIL1': 4
+        # 'IXFDCOLS': variable  ## this att is determined at runtime
+    }
+)
 """Length in bytes of the fields in the data record."""
 
-APPLICATION_RECORD_TYPE = {
-    'IXFARECL': 6,
-    'IXFARECT': 1,
-    'IXFAPPID': 12,
-    # 'IXFADATA': variable
-}
+APPLICATION_RECORD_TYPE = OrderedDict(
+    {
+        'IXFARECL': 6,
+        'IXFARECT': 1,
+        'IXFAPPID': 12,
+        # 'IXFADATA': variable
+    }
+)
 """Length in bytes of the fields in the application record."""
 
 # Data types
@@ -129,10 +140,15 @@ IXF_TO_PYTHON_DTYPES = {
 """Maps IXF data types to python ones"""
 
 # Data
-DB2IXF_ACCEPTED_CORRUPTION_RATE = int(os.getenv("DB2IXF_ACCEPTED_CORRUPTION_RATE", "1"))
+DB2IXF_ACCEPTED_CORRUPTION_RATE = int(
+    os.getenv("DB2IXF_ACCEPTED_CORRUPTION_RATE", "1")
+)
 """Accepted rate of corrupted data, attention to data loss !"""
+
 if not (0 <= DB2IXF_ACCEPTED_CORRUPTION_RATE <= 100):
-    raise ValueError("`DB2IXF_DATA_CORRUPTION_RATE` should be integer between 0 and 100")
+    raise ValueError(
+        "`DB2IXF_DATA_CORRUPTION_RATE` should be integer between 0 and 100"
+    )
 
 # Will need to delete this coz not necessary so skip it
 CCSID_TO_CODE_PAGE = {

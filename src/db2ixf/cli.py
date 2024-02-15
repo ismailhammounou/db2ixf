@@ -56,7 +56,7 @@ def json(
     """
     if output is None:
         output = Path.cwd()
-        filename = f"{file.name.removesuffix('.IXF').removesuffix('.ixf')}.json"
+        filename = f"{file.name.lower().removesuffix('.ixf')}.json"
         output /= filename
 
     if verbose > 2:
@@ -69,6 +69,54 @@ def json(
 
     parser = IXFParser(file)
     parser.to_json(output)
+    raise typer.Exit()
+
+
+@app.command(epilog="Made with heart :D")
+def jsonline(
+    file: Annotated[Path,
+                    typer.Argument(
+                        help="Path to the ixf FILE.",
+                        exists=True,
+                        dir_okay=False,
+                        resolve_path=True,
+                        rich_help_panel="Required Arguments",
+                    )],
+    output: Annotated[Union[Path, None],
+                      typer.Argument(
+                          help="Path to the `jsonline` OUTPUT file.",
+                          dir_okay=False,
+                          readable=False,
+                          resolve_path=True,
+                          rich_help_panel="Optional Arguments",
+                      )] = None,
+    verbose: Annotated[int,
+                       typer.Option(
+                           "--verbose",
+                           "-v",
+                           metavar="",
+                           help="Counter for verbosity level.",
+                           count=True,
+                       )] = 0,
+):
+    """
+    Parse ixf ``FILE`` and convert it to a **jsonline** ``OUTPUT``.
+    """
+    if output is None:
+        output = Path.cwd()
+        filename = f"{file.name.lower().removesuffix('.ixf')}.jsonl"
+        output /= filename
+
+    if verbose > 2:
+        logger.setLevel(VERBOSE_MAPPING[2])
+    else:
+        logger.setLevel(VERBOSE_MAPPING[verbose])
+
+    logger.info(f"IXF file: {file}")
+    logger.info(f"JSON Line file: {output}")
+
+    parser = IXFParser(file)
+    parser.to_jsonline(output)
     raise typer.Exit()
 
 
@@ -111,7 +159,7 @@ def csv(
     """
     if output is None:
         output = Path.cwd()
-        filename = f"{file.name.removesuffix('.IXF').removesuffix('.ixf')}.csv"
+        filename = f"{file.name.lower().removesuffix('.ixf')}.csv"
         output /= filename
 
     if sep is None:
@@ -180,7 +228,7 @@ def parquet(
     """
     if output is None:
         output = Path.cwd()
-        filename = f"{file.name.removesuffix('.IXF').removesuffix('.ixf')}.parquet"
+        filename = f"{file.name.lower().removesuffix('.ixf')}.parquet"
         output /= filename
 
     if version is None:
