@@ -8,6 +8,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
+## [0.11.0](https://github.com/ismailhammounou/db2ixf/tree/0.11.0) - 2024-02-15
+
+
+### Added
+
+- Add support for jsonline [db2ixf-56](https://github.com/ismailhammounou/db2ixf/issues/56)
+
+
+### Changed
+
+- Refactor code to avoid memory leaks [db2ixf-58](https://github.com/ismailhammounou/db2ixf/issues/58)
+
 ## [0.10.2](https://github.com/ismailhammounou/db2ixf/tree/0.10.2) - 2024-02-13
 
 
