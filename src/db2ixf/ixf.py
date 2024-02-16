@@ -8,6 +8,7 @@ import csv
 import deltalake
 import json
 from collections import OrderedDict
+from copy import deepcopy
 from db2ixf.collectors import collectors
 from db2ixf.constants import (
     COL_DESCRIPTOR_RECORD_TYPE, DATA_RECORD_TYPE,
@@ -29,7 +30,8 @@ from pathlib import Path
 from pyarrow import Schema, schema
 from pyarrow.parquet import ParquetWriter
 from typing import (
-    Any, BinaryIO, Dict, Iterable, List, Literal, Optional, TextIO, Tuple,
+    Any, BinaryIO, Dict, Iterable, List, Literal, Optional, TextIO,
+    Tuple,
     Union,
 )
 
@@ -218,7 +220,7 @@ class IXFParser:
 
                 # Parse next data record in case a column is in position 1
                 if col_position == 1:
-                    self.current_data_record.clear()
+                    self.current_data_record = OrderedDict()
                     self.get_data_record()
 
                 # Mark the end of data records: helps exit the while loop
@@ -249,14 +251,14 @@ class IXFParser:
                           f"data type {col_type}"
                     raise UnknownDataTypeException(msg)
 
-                collected_data = collector(
+                collected_data: Any = collector(
                     c, self.current_data_record["IXFDCOLS"], pos
                 )
+                self.current_row[col_name] = deepcopy(collected_data)
+                collected_data = None  # noqa
+                del collected_data, collector
 
-                self.current_row[col_name] = collected_data
-
-                del collected_data
-
+            self.current_data_record = OrderedDict()
             return self.current_row
         except UnknownDataTypeException as er1:
             logger.error(er1)
@@ -268,6 +270,7 @@ class IXFParser:
             return self.current_row
         except Exception as er3:
             logger.error(er3)
+            self.current_row = OrderedDict()
             raise IXFParsingError(er3)
 
     def parse_data(self) -> Iterable[OrderedDict]:
@@ -316,6 +319,7 @@ class IXFParser:
         logger.debug("Parse data records")
         for r in self.parse_data():
             yield r
+        gc.collect()
         logger.debug("Finished parsing")
 
     def to_json(self, output: Union[str, Path, PathLike, TextIO]) -> bool:
@@ -357,8 +361,6 @@ class IXFParser:
                 json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
                 first_row = False
             out.write("]")
-        # Add garbage collection step
-        gc.collect()
         logger.debug("Finished writing json file")
 
         total_rows = self.number_corrupted_rows + self.number_rows
@@ -422,8 +424,6 @@ class IXFParser:
             for r in self.parse():
                 json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
                 out.write("\n")
-        # Add garbage collection step
-        gc.collect()
         logger.debug("Finished writing json line file")
 
         total_rows = self.number_corrupted_rows + self.number_rows
@@ -496,8 +496,6 @@ class IXFParser:
             writer.writerow(cols)
             for r in self.parse():
                 writer.writerow(r.values())
-        # Add garbage collection step
-        gc.collect()
         logger.debug("Finished writing csv file")
 
         total_rows = self.number_corrupted_rows + self.number_rows

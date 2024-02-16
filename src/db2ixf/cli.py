@@ -272,8 +272,8 @@ def main(
 ):
     """
     A command-line tool (**CLI**) for parsing and converting IXF (IBM DB2
-    Import/Export Format) files to various formats such as JSON, CSV, and
-    Parquet. Easily parse and convert IXF files to meet your data processing
+    Import/Export Format) files to various formats such as JSON, JSONLINE, CSV,
+    and Parquet. Easily parse and convert IXF files to meet your data processing
     needs.
     """
     cli = ctx.info_name

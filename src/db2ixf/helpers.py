@@ -1,5 +1,6 @@
 # coding=utf-8
 """Create helper function for schema generation and others."""
+
 import chardet
 from collections import OrderedDict, defaultdict
 from copy import deepcopy
@@ -8,8 +9,10 @@ from db2ixf.exceptions import NotValidDataPrecisionException
 from db2ixf.logger import logger
 from pyarrow import (
     RecordBatch, Schema, array, binary, date32, decimal128, decimal256, field,
-    float32, float64, int16, int32, int64, large_binary, large_string,
-    record_batch, schema, string, time32, time64, timestamp,
+    float32,
+    float64, int16, int32, int64, large_binary, large_string, record_batch,
+    schema, string,
+    time32, time64, timestamp,
 )
 from typing import BinaryIO, Dict, Iterable, List, Literal, Tuple
 
@@ -47,7 +50,7 @@ def get_pyarrow_schema(cols: List[OrderedDict]) -> Schema:
         "BINARY": binary(),
     }
 
-    _schema = {}
+    _schema = OrderedDict()
     for c in cols:
         cname = c["IXFCNAME"].decode("utf-8").strip()
         ctype = int(c["IXFCTYPE"])
@@ -88,7 +91,7 @@ def get_pyarrow_schema(cols: List[OrderedDict]) -> Schema:
     return schema(_schema.items())
 
 
-def get_pandas_schema(cols: List[dict]) -> Dict[str, object]:
+def get_pandas_schema(cols: List[OrderedDict]) -> OrderedDict[str, object]:
     """Creates a pandas schema of the columns extracted from IXF file.
 
     Parameters
@@ -120,7 +123,7 @@ def get_pandas_schema(cols: List[dict]) -> Dict[str, object]:
         "BINARY": bytes,
     }
 
-    pandas_schema = {}
+    pandas_schema = OrderedDict()
     for c in cols:
         cname = str(c["IXFCNAME"], encoding="utf-8").strip()
         ctype = int(c["IXFCTYPE"])
@@ -142,7 +145,17 @@ def get_pandas_schema(cols: List[dict]) -> Dict[str, object]:
     return pandas_schema
 
 
-def get_batch(data: Iterable[Dict], size: int = 1000) -> Iterable[List[Dict]]:
+def get_names(cols: List[OrderedDict]) -> List[str]:
+    names = []
+    for col in cols:
+        name = str(col["IXFCNAME"], encoding="utf-8").strip()
+        names.append(name)
+    return names
+
+
+def get_batch(
+    data: Iterable[OrderedDict], size: int = 1000
+) -> Iterable[List[OrderedDict]]:
     """Batch generator. It yields batch of rows/dictionaries as a list.
 
     Parameters
@@ -202,9 +215,12 @@ def merge_dicts(dicts: List[OrderedDict]) -> Dict[str, list]:
     # Using defaultdict to automatically handle missing keys
     result = defaultdict(list)
 
-    for dictionary in dicts:
+    _dicts = deepcopy(dicts)
+    for dictionary in _dicts:
         for key, value in dictionary.items():
             result[key].append(value)
+
+    del dicts
 
     # Converting defaultdict back to a regular dictionary
     return dict(result)
@@ -373,11 +389,14 @@ def apply_schema_fixes(pyarrow_schema: Schema) -> Schema:
     Schema:
         Pyarrow schema with all fixes
     """
+    pa_schema = deepcopy(pyarrow_schema)
+
     fixes = [deltalake_fix_ns_timestamps, deltalake_fix_time]
     for fix in fixes:
-        pyarrow_schema = fix(deepcopy(pyarrow_schema))
-    pa_schema = deepcopy(pyarrow_schema)
+        pa_schema = fix(pa_schema)
+
     del pyarrow_schema
+
     return pa_schema
 
 
@@ -402,10 +421,15 @@ def pyarrow_record_batches(
         Pyarrow record batch.
     """
     for batch in get_array_batch(data, size=batch_size):
-        _arrays = [array(v) for v in list(batch.values())]
-        yield record_batch(data=_arrays, schema=pyarrow_schema)
-        _arrays.clear()
-    del _arrays
+        _arrays = []
+        for v in list(batch.values()):
+            _arrays.append(array(v))
+
+        _record_batch = record_batch(data=_arrays, schema=pyarrow_schema)
+        yield _record_batch
+        _arrays = []
+        _record_batch = None
+        del _arrays, _record_batch
 
 
 def decode_cell(cell: str, cp: int, cpt: Literal["s", "d"] = "s"):
