@@ -10,6 +10,13 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
 
+## [0.12.1](https://github.com/ismailhammounou/db2ixf/tree/0.12.1) - 2024-02-16
+
+### Fixed
+
+- Fix UnboundLocalError
+  error [db2ixf-61](https://github.com/ismailhammounou/db2ixf/issues/61)
+
 ## [0.12.0](https://github.com/ismailhammounou/db2ixf/tree/0.12.0) - 2024-02-16
 
 ### Added
