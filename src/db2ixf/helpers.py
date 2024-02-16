@@ -279,7 +279,6 @@ def get_array_batch(data_source: Iterable, size: int = 1000) -> Iterable[dict]:
     if rows:
         batch = merge_dicts(rows)
         yield batch
-    del batch
 
 
 def get_ccsid_from_column(column: dict) -> Tuple[int, int]:
