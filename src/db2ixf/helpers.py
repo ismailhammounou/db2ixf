@@ -180,7 +180,6 @@ def get_batch(
     # Yield the remaining rows as the last batch
     if batch:
         yield batch
-    del batch
 
 
 def merge_dicts(dicts: List[OrderedDict]) -> Dict[str, list]:
@@ -428,7 +427,6 @@ def pyarrow_record_batches(
         yield _record_batch
         _arrays = []
         _record_batch = None
-        del _arrays, _record_batch
 
 
 def decode_cell(cell: str, cp: int, cpt: Literal["s", "d"] = "s"):

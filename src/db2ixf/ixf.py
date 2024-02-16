@@ -256,7 +256,6 @@ class IXFParser:
                 )
                 self.current_row[col_name] = deepcopy(collected_data)
                 collected_data = None  # noqa
-                del collected_data, collector
 
             self.current_data_record = OrderedDict()
             return self.current_row
