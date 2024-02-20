@@ -2,8 +2,6 @@
 """Creates an PC/IXF parser"""
 from __future__ import annotations
 
-import gc
-
 import csv
 import deltalake
 import json
@@ -30,8 +28,7 @@ from pathlib import Path
 from pyarrow import Schema, schema
 from pyarrow.parquet import ParquetWriter
 from typing import (
-    Any, BinaryIO, Dict, Iterable, List, Literal, Optional, TextIO,
-    Tuple,
+    Any, BinaryIO, Dict, Iterable, List, Literal, Optional, TextIO, Tuple,
     Union,
 )
 
@@ -300,7 +297,7 @@ class IXFParser:
 
         Returns
         -------
-        Iterator[dict]:
+        Iterator[Dict]:
             List of dictionaries containing parsed rows.
         """
         logger.debug("Start parsing")
@@ -317,8 +314,7 @@ class IXFParser:
 
         logger.debug("Parse data records")
         for r in self.parse_data():
-            yield r
-        gc.collect()
+            yield dict(r)
         logger.debug("Finished parsing")
 
     def to_json(self, output: Union[str, Path, PathLike, TextIO]) -> bool:
@@ -365,6 +361,7 @@ class IXFParser:
         total_rows = self.number_corrupted_rows + self.number_rows
         if total_rows == 0:
             logger.warning("Empty ixf file")
+            self.file.close()
             return True
 
         logger.debug(f"Number of total rows = {total_rows}")
@@ -385,8 +382,10 @@ class IXFParser:
                 "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
                 "variable to a higher value"
             )
+            self.file.close()
             raise IXFParsingError(_msg)
 
+        self.file.close()
         return True
 
     def to_jsonline(self, output: Union[str, Path, PathLike, TextIO]) -> bool:
@@ -428,6 +427,7 @@ class IXFParser:
         total_rows = self.number_corrupted_rows + self.number_rows
         if total_rows == 0:
             logger.warning("Empty ixf file")
+            self.file.close()
             return True
 
         logger.debug(f"Number of total rows = {total_rows}")
@@ -448,8 +448,10 @@ class IXFParser:
                 "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
                 "variable to a higher value"
             )
+            self.file.close()
             raise IXFParsingError(_msg)
 
+        self.file.close()
         return True
 
     def to_csv(
@@ -500,6 +502,7 @@ class IXFParser:
         total_rows = self.number_corrupted_rows + self.number_rows
         if total_rows == 0:
             logger.warning("Empty ixf file")
+            self.file.close()
             return True
 
         logger.debug(f"Number of total rows = {total_rows}")
@@ -520,8 +523,10 @@ class IXFParser:
                 "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
                 "variable to a higher value"
             )
+            self.file.close()
             raise IXFParsingError(_msg)
 
+        self.file.close()
         return True
 
     def to_parquet(
@@ -585,13 +590,12 @@ class IXFParser:
                 )
                 for batch in record_batches:
                     writer.write_batch(batch)
-        # Add garbage collection step
-        gc.collect()
         logger.debug("Finished writing parquet file")
 
         total_rows = self.number_corrupted_rows + self.number_rows
         if total_rows == 0:
             logger.warning("Empty ixf file")
+            self.file.close()
             return True
 
         logger.debug(f"Number of total rows = {total_rows}")
@@ -612,8 +616,10 @@ class IXFParser:
                 "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
                 "variable to a higher value"
             )
+            self.file.close()
             raise IXFParsingError(_msg)
 
+        self.file.close()
         return True
 
     def to_deltalake(
@@ -698,12 +704,11 @@ class IXFParser:
         )
         # Add garbage collection step
         del fixed_schema, _data
-        gc.collect()
-        logger.debug("End writing to deltalake")
 
         total_rows = self.number_corrupted_rows + self.number_rows
         if total_rows == 0:
             logger.warning("Empty ixf file")
+            self.file.close()
             return True
 
         logger.debug(f"Number of total rows = {total_rows}")
@@ -724,8 +729,10 @@ class IXFParser:
                 "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
                 "variable to a higher value"
             )
+            self.file.close()
             raise IXFParsingError(_msg)
 
+        self.file.close()
         return True
 
 
