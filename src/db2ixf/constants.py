@@ -150,6 +150,8 @@ if not (0 <= DB2IXF_ACCEPTED_CORRUPTION_RATE <= 100):
         "`DB2IXF_DATA_CORRUPTION_RATE` should be integer between 0 and 100"
     )
 
+SIZE_FACTOR = 1024 * 1024  # 1 MB
+
 # Will need to delete this coz not necessary so skip it
 CCSID_TO_CODE_PAGE = {
     37: 'cp037',
