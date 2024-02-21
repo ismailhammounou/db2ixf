@@ -182,7 +182,18 @@ def get_batch(
         yield batch
 
 
-def merge_dicts(dicts: List[OrderedDict]) -> Dict[str, list]:
+def _merge_dicts(dicts: List[OrderedDict]) -> Dict[str, list]:
+    """Merge dictionaries."""
+    # Using defaultdict to automatically handle missing keys
+    result = defaultdict(list)
+    for dictionary in dicts:
+        for key, value in dictionary.items():
+            result[key].append(value)
+    # Converting defaultdict back to a regular dictionary
+    return dict(result)
+
+
+def merge_dicts(dicts: List[OrderedDict], size: int) -> Dict[str, list]:
     """
     Merge a list of dictionaries into a single dictionary where each key is
     mapped to a list of its values.
@@ -191,6 +202,8 @@ def merge_dicts(dicts: List[OrderedDict]) -> Dict[str, list]:
     ----------
     dicts : List[dict]
         A list of dictionaries.
+    size: int
+        Batch size used to decide whether we deepcopy or not.
 
     Returns
     -------
@@ -212,17 +225,15 @@ def merge_dicts(dicts: List[OrderedDict]) -> Dict[str, list]:
     }
     """
     # Using defaultdict to automatically handle missing keys
-    result = defaultdict(list)
-
-    _dicts = deepcopy(dicts)
-    for dictionary in _dicts:
-        for key, value in dictionary.items():
-            result[key].append(value)
-
-    del dicts
+    if size <= 1000:
+        _dicts = deepcopy(dicts)
+        result = _merge_dicts(_dicts)
+        del dicts
+    else:
+        result = _merge_dicts(dicts)
 
     # Converting defaultdict back to a regular dictionary
-    return dict(result)
+    return result
 
 
 def get_array_batch(data_source: Iterable, size: int = 10000) -> Iterable[dict]:
@@ -270,7 +281,7 @@ def get_array_batch(data_source: Iterable, size: int = 10000) -> Iterable[dict]:
     for i, row in enumerate(data_source):
         rows.append(row)
         if (i + 1) % size == 0:
-            batch = merge_dicts(rows)
+            batch = merge_dicts(rows, size=size)
             yield batch
             rows = []
 
