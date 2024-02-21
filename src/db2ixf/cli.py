@@ -213,7 +213,7 @@ def parquet(
                                    "to the parquet file, It is used "
                                    "for memory optimization.",
                               rich_help_panel="Command Options",
-                          )] = 1000,
+                          )] = None,
     verbose: Annotated[int,
                        typer.Option(
                            "--verbose",
@@ -234,9 +234,6 @@ def parquet(
     if version is None:
         version = "2.4"
 
-    if batch_size is None:
-        batch_size = 10000
-
     if verbose > 2:
         logger.setLevel(VERBOSE_MAPPING[2])
     else:
@@ -248,7 +245,7 @@ def parquet(
     logger.info(f"Batch size: {batch_size}")
 
     parser = IXFParser(file)
-    parser.to_parquet(output, int(batch_size), str(version))
+    parser.to_parquet(output, batch_size, version)
     raise typer.Exit()
 
 
