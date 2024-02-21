@@ -4,6 +4,7 @@ import base64
 import chardet
 import json
 from datetime import date, datetime, time
+from decimal import Decimal
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -12,6 +13,8 @@ class CustomJSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, (date, time, datetime)):
             return o.isoformat()
+        if isinstance(o, Decimal):
+            return str(o)
         elif isinstance(o, bytes):
             try:
                 encoding = chardet.detect(o)["encoding"]
