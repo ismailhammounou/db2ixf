@@ -138,7 +138,7 @@ def collect_decimal(c, fields, pos) -> Union[int, float]:
         dec = -dec
 
     if s == 0:
-        return int(dec)
+        return Decimal(dec)
 
     return Decimal(dec / pow(10, s))
 
@@ -213,12 +213,12 @@ def collect_char(c, fields, pos) -> str:
     field = fields[pos:pos + length]
 
     if dbcp != 0:
-        return decode_cell(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d").strip()
 
     if sbcp != 0:
-        return decode_cell(field, sbcp)
+        return decode_cell(field, sbcp).strip()
 
-    return str(field, "utf-8")
+    return str(field, "utf-8").strip()
 
 
 def collect_varchar(c, fields, pos) -> str:
@@ -257,12 +257,12 @@ def collect_varchar(c, fields, pos) -> str:
     field = fields[pos:pos + length]
 
     if dbcp != 0:
-        return decode_cell(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d").strip()
 
     if sbcp != 0:
-        return decode_cell(field, sbcp)
+        return decode_cell(field, sbcp).strip()
 
-    return str(field, "utf-8")
+    return str(field, "utf-8").strip()
 
 
 def collect_longvarchar(c, fields, pos) -> str:
@@ -300,12 +300,12 @@ def collect_longvarchar(c, fields, pos) -> str:
     field = fields[pos:pos + length]
 
     if dbcp != 0:
-        return decode_cell(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d").strip()
 
     if sbcp != 0:
-        return decode_cell(field, sbcp)
+        return decode_cell(field, sbcp).strip()
 
-    return str(field, "utf-8")
+    return str(field, "utf-8").strip()
 
 
 def collect_vargraphic(c, fields, pos) -> str:
@@ -344,7 +344,7 @@ def collect_vargraphic(c, fields, pos) -> str:
     field = fields[pos:pos + (length * 2)]
 
     if dbcp != 0:
-        return decode_cell(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d").strip()
 
     _msg = "The string in double-byte characters has DBCS code page " \
            "equals to 0 (unknown encoding)"
@@ -457,10 +457,10 @@ def collect_clob(c, fields, pos) -> str:
     field = fields[pos:pos + length]
 
     if dbcp != 0:
-        return decode_cell(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d").strip()
 
     if sbcp != 0:
-        return decode_cell(field, sbcp)
+        return decode_cell(field, sbcp).strip()
 
     msg = "CLOB data type can not be a bit string as BLOB, " \
           "the SBCP and DBCP should not simultaneously be equal to 0."
@@ -503,10 +503,10 @@ def collect_blob(c, fields, pos) -> str:
     field = fields[pos:pos + length]
 
     if dbcp != 0:
-        return decode_cell(field, dbcp, "d")
+        return decode_cell(field, dbcp, "d").strip()
 
     if sbcp != 0:
-        return decode_cell(field, sbcp)
+        return decode_cell(field, sbcp).strip()
 
     return field
 
