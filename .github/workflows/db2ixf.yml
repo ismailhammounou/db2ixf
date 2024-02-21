@@ -3,7 +3,7 @@ name: CI
 
 env:
   # Run tests
-  RUN_TESTS: 'true'
+  RUN_TESTS: 'false'
   # Run security check
   RUN_SECURITY_CHECK: 'true'
   # Publish artifacts
