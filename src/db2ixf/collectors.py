@@ -3,6 +3,7 @@
 from datetime import date, datetime, time
 from db2ixf.exceptions import DataCollectorError
 from db2ixf.helpers import decode_cell, get_ccsid_from_column
+from decimal import Decimal
 from struct import unpack
 from typing import Union
 
@@ -139,7 +140,7 @@ def collect_decimal(c, fields, pos) -> Union[int, float]:
     if s == 0:
         return int(dec)
 
-    return dec / pow(10, s)
+    return Decimal(dec / pow(10, s))
 
 
 def collect_floating_point(c, fields, pos) -> float:
