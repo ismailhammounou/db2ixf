@@ -10,6 +10,13 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
 
+## [0.13.1](https://github.com/ismailhammounou/db2ixf/tree/0.13.1) - 2024-02-21
+
+### Fixed
+
+- to_csv does not write the
+  header [db2ixf-66](https://github.com/ismailhammounou/db2ixf/issues/66)
+
 ## [0.13.0](https://github.com/ismailhammounou/db2ixf/tree/0.13.0) - 2024-02-21
 
 ### Added
