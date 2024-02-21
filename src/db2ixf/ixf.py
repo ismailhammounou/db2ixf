@@ -179,8 +179,7 @@ class IXFParser:
 
             column["IXFCDSIZ"] = self.file.read(int(column["IXFCRECL"]) - 862)
 
-            self.columns_info.append(column.copy())
-            column.clear()
+            self.columns_info.append(column)
 
         return self.columns_info
 
@@ -506,9 +505,12 @@ class IXFParser:
         logger.debug("Start writing in the csv file")
         with output as out:
             writer = csv.writer(out, delimiter=sep)
-            cols = get_names(self.columns_info)
-            writer.writerow(cols)
+            is_header = True
             for r in self.parse():
+                if is_header:
+                    cols = get_names(self.columns_info)
+                    writer.writerow(cols)
+                    is_header = False
                 writer.writerow(r.values())
         logger.debug("Finished writing csv file")
 
