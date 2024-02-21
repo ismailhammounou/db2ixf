@@ -235,7 +235,7 @@ def parquet(
         version = "2.4"
 
     if batch_size is None:
-        batch_size = 1000
+        batch_size = 10000
 
     if verbose > 2:
         logger.setLevel(VERBOSE_MAPPING[2])

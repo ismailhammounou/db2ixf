@@ -154,7 +154,7 @@ def get_names(cols: List[OrderedDict]) -> List[str]:
 
 
 def get_batch(
-    data: Iterable[OrderedDict], size: int = 1000
+    data: Iterable[OrderedDict], size: int = 10000
 ) -> Iterable[List[OrderedDict]]:
     """Batch generator. It yields batch of rows/dictionaries as a list.
 
@@ -225,7 +225,7 @@ def merge_dicts(dicts: List[OrderedDict]) -> Dict[str, list]:
     return dict(result)
 
 
-def get_array_batch(data_source: Iterable, size: int = 1000) -> Iterable[dict]:
+def get_array_batch(data_source: Iterable, size: int = 10000) -> Iterable[dict]:
     """Array batch generator. It yields a batch of rows in a single dictionary.
 
     It gets a list of size `size` containing rows from the data source
@@ -250,7 +250,7 @@ def get_array_batch(data_source: Iterable, size: int = 1000) -> Iterable[dict]:
     Get a batch generator from a data generator and process the batches:
 
     >>> data_generator = some_data_generator  # Assuming yields rows  # noqa
-    >>> batch_generator = get_array_batch(data_generator, size=100)
+    >>> batch_generator = get_array_batch(data_generator, size=100000)
 
     >>> for b in batch_generator:
     ...     # Process the batch of rows
@@ -399,7 +399,7 @@ def apply_schema_fixes(pyarrow_schema: Schema) -> Schema:
 
 
 def pyarrow_record_batches(
-    data: Iterable[Dict], pyarrow_schema: Schema, batch_size: int = 1000
+    data: Iterable[Dict], pyarrow_schema: Schema, batch_size: int = 10000
 ) -> Iterable[RecordBatch]:
     """Creates an Iterable of pyarrow record batches.
 

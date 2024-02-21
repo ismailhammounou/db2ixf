@@ -532,7 +532,7 @@ class IXFParser:
     def to_parquet(
         self,
         output: Union[str, Path, PathLike, BinaryIO],
-        batch_size: int = 1000,
+        batch_size: int = 10000,
         parquet_version: str = "2.4"
     ) -> bool:
         """Parse and convert to parquet.
@@ -630,7 +630,7 @@ class IXFParser:
         overwrite_schema: bool = False,
         partition_filters: Optional[List[Tuple[str, str, Any]]] = None,
         large_dtypes: bool = False,
-        batch_size: int = 1000,
+        batch_size: int = 10000,
         **kwargs
     ) -> bool:
         """Parse and convert to a deltalake table.
