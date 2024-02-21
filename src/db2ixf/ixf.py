@@ -5,13 +5,14 @@ from __future__ import annotations
 import csv
 import deltalake
 import json
+import os
 from collections import OrderedDict
 from copy import deepcopy
 from db2ixf.collectors import collectors
 from db2ixf.constants import (
     COL_DESCRIPTOR_RECORD_TYPE, DATA_RECORD_TYPE,
     DB2IXF_ACCEPTED_CORRUPTION_RATE, HEADER_RECORD_TYPE,
-    TABLE_RECORD_TYPE,
+    SIZE_FACTOR, TABLE_RECORD_TYPE,
 )
 from db2ixf.encoders import CustomJSONEncoder
 from db2ixf.exceptions import (
@@ -19,7 +20,7 @@ from db2ixf.exceptions import (
     UnknownDataTypeException,
 )
 from db2ixf.helpers import (
-    apply_schema_fixes, get_pyarrow_schema, pyarrow_record_batches,
+    apply_schema_fixes, get_names, get_pyarrow_schema, pyarrow_record_batches,
 )
 from db2ixf.logger import logger
 from deltalake import DeltaTable
@@ -57,6 +58,9 @@ class IXFParser:
         self.file = file
 
         # State
+        self.file_size: int = int(os.fstat(file.fileno()).st_size)
+        logger.debug(f"File size = {self.file_size} bytes")
+        """IXF file size"""
         self.header_info: OrderedDict = OrderedDict()
         """Contains header informations extracted from the ixf file."""
         self.table_info: OrderedDict = OrderedDict()
@@ -76,6 +80,19 @@ class IXFParser:
         # Avoids counting the last line (EOF)
         self.number_corrupted_rows: int = -1
         """Number of corrupted rows in the ixf file."""
+
+    def get_optimal_batch_size(self):
+        """Get optimal batch size"""
+        size_in_megabytes: float = self.file_size / SIZE_FACTOR
+        if size_in_megabytes >= 1000.0:
+            return 50000
+        if size_in_megabytes >= 100.0:
+            return 10000
+        if size_in_megabytes >= 10.0:
+            return 5000
+        if size_in_megabytes >= 1.0:
+            return 1000
+        return 100
 
     def parse_header(self, record_type: dict = None) -> dict:
         """Parse the header record.
@@ -489,11 +506,7 @@ class IXFParser:
         logger.debug("Start writing in the csv file")
         with output as out:
             writer = csv.writer(out, delimiter=sep)
-            cols = [
-                str(
-                    c["IXFCNAME"], encoding="utf-8"
-                ).strip() for c in self.columns_info
-            ]
+            cols = get_names(self.columns_info)
             writer.writerow(cols)
             for r in self.parse():
                 writer.writerow(r.values())
@@ -532,7 +545,7 @@ class IXFParser:
     def to_parquet(
         self,
         output: Union[str, Path, PathLike, BinaryIO],
-        batch_size: int = 10000,
+        batch_size: int = None,
         parquet_version: str = "2.4"
     ) -> bool:
         """Parse and convert to parquet.
@@ -562,6 +575,11 @@ class IXFParser:
         if output.mode != "wb":
             msg = "File-like object should be opened in write and binary mode"
             raise ValueError(msg)
+
+        logger.debug("Get optimal batch size")
+        if batch_size is None:
+            batch_size = self.get_optimal_batch_size()
+            logger.debug(f"Optimal batch size = {batch_size}")
 
         logger.debug("Start parsing")
         logger.debug("Put the pointer at the beginning of the ixf file")
@@ -630,7 +648,7 @@ class IXFParser:
         overwrite_schema: bool = False,
         partition_filters: Optional[List[Tuple[str, str, Any]]] = None,
         large_dtypes: bool = False,
-        batch_size: int = 10000,
+        batch_size: Optional[int] = None,
         **kwargs
     ) -> bool:
         """Parse and convert to a deltalake table.
@@ -657,8 +675,7 @@ class IXFParser:
             If True, the table schema is checked against large_dtypes.
         batch_size : int
             Number of rows to extract before conversion operation.
-            If None, the number of rows will be equal to 100000. It is used for
-            memory optimization.
+            It is used for memory optimization.
         **kwargs : Optional[dict]
             Some of the arguments you can give to this function
             `deltalake.write_deltalake`. See doc in
@@ -684,6 +701,11 @@ class IXFParser:
 
         logger.debug("Apply fixes on pyarrow schema for deltalake adaptation")
         fixed_schema = apply_schema_fixes(self.pyarrow_schema)
+
+        logger.debug("Get optimal batch size")
+        if batch_size is None:
+            batch_size = self.get_optimal_batch_size()
+            logger.debug(f"Optimal batch size = {batch_size}")
 
         logger.debug("Start writing to deltalake")
         _data = iter(
