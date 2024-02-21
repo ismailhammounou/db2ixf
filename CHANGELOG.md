@@ -10,6 +10,15 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
 
+## [0.13.0](https://github.com/ismailhammounou/db2ixf/tree/0.13.0) - 2024-02-21
+
+### Added
+
+- Change default batch size to decrease IO in some use
+  cases [db2ixf-62](https://github.com/ismailhammounou/db2ixf/issues/62)
+- Improve decimal
+  collector [db2ixf-64](https://github.com/ismailhammounou/db2ixf/issues/64)
+
 ## [0.12.1](https://github.com/ismailhammounou/db2ixf/tree/0.12.1) - 2024-02-16
 
 ### Fixed
