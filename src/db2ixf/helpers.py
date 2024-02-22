@@ -2,6 +2,7 @@
 """Create helper function for schema generation and others."""
 
 import chardet
+import os
 from collections import OrderedDict, defaultdict
 from copy import deepcopy
 from db2ixf.constants import IXF_DTYPES
@@ -13,6 +14,20 @@ from pyarrow import (
     string, time32, time64, timestamp,
 )
 from typing import BinaryIO, Dict, Iterable, List, Literal, Tuple
+
+
+def get_filesize(file: BinaryIO) -> int:
+    if hasattr(file, "fs"):
+        filesize = file.fs.size(file.path)
+        file.fs.seek(0)
+        return filesize
+    if hasattr(file, "open"):
+        filesize = file.open().seek(0, os.SEEK_END)
+        file.open().seek(0)
+        return filesize
+    filesize = file.seek(0, os.SEEK_END)
+    file.seek(0)
+    return filesize
 
 
 def get_pyarrow_schema(cols: List[OrderedDict]) -> Schema:

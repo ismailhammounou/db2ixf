@@ -5,7 +5,6 @@ from __future__ import annotations
 import csv
 import deltalake
 import json
-import os
 from collections import OrderedDict
 from copy import deepcopy
 from db2ixf.collectors import collectors
@@ -20,7 +19,8 @@ from db2ixf.exceptions import (
     UnknownDataTypeException,
 )
 from db2ixf.helpers import (
-    apply_schema_fixes, get_names, get_pyarrow_schema, pyarrow_record_batches,
+    apply_schema_fixes, get_filesize, get_names, get_pyarrow_schema,
+    pyarrow_record_batches,
 )
 from db2ixf.logger import logger
 from deltalake import DeltaTable
@@ -58,7 +58,7 @@ class IXFParser:
         self.file = file
 
         # State
-        self.file_size: int = int(os.fstat(file.fileno()).st_size)
+        self.file_size: int = get_filesize(file)
         logger.debug(f"File size = {self.file_size} bytes")
         """IXF file size"""
         self.header_info: OrderedDict = OrderedDict()
