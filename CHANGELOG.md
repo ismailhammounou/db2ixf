@@ -10,6 +10,13 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
 
+## [0.13.2](https://github.com/ismailhammounou/db2ixf/tree/0.13.2) - 2024-02-22
+
+### Fixed
+
+- bug in calculating file size when file opened by a non local file
+  system [db2ixf-67](https://github.com/ismailhammounou/db2ixf/issues/67)
+
 ## [0.13.1](https://github.com/ismailhammounou/db2ixf/tree/0.13.1) - 2024-02-21
 
 ### Fixed
