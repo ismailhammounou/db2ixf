@@ -17,13 +17,13 @@ from typing import BinaryIO, Dict, Iterable, List, Literal, Tuple
 
 
 def get_filesize(file: BinaryIO) -> int:
-    if hasattr(file, "fs"):
-        filesize = file.fs.size(file.path)
-        file.fs.seek(0)
-        return filesize
     if hasattr(file, "open"):
         filesize = file.open().seek(0, os.SEEK_END)
         file.open().seek(0)
+        return filesize
+    if hasattr(file, "fs"):
+        filesize = file.fs.size(file.path)
+        file.fs.open(file.path).seek(0)
         return filesize
     filesize = file.seek(0, os.SEEK_END)
     file.seek(0)
