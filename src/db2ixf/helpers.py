@@ -9,8 +9,9 @@ from db2ixf.constants import IXF_DTYPES
 from db2ixf.exceptions import NotValidDataPrecisionException
 from db2ixf.logger import logger
 from pyarrow import (
-    RecordBatch, Schema, binary, date32, decimal128, decimal256, field,
-    float32, float64, int16, int32, int64, large_binary, large_string, schema,
+    RecordBatch, Schema, array, binary, date32, decimal128, decimal256, field,
+    float32, float64, int16, int32, int64, large_binary, large_string,
+    record_batch, schema,
     string, time32, time64, timestamp,
 )
 from typing import BinaryIO, Dict, Iterable, List, Literal, Tuple
@@ -447,8 +448,17 @@ def pyarrow_record_batches(
     RecordBatch
         Pyarrow record batch.
     """
-    for batch in get_batch(data, size=batch_size):
-        yield RecordBatch.from_pylist(batch, schema=pyarrow_schema)
+    # for batch in get_batch(data, size=batch_size):
+    #     yield RecordBatch.from_pylist(batch, schema=pyarrow_schema)
+    for batch in get_array_batch(data, size=batch_size):
+        _arrays = []
+        for v in list(batch.values()):
+            _arrays.append(array(v))
+
+        _record_batch = record_batch(data=_arrays, schema=pyarrow_schema)
+        yield _record_batch
+        _arrays = []
+        _record_batch = None
 
 
 def decode_cell(cell: str, cp: int, cpt: Literal["s", "d"] = "s"):
