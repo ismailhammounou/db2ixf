@@ -10,6 +10,13 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
 
+## [0.13.3](https://github.com/ismailhammounou/db2ixf/tree/0.13.4) - 2024-02-23
+
+### Fixed
+
+- bug: pyarrow.lib.ArrowTypeError: Expected bytes, got a 'datetime.time'
+  object [db2ixf-69](https://github.com/ismailhammounou/db2ixf/issues/69)
+
 ## [0.13.3](https://github.com/ismailhammounou/db2ixf/tree/0.13.3) - 2024-02-22
 
 ### Fixed
