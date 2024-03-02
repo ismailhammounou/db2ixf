@@ -29,11 +29,11 @@ def test_cli_conversion_to_json(test_output_dir):
 
 
 def test_cli_conversion_to_jsonline(test_output_dir):
-    """Test CLI db2ixf conversion to json."""
+    """Test CLI db2ixf conversion to json line."""
     # Input file in IXF
     ixf_file = RESOURCES_DIR / "data" / "sample.ixf"
 
-    # Output in json
+    # Output in json line
     output_file = test_output_dir / "result.jsonl"
 
     # Run the db2ixf CLI command
@@ -51,8 +51,8 @@ def test_cli_conversion_to_jsonline(test_output_dir):
     assert output_file.is_file()
 
 
-@pytest.mark.parametrize("separator", ["$", "#"])
-def test_cli_conversion_to_csv(test_output_dir, separator):
+@pytest.mark.parametrize("separator, size", [("$", None), ("#", 1000)])
+def test_cli_conversion_to_csv(test_output_dir, separator, size):
     """Test CLI db2ixf conversion to csv."""
     # Input file in IXF
     ixf_file = RESOURCES_DIR / "data" / "sample.ixf"
@@ -61,14 +61,27 @@ def test_cli_conversion_to_csv(test_output_dir, separator):
     output_file = test_output_dir / "result.csv"
 
     # Run the db2ixf CLI command
-    command = [
-        "db2ixf",
-        "csv",
-        "--sep",
-        str(separator),
-        str(ixf_file),
-        str(output_file),
-    ]
+    if size:
+        command = [
+            "db2ixf",
+            "csv",
+            "--sep",
+            separator,
+            "--batch-size",
+            str(size),
+            str(ixf_file),
+            str(output_file)
+        ]
+    else:
+        command = [
+            "db2ixf",
+            "csv",
+            "--sep",
+            separator,
+            str(ixf_file),
+            str(output_file)
+        ]
+
     result = subprocess.run(command, capture_output=True, text=True)
 
     # Assert the expected output or behavior
@@ -77,6 +90,7 @@ def test_cli_conversion_to_csv(test_output_dir, separator):
     assert output_file.is_file()
 
 # parquet_param_data = [
+#     ("1.0", None), ("2.4", None), ("2.6", None),
 #     ("1.0", 100), ("2.4", 100), ("2.6", 100),
 #     ("1.0", 500), ("2.4", 500), ("2.6", 500),
 #     ("1.0", 1000), ("2.4", 1000), ("2.6", 1000),
@@ -97,16 +111,27 @@ def test_cli_conversion_to_csv(test_output_dir, separator):
 #     output_file = test_output_dir / "result.parquet"
 #
 #     # Run the db2ixf CLI command
-#     command = [
-#         "db2ixf",
-#         "parquet",
-#         "--version",
-#         str(parquet_version),
-#         "--batch-size",
-#         str(size),
-#         str(ixf_file),
-#         str(output_file),
-#     ]
+#     if size:
+#         command = [
+#             "db2ixf",
+#             "parquet",
+#             "--parquet-version",
+#             parquet_version,
+#             "--batch-size",
+#             str(size),
+#             str(ixf_file),
+#             str(output_file)
+#         ]
+#     else:
+#         command = [
+#             "db2ixf",
+#             "parquet",
+#             "--parquet-version",
+#             parquet_version,
+#             str(ixf_file),
+#             str(output_file)
+#         ]
+#
 #     result = subprocess.run(command, capture_output=True, text=True)
 #
 #     # Assert the expected output or behavior
