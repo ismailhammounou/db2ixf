@@ -1,34 +1,48 @@
 # coding=utf-8
 """Create helper function for schema generation and others."""
-
 import chardet
 import os
-from collections import OrderedDict, defaultdict
-from copy import deepcopy
-from db2ixf.constants import IXF_DTYPES
+import warnings
+from collections import OrderedDict
+from db2ixf.constants import (
+    DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER, DB2IXF_DEFAULT_BATCH_SIZE, IXF_DTYPES,
+)
 from db2ixf.exceptions import NotValidDataPrecisionException
 from db2ixf.logger import logger
 from pyarrow import (
     RecordBatch, Schema, array, binary, date32, decimal128, decimal256, field,
     float32, float64, int16, int32, int64, large_binary, large_string,
-    record_batch, schema,
-    string, time32, time64, timestamp,
+    record_batch, schema, string, time32, time64, timestamp,
 )
-from typing import BinaryIO, Dict, Iterable, List, Literal, Tuple
+from typing import (BinaryIO, List, Literal, Tuple)
 
 
 def get_filesize(file: BinaryIO) -> int:
-    if hasattr(file, "open"):
-        filesize = file.open().seek(0, os.SEEK_END)
-        file.open().seek(0)
+    if hasattr(file, "seek"):
+        filesize = file.seek(0, os.SEEK_END)
+        file.seek(0)
         return filesize
     if hasattr(file, "fs"):
         filesize = file.fs.size(file.path)
-        file.fs.open(file.path).seek(0)
         return filesize
-    filesize = file.seek(0, os.SEEK_END)
-    file.seek(0)
-    return filesize
+    if hasattr(file, "open"):
+        filesize = file.open(file.path).seek(0, os.SEEK_END)
+        file.open(file.path).seek(0)
+        return filesize
+    return 0
+
+
+def init_opt_batch_size(file_size: int):
+    """Init optimal batch size"""
+    nbr_net_req = int(file_size / DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER)
+    if nbr_net_req == 0:
+        nbr_net_req = 1
+    return int(nbr_net_req * DB2IXF_DEFAULT_BATCH_SIZE * 1.5)
+
+
+def get_opt_batch_size(batch_size: int, row_size: int) -> int:
+    size = int(DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER / row_size * 1.5)
+    return max(batch_size, size)
 
 
 def get_pyarrow_schema(cols: List[OrderedDict]) -> Schema:
@@ -64,12 +78,16 @@ def get_pyarrow_schema(cols: List[OrderedDict]) -> Schema:
         "BINARY": binary(),
     }
 
-    _schema = OrderedDict()
+    # todo: use the code page from the header instead of utf-8
+    _schema = []
     for c in cols:
         cname = c["IXFCNAME"].decode("utf-8").strip()
+        cdesc = c["IXFCDESC"].decode("utf-8").strip()
+        cnull = c["IXFCNULL"].decode("utf-8").strip()
         ctype = int(c["IXFCTYPE"])
-        dtype = mapper[IXF_DTYPES[ctype]]
 
+        # Update dtype for datatypes
+        dtype = mapper[IXF_DTYPES[ctype]]
         if ctype == 912:
             length = int(c["IXFCLENG"])
             dtype = binary(length)
@@ -103,66 +121,24 @@ def get_pyarrow_schema(cols: List[OrderedDict]) -> Schema:
                 msg = f"Invalid time precision for {cname}, expected < 12"
                 raise NotValidDataPrecisionException(msg)
 
-        _schema[cname] = dtype
+        # See if the col is nullable or not
+        if cnull.lower() not in ["y", "n"]:
+            cnull = "Y"
+        cnullable = False if cnull.lower() == "n" else True
 
-    return schema(_schema.items())
+        _field = field(
+            cname,
+            dtype,
+            nullable=cnullable,
+            metadata={cname: cdesc}
+        )
 
+        _schema.append(_field)
 
-def get_pandas_schema(cols: List[OrderedDict]) -> OrderedDict[str, object]:
-    """Creates a pandas schema of the columns extracted from IXF file.
-
-    Parameters
-    ----------
-    cols : list[dict]
-        List of column descriptors extracted from IXF file.
-
-    Returns
-    -------
-    dict[str, object]:
-        Maps columns extracted from IXF file to their pandas data types.
-    """
-
-    mapper = {
-        "DATE": "datetime64[ns]",
-        "TIME": "datetime64[ns]",
-        "TIMESTAMP": "datetime64[ns]",
-        "BLOB": bytes,
-        "CLOB": object,
-        "VARCHAR": object,
-        "CHAR": object,
-        "LONGVARCHAR": object,
-        "VARGRAPHIC": object,
-        "FLOATING POINT": "float64",
-        "DECIMAL": "float32",
-        "BIGINT": "int64",
-        "INTEGER": "int64",
-        "SMALLINT": "int64",
-        "BINARY": bytes,
-    }
-
-    pandas_schema = OrderedDict()
-    for c in cols:
-        cname = str(c["IXFCNAME"], encoding="utf-8").strip()
-        ctype = int(c["IXFCTYPE"])
-        dtype = mapper[IXF_DTYPES[ctype]]
-
-        if ctype == 480:
-            length = int(c["IXFCLENG"])
-            dtype = "float32" if length == 4 else dtype
-
-        if ctype == 484:
-            scale = int(c["IXFCLENG"][3:5])
-            if scale == 0:
-                dtype = "int64"
-            else:
-                dtype = "float32"
-
-        pandas_schema[cname] = dtype
-
-    return pandas_schema
+    return schema(_schema)
 
 
-def get_names(cols: List[OrderedDict]) -> List[str]:
+def get_column_names(cols: List[OrderedDict]) -> List[str]:
     names = []
     for col in cols:
         name = str(col["IXFCNAME"], encoding="utf-8").strip()
@@ -170,147 +146,7 @@ def get_names(cols: List[OrderedDict]) -> List[str]:
     return names
 
 
-def get_batch(
-    data: Iterable[OrderedDict], size: int = 10000
-) -> Iterable[List[OrderedDict]]:
-    """Batch generator. It yields batch of rows/dictionaries as a list.
-
-    Parameters
-    ----------
-    data : Iterable[Dict]
-        Iterable of individual rows from the source data.
-    size : int, optional
-        Size of each batch (number of rows per batch).
-
-    Returns
-    -------
-    Iterable[List[Dict]]
-        Iterable of a list of rows.
-    """
-    batch = []
-    for i, row in enumerate(data):
-        batch.append(row)
-        if (i + 1) % size == 0:
-            yield batch
-            batch = []
-
-    # Yield the remaining rows as the last batch
-    if batch:
-        yield batch
-
-
-def _merge_dicts(dicts: List[OrderedDict]) -> Dict[str, list]:
-    """Merge dictionaries."""
-    # Using defaultdict to automatically handle missing keys
-    result = defaultdict(list)
-    for dictionary in dicts:
-        for key, value in dictionary.items():
-            result[key].append(value)
-    # Help free memory
-    dicts.clear()
-    # Converting defaultdict back to a regular dictionary
-    return dict(result)
-
-
-def merge_dicts(dicts: List[OrderedDict], size: int) -> Dict[str, list]:
-    """
-    Merge a list of dictionaries into a single dictionary where each key is
-    mapped to a list of its values.
-
-    Parameters
-    ----------
-    dicts : List[dict]
-        A list of dictionaries.
-    size: int
-        Batch size used to decide whether we deepcopy or not.
-
-    Returns
-    -------
-    Dict[str, list]
-        A dictionary where each key is mapped to a list of values.
-
-    Examples
-    --------
-    >>> dicts_inlist = [
-    ...     {"key1": "value1", "key2": "value2"},
-    ...     {"key1": "value3", "key2": "value4"},
-    ...     {"key1": "value5", "key3": "value6"}
-    ... ]
-    >>> merge_dicts(dicts_inlist, size=1000)
-    {
-    'key1': ['value1', 'value3', 'value5'],
-    'key2': ['value2', 'value4'],
-    'key3': ['value6']
-    }
-    """
-    # Using defaultdict to automatically handle missing keys
-    if size <= 1000:
-        _dicts = deepcopy(dicts)
-        result = _merge_dicts(_dicts)
-        del dicts
-    else:
-        result = _merge_dicts(dicts)
-
-    # Converting defaultdict back to a regular dictionary
-    return result
-
-
-def get_array_batch(data_source: Iterable, size: int = 10000) -> Iterable[dict]:
-    """Array batch generator. It yields a batch of rows in a single dictionary.
-
-    It gets a list of size `size` containing rows from the data source
-    then merge all rows in one dictionary and yield it.
-
-
-    Parameters
-    ----------
-    data_source : Iterable
-        Iterable of individual rows from the source data.
-    size : int, optional
-        Size of each batch (number of rows per batch).
-
-    Yields
-    ------
-    Iterable[Dict]
-        A generator that yields batches of rows, where each batch is a
-        list of rows.
-
-    Examples
-    --------
-    Get a batch generator from a data generator and process the batches:
-
-    >>> data_generator = some_data_generator  # Assuming yields rows  # noqa
-    >>> batch_generator = get_array_batch(data_generator, size=100000)
-
-    >>> for b in batch_generator:
-    ...     # Process the batch of rows
-    ...     process_batch(b) # noqa
-
-    Notes
-    -----
-    - The function accumulates rows until the number of rows reaches the
-      specified `size`.
-    - Once the accumulated rows reach the `size`, a batch is formed and yielded.
-    - If there are remaining rows that do not form a complete batch, they are
-      yielded as the last batch.
-    - The `merge_dicts` function should be implemented separately and used
-      to merge the rows into a single dictionary.
-    """
-    rows = []
-    for i, row in enumerate(data_source):
-        rows.append(row)
-        if (i + 1) % size == 0:
-            batch = merge_dicts(rows, size=size)
-            yield batch
-            rows = []
-
-    # Yield the remaining rows as the last batch
-    if rows:
-        batch = merge_dicts(rows, size=size)
-        yield batch
-
-
-def get_ccsid_from_column(column: dict) -> Tuple[int, int]:
+def get_ccsid_from_column(column: OrderedDict) -> Tuple[int, int]:
     """
     Get the coded character set identifiers for single and double bytes
     data type. Which means the code page for singular/double byte data type.
@@ -322,24 +158,6 @@ def get_ccsid_from_column(column: dict) -> Tuple[int, int]:
     dbcp = int(dbcp) if dbcp else 0
 
     return sbcp, dbcp
-
-
-def get_record_length_and_type(file: BinaryIO) -> Tuple[int, str]:
-    """Get record length and its type.
-
-    Parameters
-    ----------
-    file : BinaryIO.
-        File-like object representing the IXF file.
-
-    Returns
-    -------
-    Tuple[int, str]
-        record length, record type
-    """
-    recl: int = int(file.read(6))
-    rect: str = file.read(1).decode("utf-8")
-    return recl, rect
 
 
 def deltalake_fix_ns_timestamps(pyarrow_schema: Schema) -> Schema:
@@ -362,7 +180,12 @@ def deltalake_fix_ns_timestamps(pyarrow_schema: Schema) -> Schema:
     """
     for i, f in enumerate(pyarrow_schema):
         if f.type == timestamp("ns"):
-            new_field = field(f.name, timestamp("us"))
+            new_field = field(
+                f.name,
+                timestamp("us"),
+                nullable=f.nullable,
+                metadata=f.metadata
+            )
             pyarrow_schema = pyarrow_schema.set(i, new_field)
     return pyarrow_schema
 
@@ -388,15 +211,20 @@ def deltalake_fix_time(pyarrow_schema: Schema) -> Schema:
     Schema
         Pyarrow schema with the fix.
     """
-    time_datatypes = [
+    time_datatypes = {
         time64("ns"),
         time64("us"),
         time32("ms"),
-        time32("s")
-    ]
+        time32("s"),
+    }
     for i, f in enumerate(pyarrow_schema):
         if f.type in time_datatypes:
-            new_field = field(f.name, string())
+            new_field = field(
+                f.name,
+                string(),
+                nullable=f.nullable,
+                metadata=f.metadata
+            )
             pyarrow_schema = pyarrow_schema.set(i, new_field)
     return pyarrow_schema
 
@@ -417,48 +245,37 @@ def apply_schema_fixes(pyarrow_schema: Schema) -> Schema:
     Schema:
         Pyarrow schema with all fixes
     """
-    pa_schema = deepcopy(pyarrow_schema)
-
     fixes = [deltalake_fix_ns_timestamps, deltalake_fix_time]
     for fix in fixes:
-        pa_schema = fix(pa_schema)
-
-    del pyarrow_schema
-
-    return pa_schema
+        pyarrow_schema = fix(pyarrow_schema)
+    return pyarrow_schema
 
 
-def pyarrow_record_batches(
-    data: Iterable[Dict], pyarrow_schema: Schema, batch_size: int = 10000
-) -> Iterable[RecordBatch]:
-    """Creates an Iterable of pyarrow record batches.
+def to_pyarrow_record_batch(
+    batch: dict,
+    pyarrow_schema: Schema
+) -> RecordBatch:
+    """Transforms to pyarrow record batch.
 
     Parameters
     ----------
-    data : Iterable
-        IXF data.
-    pyarrow_schema : Schema
-        Pyarrow schema.
-    batch_size : int
-        Number of rows to extract before writing to the parquet file.
-        It is used for memory optimization.
+    batch : DefaultOrderedDict
+        Dictionary of type Dict[str, list]
+    pyarrow_schema: Schema
+        Pyarrow schema
 
-    Yields
-    ------
+    Returns
+    -------
     RecordBatch
-        Pyarrow record batch.
+        Pyarrow record batch
     """
-    # for batch in get_batch(data, size=batch_size):
-    #     yield RecordBatch.from_pylist(batch, schema=pyarrow_schema)
-    for batch in get_array_batch(data, size=batch_size):
-        _arrays = []
-        for v in list(batch.values()):
-            _arrays.append(array(v))
+    _arrays = []
+    for k, v in batch.items():
+        _dtype = pyarrow_schema.field(k).type
+        _arrays.append(array(v, type=_dtype))
+        _dtype = None
 
-        _record_batch = record_batch(data=_arrays, schema=pyarrow_schema)
-        yield _record_batch
-        _arrays = []
-        _record_batch = None
+    return record_batch(_arrays, schema=pyarrow_schema)
 
 
 def decode_cell(cell: str, cp: int, cpt: Literal["s", "d"] = "s"):
@@ -510,3 +327,18 @@ def decode_cell(cell: str, cp: int, cpt: Literal["s", "d"] = "s"):
                         "Alert: eventual data loss, please provide encoding !"
                     )
                     return cell.decode(f"cp{cp}", errors="ignore")
+
+
+def deprecated(version: str, message: str = ""):
+    def decorator(func):
+        _info = f"WARNING: `{func.__name__}` is deprecated and will be " \
+                f"removed in version {version}. "
+        _info = f"{_info}{message}"
+
+        def wrapper(*args, **kwargs):
+            warnings.warn(_info, DeprecationWarning, stacklevel=2)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

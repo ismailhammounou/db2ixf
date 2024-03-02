@@ -2,16 +2,17 @@
 """Creates an PC/IXF parser"""
 from __future__ import annotations
 
+import sys
+
 import csv
 import deltalake
 import json
-from collections import OrderedDict
-from copy import deepcopy
+from collections import OrderedDict, defaultdict
 from db2ixf.collectors import collectors
 from db2ixf.constants import (
     COL_DESCRIPTOR_RECORD_TYPE, DATA_RECORD_TYPE,
     DB2IXF_ACCEPTED_CORRUPTION_RATE, HEADER_RECORD_TYPE,
-    SIZE_FACTOR, TABLE_RECORD_TYPE,
+    TABLE_RECORD_TYPE,
 )
 from db2ixf.encoders import CustomJSONEncoder
 from db2ixf.exceptions import (
@@ -19,24 +20,25 @@ from db2ixf.exceptions import (
     UnknownDataTypeException,
 )
 from db2ixf.helpers import (
-    apply_schema_fixes, get_filesize, get_names, get_pyarrow_schema,
-    pyarrow_record_batches,
+    apply_schema_fixes, deprecated, get_column_names, get_filesize,
+    get_opt_batch_size, get_pyarrow_schema,
+    init_opt_batch_size, to_pyarrow_record_batch,
 )
 from db2ixf.logger import logger
 from deltalake import DeltaTable
 from os import PathLike
 from pathlib import Path
-from pyarrow import Schema, schema
+from pyarrow import RecordBatch, Schema, schema
 from pyarrow.parquet import ParquetWriter
 from typing import (
-    Any, BinaryIO, Dict, Iterable, List, Literal, Optional, TextIO, Tuple,
+    Any, BinaryIO, Dict, Generator, Iterable, List, Literal, Optional, TextIO,
+    Tuple,
     Union,
 )
 
 
 class IXFParser:
-    """
-    PC/IXF Parser.
+    """PC/IXF Parser.
 
     Attributes
     ----------
@@ -45,7 +47,13 @@ class IXFParser:
     """
 
     def __init__(self, file: Union[str, Path, PathLike, BinaryIO]):
-        """Init the instance."""
+        """Init an instance of the PC/IXF Parser.
+
+        Parameters
+        ----------
+        file : str, Path, PathLike or File-Like Object
+            Input file and it is better to use file-like object.
+        """
         if isinstance(file, (str, Path, PathLike)):
             file = open(file, mode="rb")
             logger.debug("File opened in read & binary mode")
@@ -61,41 +69,37 @@ class IXFParser:
         self.file_size: int = get_filesize(file)
         logger.debug(f"File size = {self.file_size} bytes")
         """IXF file size"""
-        self.header_info: OrderedDict = OrderedDict()
-        """Contains header informations extracted from the ixf file."""
-        self.table_info: OrderedDict = OrderedDict()
+        self.header_record: OrderedDict = OrderedDict()
+        """Contains header metadata extracted from the ixf file."""
+        self.table_record: OrderedDict = OrderedDict()
         """Contains table metadata extracted from the ixf file."""
-        self.columns_info: List[OrderedDict] = []
+        self.column_records: List[OrderedDict] = []
         """Contains columns description extracted from the ixf file."""
         self.pyarrow_schema: Schema = schema([])
-        """Pyarrow Schema extracted from the ixf file."""
+        """Pyarrow schema extracted from the ixf file."""
         self.current_data_record: OrderedDict = OrderedDict()
         """Contains current data record extracted from ixf file."""
         self.end_data_records: bool = False
-        """Flag the end of data records in the ixf file."""
+        """Flag the end of the data records in the ixf file."""
         self.current_row: OrderedDict = OrderedDict()
         """Contains parsed data extracted from a data record of the ixf file."""
+        self.current_row_size: int = 0
+        """Current row size in bytes"""
+        self.current_total_size: int = 0
+        """Current total size of the rows"""
         self.number_rows: int = 0
         """Number of rows extracted from the ixf file."""
         # Avoids counting the last line (EOF)
         self.number_corrupted_rows: int = -1
         """Number of corrupted rows in the ixf file."""
+        self.opt_batch_size: int = init_opt_batch_size(self.file_size)
+        """Estimated optimal batch size"""
 
-    def get_optimal_batch_size(self):
-        """Get optimal batch size"""
-        size_in_megabytes: float = self.file_size / SIZE_FACTOR
-        if size_in_megabytes >= 1000.0:
-            return 50000
-        if size_in_megabytes >= 100.0:
-            return 10000
-        if size_in_megabytes >= 10.0:
-            return 5000
-        if size_in_megabytes >= 1.0:
-            return 1000
-        return 100
-
-    def parse_header(self, record_type: dict = None) -> dict:
-        """Parse the header record.
+    def __read_header(
+        self,
+        record_type: OrderedDict = None
+    ) -> OrderedDict:
+        """Read the header record.
 
         Parameters
         ----------
@@ -112,12 +116,15 @@ class IXFParser:
             record_type = HEADER_RECORD_TYPE
 
         for u, w in record_type.items():
-            self.header_info[u] = self.file.read(w)
+            self.header_record[u] = self.file.read(w)
 
-        return self.header_info
+        return self.header_record
 
-    def parse_table(self, record_type: dict = None) -> dict:
-        """Parse the table record.
+    def __read_table(
+        self,
+        record_type: OrderedDict = None
+    ) -> OrderedDict:
+        """Read the table record.
 
         Parameters
         ----------
@@ -134,12 +141,15 @@ class IXFParser:
             record_type = TABLE_RECORD_TYPE
 
         for m, n in record_type.items():
-            self.table_info[m] = self.file.read(n)
+            self.table_record[m] = self.file.read(n)
 
-        return self.table_info
+        return self.table_record
 
-    def parse_columns(self, record_type: dict = None) -> List[OrderedDict]:
-        """Parse the column records.
+    def __read_column_records(
+        self,
+        record_type: OrderedDict = None
+    ) -> List[OrderedDict]:
+        """Read the column records.
 
         Parameters
         ----------
@@ -161,7 +171,7 @@ class IXFParser:
             record_type = COL_DESCRIPTOR_RECORD_TYPE
 
         # "IXFTCCNT" contains number of columns in the table
-        for _ in range(0, int(self.table_info["IXFTCCNT"])):
+        for _ in range(0, int(self.table_record["IXFTCCNT"])):
             column = OrderedDict()
             for i, j in record_type.items():
                 column[i] = self.file.read(j)
@@ -179,12 +189,15 @@ class IXFParser:
 
             column["IXFCDSIZ"] = self.file.read(int(column["IXFCRECL"]) - 862)
 
-            self.columns_info.append(column)
+            self.column_records.append(column)
 
-        return self.columns_info
+        return self.column_records
 
-    def get_data_record(self, record_type: dict = None) -> OrderedDict:
-        """get one data record.
+    def __read_data_record(
+        self,
+        record_type: OrderedDict = None
+    ) -> OrderedDict:
+        """Read one data record.
 
         Parameters
         ----------
@@ -209,8 +222,10 @@ class IXFParser:
         )
         return self.current_data_record
 
-    def collect_data(self) -> OrderedDict:
-        """collect data from fields of the current data record.
+    def __parse_data_record(self) -> OrderedDict:
+        """Parses one data record.
+
+        It collects data from fields of the current data record.
 
         Returns
         -------
@@ -221,7 +236,7 @@ class IXFParser:
         # Start Extraction
         try:
             self.current_row = OrderedDict()
-            for c in self.columns_info:
+            for c in self.column_records:
                 # Extract some metadata about the column
                 col_name = str(c["IXFCNAME"], encoding="utf-8").strip()
                 col_type = int(c["IXFCTYPE"])
@@ -230,11 +245,11 @@ class IXFParser:
 
                 # Init the data collection
                 self.current_row[col_name] = None
+                collected_data = None  # noqa
 
                 # Parse next data record in case a column is in position 1
                 if col_position == 1:
-                    self.current_data_record = OrderedDict()
-                    self.get_data_record()
+                    self.__read_data_record()
 
                 # Mark the end of data records: helps exit the while loop
                 if self.current_data_record["IXFDRECT"] != b"D":
@@ -267,26 +282,40 @@ class IXFParser:
                 collected_data: Any = collector(
                     c, self.current_data_record["IXFDCOLS"], pos
                 )
-                self.current_row[col_name] = deepcopy(collected_data)
-                collected_data = None  # noqa
+                self.current_row[col_name] = collected_data
 
             self.current_data_record = OrderedDict()
             return self.current_row
-        except UnknownDataTypeException as er1:
+        except DataCollectorError as er1:
             logger.error(er1)
             self.current_row = OrderedDict()
-            raise IXFParsingError(er1)
-        except DataCollectorError as er2:
+            return self.current_row
+        except (UnknownDataTypeException, Exception) as er2:
             logger.error(er2)
             self.current_row = OrderedDict()
-            return self.current_row
-        except Exception as er3:
-            logger.error(er3)
-            self.current_row = OrderedDict()
-            raise IXFParsingError(er3)
+            raise IXFParsingError(er2)
 
-    def parse_data(self) -> Iterable[OrderedDict]:
-        """Parse data records.
+    def __update_statistics(self) -> "IXFParser":
+        """Update stats and change state of the parser"""
+        # Stats calculation
+        self.number_rows += 1
+        self.current_row_size = sys.getsizeof(self.current_row)
+        self.current_total_size += self.current_row_size
+        if self.number_rows == 0:
+            self.estimated_row_size = self.current_row_size
+        else:
+            self.estimated_row_size = self.current_total_size \
+                                      / self.number_rows
+
+        self.opt_batch_size = get_opt_batch_size(
+            self.opt_batch_size,
+            self.estimated_row_size
+        )
+
+        return self
+
+    def __parse_all_data_records(self) -> Generator[OrderedDict]:
+        """Parses all the data records.
 
         Yields
         ------
@@ -296,44 +325,221 @@ class IXFParser:
         # Start parsing
         while not self.end_data_records:
             # Extract data
-            self.collect_data()
+            self.__parse_data_record()
 
             # Do not accept empty dictionary
             if not self.current_row:
                 self.number_corrupted_rows += 1
                 continue
 
-            # Increment number of rows and yield the current row
-            self.number_rows += 1
-
+            self.__update_statistics()
             yield self.current_row
 
-    def parse(self) -> Iterable[Dict]:
-        """Parse and yield a row.
-
-        Returns
-        -------
-        Iterator[Dict]:
-            List of dictionaries containing parsed rows.
-        """
+    def __start_parsing(self) -> "IXFParser":
+        """Starts the parsing"""
         logger.debug("Start parsing")
         logger.debug("Put the pointer at the beginning of the ixf file")
         self.file.seek(0)
         logger.debug("Parse header record")
-        self.parse_header()
+        self.__read_header()
         logger.debug("Parse table record")
-        self.parse_table()
+        self.__read_table()
         logger.debug("Parse column descriptor records")
-        self.parse_columns()
-        logger.debug("Get pyarrow schema")
-        self.pyarrow_schema = get_pyarrow_schema(self.columns_info)
+        self.__read_column_records()
+        return self
 
-        logger.debug("Parse data records")
-        for r in self.parse_data():
+    def __iter_row(self) -> Generator[Dict]:
+        """Yields extracted rows (Without parsing of header, table, cols)."""
+        logger.debug("Parse all data records")
+        for r in self.__parse_all_data_records():
             yield dict(r)
         logger.debug("Finished parsing")
 
-    def to_json(self, output: Union[str, Path, PathLike, TextIO]) -> bool:
+    def get_row(self) -> Generator[Dict]:
+        """Yields an extracted row.
+
+        Yields
+        -------
+        Generator[Dict]
+            Generated parsed rows.
+        """
+        self.__start_parsing()
+        for r in self.__iter_row():
+            yield r
+
+    def get_all_rows(self) -> List[Dict]:
+        """Get all the extracted rows from the ixf file.
+
+        Returns
+        -------
+        List[Dict]
+            List of all extracted rows.
+
+        Notes
+        -----
+        - Attention: it loads all the extracted rows into memory.
+        """
+        rows = list(self.get_row())
+
+        total_rows = self.number_corrupted_rows + self.number_rows
+        if total_rows == 0:
+            logger.warning("Empty ixf file")
+            self.file.close()
+            return rows
+
+        logger.debug(f"Number of total rows = {total_rows}")
+        logger.debug(f"Number of healthy rows = {self.number_rows}")
+        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
+
+        cor_rate = self.number_corrupted_rows / total_rows * 100
+
+        if int(cor_rate) != 0:
+            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
+
+        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            _msg = f"Corrupted data ({cor_rate}%) > " \
+                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
+            logger.error(_msg)
+            logger.warning(
+                "You can change the accepted rate of the corrupted data "
+                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
+                "variable to a higher value"
+            )
+            self.file.close()
+            raise IXFParsingError(_msg)
+
+        self.file.close()
+        return rows
+
+    def __iter_batch_of_rows(
+        self,
+        data: Iterable[Dict],
+        batch_size: int = None
+    ) -> Generator[List[Dict]]:
+        """Yields batch of rows."""
+        if batch_size is None:
+            _size = self.opt_batch_size
+        else:
+            _size = batch_size
+
+        batch = []
+        counter = 0
+        for i, row in enumerate(data):
+            batch.append(row)
+            counter += 1
+            if counter % _size == 0:
+                _size = batch_size if batch_size else self.opt_batch_size
+                yield batch
+                batch = []
+
+        # Yield the remaining rows as the last batch
+        if batch:
+            yield batch
+
+    def iter_batch_of_rows(
+        self,
+        batch_size: int = None
+    ) -> Generator[List[Dict]]:
+        """Parses the ixf file and Yields batch of rows."""
+        self.__start_parsing()
+        _batches = self.__iter_batch_of_rows(
+            data=self.__iter_row(),
+            batch_size=batch_size
+        )
+        for batch in _batches:
+            yield batch
+
+    @deprecated("0.15.0", "Use `get_row` method instead.")
+    def parse(self) -> Generator[Dict]:
+        """Alias for __iter_row for compatibility with old versions."""
+        return self.get_row()
+
+    def to_csv(
+        self,
+        output: Union[str, Path, PathLike, TextIO],
+        sep: str = "|",
+        batch_size: int = None
+    ) -> bool:
+        """Parse and convert to CSV.
+
+        Parameters
+        ----------
+        output : Union[str, Path, PathLike, TextIO]
+            Output file. It is better to use file-like object
+        sep : str
+            Separator/delimiter of the columns.
+        batch_size : int
+            Batch size, it used for memory optimization
+
+        Returns
+        -------
+        bool
+            True if the parsing and conversion are ok
+        """
+        if isinstance(output, (str, Path, PathLike)):
+            output = open(output, mode="w", encoding="utf-8")
+
+        if not hasattr(output, "mode"):
+            raise TypeError("File-like object should have `mode` attribute")
+
+        if output.mode not in ["w", "wt"]:
+            msg = "File-like object should be opened in write and text mode"
+            raise ValueError(msg)
+
+        # Force utf-8 encoding for the csv file
+        # (Maybe we only need to log without forcing)
+        if output.encoding != "utf-8":
+            raise ValueError("File-like object should be `utf-8` encoded")
+
+        # init the parsing
+        self.__start_parsing()
+        batches = self.__iter_batch_of_rows(
+            data=self.__iter_row(),
+            batch_size=batch_size
+        )
+
+        logger.debug("Start writing in the csv file")
+        with output as out:
+            writer = csv.writer(out, delimiter=sep)
+            writer.writerow(get_column_names(self.column_records))
+            for rows in batches:
+                writer.writerows([r.values() for r in rows])
+        logger.debug("Finished writing csv file")
+
+        total_rows = self.number_corrupted_rows + self.number_rows
+        if total_rows == 0:
+            logger.warning("Empty ixf file")
+            self.file.close()
+            return True
+
+        logger.debug(f"Number of total rows = {total_rows}")
+        logger.debug(f"Number of healthy rows = {self.number_rows}")
+        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
+
+        cor_rate = self.number_corrupted_rows / total_rows * 100
+
+        if int(cor_rate) != 0:
+            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
+
+        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            _msg = f"Corrupted data ({cor_rate}%) > " \
+                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
+            logger.error(_msg)
+            logger.warning(
+                "You can change the accepted rate of the corrupted data "
+                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
+                "variable to a higher value"
+            )
+            self.file.close()
+            raise IXFParsingError(_msg)
+
+        self.file.close()
+        return True
+
+    def to_json(
+        self,
+        output: Union[str, Path, PathLike, TextIO]
+    ) -> bool:
         """Parse and convert to JSON.
 
         Parameters
@@ -362,11 +568,15 @@ class IXFParser:
         if output.encoding != "utf-8":
             raise ValueError("File-like object should be `utf-8` encoded")
 
+        # init the parsing
+        self.__start_parsing()
+        _data = self.__iter_row()
+
         logger.debug("Start writing in the json file")
         with output as out:
             out.write("[")
             first_row = True
-            for r in self.parse():
+            for r in _data:
                 if not first_row:
                     out.write(",")
                 json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
@@ -404,7 +614,10 @@ class IXFParser:
         self.file.close()
         return True
 
-    def to_jsonline(self, output: Union[str, Path, PathLike, TextIO]) -> bool:
+    def to_jsonline(
+        self,
+        output: Union[str, Path, PathLike, TextIO]
+    ) -> bool:
         """Parse and convert to JSON Line Object.
 
         Parameters
@@ -433,9 +646,13 @@ class IXFParser:
         if output.encoding != "utf-8":
             raise ValueError("File-like object should be `utf-8` encoded")
 
+        # init the parsing
+        self.__start_parsing()
+        _data = self.__iter_row()
+
         logger.debug("Start writing in the json line file")
         with output as out:
-            for r in self.parse():
+            for r in _data:
                 json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
                 out.write("\n")
         logger.debug("Finished writing json line file")
@@ -470,85 +687,36 @@ class IXFParser:
         self.file.close()
         return True
 
-    def to_csv(
-        self, output: Union[str, Path, PathLike, TextIO], sep: str = "|"
-    ) -> bool:
-        """Parse and convert to CSV.
+    def __iter_pa_record_batch(
+        self,
+        data: Iterable[Dict],
+        batch_size: int = None
+    ) -> Generator[RecordBatch]:
+        """Yields pyarrow record batch from an iterable of rows."""
+        if batch_size is None:
+            _size = self.opt_batch_size
+        else:
+            _size = batch_size
 
-        Parameters
-        ----------
-        output : Union[str, Path, PathLike, TextIO]
-            Output file. It is better to use file-like object.
-        sep : str
-            Separator/delimiter of the columns. It defaults to `|`.
+        batch = defaultdict(list)
+        counter = 0
+        for i, row in enumerate(data):
+            for key, value in row.items():
+                batch[key].append(value)
+            counter += 1
+            if counter % _size == 0:
+                _size = batch_size if batch_size else self.opt_batch_size
+                yield to_pyarrow_record_batch(batch, self.pyarrow_schema)
+                batch = defaultdict(list)
 
-        Returns
-        -------
-        bool
-            True if the parsing and conversion are ok.
-        """
-        if isinstance(output, (str, Path, PathLike)):
-            output = open(output, mode="w", encoding="utf-8")
-
-        if not hasattr(output, "mode"):
-            raise TypeError("File-like object should have `mode` attribute")
-
-        if output.mode not in ["w", "wt"]:
-            msg = "File-like object should be opened in write and text mode"
-            raise ValueError(msg)
-
-        # Force utf-8 encoding for the csv file
-        # (Maybe we only need to log without forcing)
-        if output.encoding != "utf-8":
-            raise ValueError("File-like object should be `utf-8` encoded")
-
-        logger.debug("Start writing in the csv file")
-        with output as out:
-            writer = csv.writer(out, delimiter=sep)
-            is_header = True
-            for r in self.parse():
-                if is_header:
-                    cols = get_names(self.columns_info)
-                    writer.writerow(cols)
-                    is_header = False
-                writer.writerow(r.values())
-        logger.debug("Finished writing csv file")
-
-        total_rows = self.number_corrupted_rows + self.number_rows
-        if total_rows == 0:
-            logger.warning("Empty ixf file")
-            self.file.close()
-            return True
-
-        logger.debug(f"Number of total rows = {total_rows}")
-        logger.debug(f"Number of healthy rows = {self.number_rows}")
-        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
-
-        cor_rate = self.number_corrupted_rows / total_rows * 100
-
-        if int(cor_rate) != 0:
-            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
-
-        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            _msg = f"Corrupted data ({cor_rate}%) > " \
-                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
-            logger.error(_msg)
-            logger.warning(
-                "You can change the accepted rate of the corrupted data "
-                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
-                "variable to a higher value"
-            )
-            self.file.close()
-            raise IXFParsingError(_msg)
-
-        self.file.close()
-        return True
+        if batch:
+            yield to_pyarrow_record_batch(batch, self.pyarrow_schema)
 
     def to_parquet(
         self,
         output: Union[str, Path, PathLike, BinaryIO],
-        batch_size: int = None,
-        parquet_version: str = "2.4"
+        parquet_version: str = "2.6",
+        batch_size: int = None
     ) -> bool:
         """Parse and convert to parquet.
 
@@ -556,15 +724,15 @@ class IXFParser:
         ----------
         output : Union[str, Path, PathLike, BinaryIO]
             Output file. It is better to use file-like object.
+        parquet_version : str
+            Parquet version. Please see pyarrow documentation.
         batch_size : int
             Number of rows to extract before writing to the parquet file.
             It is used for memory optimization.
-        parquet_version : str
-            Parquet version. Please look at pyarrow documentation.
 
         Returns
         -------
-        bool:
+        bool
             True if the parsing and conversion are ok.
         """
         if isinstance(output, (str, Path, PathLike)):
@@ -578,24 +746,15 @@ class IXFParser:
             msg = "File-like object should be opened in write and binary mode"
             raise ValueError(msg)
 
-        logger.debug("Get optimal batch size")
-        if batch_size is None:
-            batch_size = self.get_optimal_batch_size()
-            logger.debug(f"Optimal batch size = {batch_size}")
+        # Init the parsing
+        self.__start_parsing()
+        logger.debug("Get pyarrow schema from column records")
+        self.pyarrow_schema = get_pyarrow_schema(self.column_records)
+        _batches = self.__iter_pa_record_batch(
+            data=self.__iter_row(), batch_size=batch_size
+        )
 
-        logger.debug("Start parsing")
-        logger.debug("Put the pointer at the beginning of the ixf file")
-        self.file.seek(0)
-        logger.debug("Parse header record")
-        self.parse_header()
-        logger.debug("Parse table record")
-        self.parse_table()
-        logger.debug("Parse column descriptor records")
-        self.parse_columns()
-        logger.debug("Get pyarrow schema")
-        self.pyarrow_schema = get_pyarrow_schema(self.columns_info)
-
-        logger.debug("Start writing in the parquet file")
+        logger.debug("Start writing parquet file")
         with output as of:
             with ParquetWriter(
                     where=of,
@@ -603,12 +762,7 @@ class IXFParser:
                     flavor="spark",
                     version=parquet_version
             ) as writer:
-                record_batches = pyarrow_record_batches(
-                    self.parse_data(),
-                    self.pyarrow_schema,
-                    batch_size
-                )
-                for batch in record_batches:
+                for batch in _batches:
                     writer.write_batch(batch)
         logger.debug("Finished writing parquet file")
 
@@ -689,36 +843,21 @@ class IXFParser:
         bool:
             True if the parsing and conversion are ok.
         """
-        logger.debug("Start parsing")
-        logger.debug("Put the pointer at the beginning of the ixf file")
-        self.file.seek(0)
-        logger.debug("Parse header record")
-        self.parse_header()
-        logger.debug("Parse table record")
-        self.parse_table()
-        logger.debug("Parse column descriptor records")
-        self.parse_columns()
-        logger.debug("Get pyarrow schema")
-        self.pyarrow_schema = get_pyarrow_schema(self.columns_info)
-
+        # Init the parsing
+        self.__start_parsing()
+        logger.debug("Get pyarrow schema from column records")
+        self.pyarrow_schema = get_pyarrow_schema(self.column_records)
         logger.debug("Apply fixes on pyarrow schema for deltalake adaptation")
-        fixed_schema = apply_schema_fixes(self.pyarrow_schema)
+        self.pyarrow_schema = apply_schema_fixes(self.pyarrow_schema)
 
-        logger.debug("Get optimal batch size")
-        if batch_size is None:
-            batch_size = self.get_optimal_batch_size()
-            logger.debug(f"Optimal batch size = {batch_size}")
-
-        logger.debug("Start writing to deltalake")
-        _data = iter(
-            pyarrow_record_batches(
-                iter(self.parse_data()), fixed_schema, batch_size
-            )
+        _data = self.__iter_pa_record_batch(
+            self.__iter_row(), batch_size=batch_size
         )
+        logger.debug("Start writing to deltalake")
         deltalake.write_deltalake(
             table_or_uri=table_or_uri,
             data=_data,
-            schema=fixed_schema,
+            schema=self.pyarrow_schema,
             partition_by=partition_by,
             mode=mode,
             overwrite_schema=overwrite_schema,
@@ -726,8 +865,9 @@ class IXFParser:
             large_dtypes=large_dtypes,
             **kwargs
         )
+
         # Add garbage collection step
-        del fixed_schema, _data
+        del _data
 
         total_rows = self.number_corrupted_rows + self.number_rows
         if total_rows == 0:

@@ -141,7 +141,7 @@ IXF_TO_PYTHON_DTYPES = {
 
 # Data
 DB2IXF_ACCEPTED_CORRUPTION_RATE = int(
-    os.getenv("DB2IXF_ACCEPTED_CORRUPTION_RATE", "1")
+    os.getenv("DB2IXF_ACCEPTED_CORRUPTION_RATE", 1)
 )
 """Accepted rate of corrupted data, attention to data loss !"""
 
@@ -150,150 +150,25 @@ if not (0 <= DB2IXF_ACCEPTED_CORRUPTION_RATE <= 100):
         "`DB2IXF_DATA_CORRUPTION_RATE` should be integer between 0 and 100"
     )
 
-SIZE_FACTOR = 1024 * 1024  # 1 MB
+MAX_SIZE_IXF_DATA_RECORD = 32 * 1024
+"""See IBM Doc: Max size of the data area of a data record in ixf format is 
+around 32 KB.
+"""
 
-# Will need to delete this coz not necessary so skip it
-CCSID_TO_CODE_PAGE = {
-    37: 'cp037',
-    273: 'cp273',
-    277: 'cp277',
-    278: 'cp278',
-    280: 'cp280',
-    284: 'cp284',
-    285: 'cp285',
-    297: 'cp297',
-    300: 'cp300',
-    301: 'cp301',
-    420: 'cp420',
-    424: 'cp424',
-    437: 'cp437',
-    500: 'cp500',
-    737: 'cp737',
-    775: 'cp775',
-    808: 'cp808',
-    813: 'cp813',
-    819: 'cp819',
-    833: 'cp833',
-    834: 'cp834',
-    835: 'cp835',
-    836: 'cp836',
-    837: 'cp837',
-    850: 'cp850',
-    852: 'cp852',
-    855: 'cp855',
-    856: 'cp856',
-    857: 'cp857',
-    858: 'cp858',
-    859: 'cp859',
-    860: 'cp860',
-    861: 'cp861',
-    862: 'cp862',
-    863: 'cp863',
-    864: 'cp864',
-    865: 'cp865',
-    866: 'cp866',
-    867: 'cp867',
-    868: 'cp868',
-    869: 'cp869',
-    870: 'cp870',
-    871: 'cp871',
-    874: 'cp874',
-    875: 'cp875',
-    897: 'cp897',
-    912: 'cp912',
-    915: 'cp915',
-    916: 'cp916',
-    918: 'cp918',
-    920: 'cp920',
-    921: 'cp921',
-    922: 'cp922',
-    923: 'cp923',
-    924: 'cp924',
-    927: 'cp927',
-    930: 'cp930',
-    932: 'cp932',
-    933: 'cp933',
-    935: 'cp935',
-    937: 'cp937',
-    939: 'cp939',
-    942: 'cp942',
-    943: 'cp943',
-    947: 'cp947',
-    948: 'cp948',
-    949: 'cp949',
-    950: 'cp950',
-    951: 'cp951',
-    954: 'cp954',
-    964: 'cp964',
-    970: 'cp970',
-    971: 'cp971',
-    1006: 'cp1006',
-    1025: 'cp1025',
-    1026: 'cp1026',
-    1027: 'cp1027',
-    1041: 'cp1041',
-    1043: 'cp1043',
-    1046: 'cp1046',
-    1047: 'cp1047',
-    1051: 'cp1051',
-    1088: 'cp1088',
-    1089: 'cp1089',
-    1097: 'cp1097',
-    1098: 'cp1098',
-    1112: 'cp1112',
-    1114: 'cp1114',
-    1115: 'cp1115',
-    1122: 'cp1122',
-    1123: 'cp1123',
-    1124: 'cp1124',
-    1140: 'cp1140',
-    1141: 'cp1141',
-    1142: 'cp1142',
-    1143: 'cp1143',
-    1144: 'cp1144',
-    1145: 'cp1145',
-    1146: 'cp1146',
-    1147: 'cp1147',
-    1148: 'cp1148',
-    1149: 'cp1149',
-    1200: 'cp1200',
-    1202: 'cp1202',
-    1204: 'cp1204',
-    1208: 'cp1208',
-    1232: 'cp1232',
-    1234: 'cp1234',
-    1236: 'cp1236',
-    1351: 'cp1351',
-    1362: 'cp1362',
-    1363: 'cp1363',
-    1364: 'cp1364',
-    1370: 'cp1370',
-    1371: 'cp1371',
-    1375: 'cp1375',
-    1380: 'cp1380',
-    1381: 'cp1381',
-    1382: 'cp1382',
-    1383: 'cp1383',
-    1385: 'cp1385',
-    1386: 'cp1386',
-    1388: 'cp1388',
-    1390: 'cp1390',
-    1399: 'cp1399',
-    5050: 'cp5050',
-    5054: 'cp5054',
-    5346: 'cp5346',
-    5347: 'cp5347',
-    5348: 'cp5348',
-    5349: 'cp5349',
-    5350: 'cp5350',
-    5351: 'cp5351',
-    5352: 'cp5352',
-    5353: 'cp5353',
-    5354: 'cp5354',
-    5488: 'cp5488',
-    9030: 'cp9030',
-    9066: 'cp9066',
-    9400: 'cp9400',
-    25546: 'cp25546',
-    33722: 'cp33722',
-}
+DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER = int(
+    os.getenv(
+        "BUFFER_SIZE_CLI_CLOUD_PROVIDER", 4 * 1024 * 1024  # 4MB (Azure client)
+    )
+)
+"""Buffer size of clients of cloud providers storage services"""
+
+if DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER == 0:
+    raise ValueError(
+        "`DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER`=# of Bytes should be > 0"
+    )
+
+DB2IXF_DEFAULT_BATCH_SIZE = os.getenv(
+    "DB2IXF_DEFAULT_BATCH_SIZE",
+    int(DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER / MAX_SIZE_IXF_DATA_RECORD)
+)
+"""Batch size (number of rows), defaults to 128"""
