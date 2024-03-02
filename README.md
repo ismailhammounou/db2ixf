@@ -13,8 +13,10 @@
 
 # DB2IXF Parser
 
-<div align="center">
-  <img src="https://github.com/ismailhammounou/db2ixf/blob/main/resources/images/db2ixf-logo.png?raw=true" alt="Logo" width="300" height="300">
+<div style="align-content: center">
+  <img style="align-content: center" 
+        src="https://github.com/ismailhammounou/db2ixf/blob/main/resources/images/db2ixf-logo.png?raw=true" 
+        alt="Logo" width="300" height="300">
 </div>
 
 DB2IXF parser is an open-source python package that simplifies the parsing and
@@ -29,7 +31,7 @@ Deltalake.
 - **Parse IXF files**: The package allows you to parse IXF files and extract the
   rows of data stored within them.
 - **Convert to multiple formats**: The parsed data can be easily converted to
-  _JSON_, _CSV_, _Parquet_, or _Deltalake_
+  _JSON_, _JSONLINE_, _CSV_, _Parquet_, or _Deltalake_
   format, providing flexibility for further analysis and integration with other
   systems.
 - **Support for file-like objects**: IXF Parser supports file-like objects as
@@ -105,7 +107,14 @@ from db2ixf import IXFParser
 path = Path('path/to/IXF/file.XXX.IXF')
 with open(path, mode='rb') as f:
     parser = IXFParser(f)
-    rows = parser.parse()
+    # rows = parser.parse()  # Deprecated !
+    rows = parser.get_row()  # Python generator
+    for row in rows:
+        print(row)
+
+with open(path, mode='rb') as f:
+    parser = IXFParser(f)
+    rows = parser.get_all_rows()  # Loads into memory !
     for row in rows:
         print(row)
 ```

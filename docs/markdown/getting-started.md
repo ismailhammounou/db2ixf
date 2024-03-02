@@ -22,19 +22,28 @@ Here's an example using a file-like object:
 ```python
 # coding=utf-8
 from pathlib import Path
-from db2ixf.ixf import IXFParser
+from db2ixf import IXFParser
 
-path = Path('Path/to/IXF/FILE/XXX.IXF')
+path = Path('path/to/IXF/file.XXX.IXF')
 with open(path, mode='rb') as f:
     parser = IXFParser(f)
-    rows = parser.parse()
+    # rows = parser.parse()  # Deprecated !
+    rows = parser.get_row()  # Python generator
+    for row in rows:
+        print(row)
+
+with open(path, mode='rb') as f:
+    parser = IXFParser(f)
+    rows = parser.get_all_rows()  # Loads into memory !
     for row in rows:
         print(row)
 ```
 
 In this example, the `IXFParser` is initialized with a file-like object `f`, and
-the `parse` method is used to retrieve the parsed rows as a list of
-dictionaries.
+the `get_row` method is used to retrieve the parsed rows as a list of
+dictionaries. `get_row` is a python generator, it helps when you deal with big
+files. `get_all_rows` will load all rows into memory as a python list so use it
+in case you have small files.
 
 #### Converting to JSON
 

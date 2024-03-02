@@ -30,8 +30,8 @@ The IXF Parser package offers the following features:
    extracting the rows of data contained within.
 
 2. **Conversion to Multiple Formats**: The parsed data can be converted to
-   different formats, including _JSON_, _CSV_, _
-   Parquet_ and _Deltalake_.
+   different formats, including _JSON_, _JSONLINE_, _CSV_, _Parquet_ and
+   _Deltalake_.
 
 3. **Support for File-Like Objects**: The package supports file-like objects as
    input, enabling the direct parsing of IXF data from file objects.
