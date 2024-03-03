@@ -2,7 +2,6 @@
 """Contains constants about mappers, schemas, metadata and others"""
 import os
 from collections import OrderedDict
-from datetime import date, datetime, time
 
 # Records
 HEADER_RECORD_TYPE = OrderedDict(
@@ -97,7 +96,7 @@ APPLICATION_RECORD_TYPE = OrderedDict(
 )
 """Length in bytes of the fields in the application record."""
 
-# Data types
+# IXF data types
 IXF_DTYPES = {
     384: 'DATE',
     388: 'TIME',
@@ -125,22 +124,8 @@ IXF_DTYPES = {
 }
 """IXF data types"""
 
-# Mappers
-IXF_TO_PYTHON_DTYPES = {
-    'DATE': date,
-    'TIME': time,
-    'TIMESTAMP': datetime,
-    'VARCHAR': str,
-    'CHAR': str,
-    'DECIMAL': float,
-    'BIGINT': int,
-    'INTEGER': int,
-    'SMALLINT': int,
-}
-"""Maps IXF data types to python ones"""
-
 # Data
-DB2IXF_ACCEPTED_CORRUPTION_RATE = int(
+DB2IXF_ACCEPTED_CORRUPTION_RATE: int = int(
     os.getenv("DB2IXF_ACCEPTED_CORRUPTION_RATE", 1)
 )
 """Accepted rate of corrupted data, attention to data loss !"""
@@ -150,12 +135,12 @@ if not (0 <= DB2IXF_ACCEPTED_CORRUPTION_RATE <= 100):
         "`DB2IXF_DATA_CORRUPTION_RATE` should be integer between 0 and 100"
     )
 
-MAX_SIZE_IXF_DATA_RECORD = 32 * 1024
+MAX_SIZE_IXF_DATA_RECORD: int = 32 * 1024
 """See IBM Doc: Max size of the data area of a data record in ixf format is 
 around 32 KB.
 """
 
-DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER = int(
+DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER: int = int(
     os.getenv(
         "BUFFER_SIZE_CLI_CLOUD_PROVIDER", 4 * 1024 * 1024  # 4MB (Azure client)
     )
@@ -167,8 +152,17 @@ if DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER == 0:
         "`DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER`=# of Bytes should be > 0"
     )
 
-DB2IXF_DEFAULT_BATCH_SIZE = os.getenv(
-    "DB2IXF_DEFAULT_BATCH_SIZE",
-    int(DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER / MAX_SIZE_IXF_DATA_RECORD)
+DB2IXF_DEFAULT_BATCH_SIZE: int = int(
+    os.getenv(
+        "DB2IXF_DEFAULT_BATCH_SIZE",
+        int(DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER / MAX_SIZE_IXF_DATA_RECORD)
+    )
 )
 """Batch size (number of rows), defaults to 128"""
+
+DB2IXF_RISK_FACTOR: int = int(
+    os.getenv(
+        "DB2IXF_RISK_FACTOR", 1.9
+    )
+)
+"""Risk factor of the dynamic batch size (Standard deviation of Normal dist)"""
