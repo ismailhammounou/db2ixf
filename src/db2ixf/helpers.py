@@ -5,7 +5,8 @@ import os
 import warnings
 from collections import OrderedDict
 from db2ixf.constants import (
-    DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER, DB2IXF_DEFAULT_BATCH_SIZE, IXF_DTYPES,
+    DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER, DB2IXF_DEFAULT_BATCH_SIZE,
+    DB2IXF_RISK_FACTOR, IXF_DTYPES,
 )
 from db2ixf.exceptions import NotValidDataPrecisionException
 from db2ixf.logger import logger
@@ -37,11 +38,13 @@ def init_opt_batch_size(file_size: int):
     nbr_net_req = int(file_size / DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER)
     if nbr_net_req == 0:
         nbr_net_req = 1
-    return int(nbr_net_req * DB2IXF_DEFAULT_BATCH_SIZE * 1.5)
+    return int(nbr_net_req * DB2IXF_DEFAULT_BATCH_SIZE * DB2IXF_RISK_FACTOR)
 
 
 def get_opt_batch_size(batch_size: int, row_size: int) -> int:
-    size = int(DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER / row_size * 1.5)
+    size = int(
+        DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER / row_size * DB2IXF_RISK_FACTOR
+    )
     return max(batch_size, size)
 
 
