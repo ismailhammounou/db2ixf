@@ -10,6 +10,13 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
 
+## [0.14.1](https://github.com/ismailhammounou/db2ixf/tree/0.14.1) - 2024-03-04
+
+### Changed
+
+- Update the way we get optimal batch
+  size [db2ixf-73](https://github.com/ismailhammounou/db2ixf/issues/73)
+
 ## [0.14.0](https://github.com/ismailhammounou/db2ixf/tree/0.14.0) - 2024-03-03
 
 ### Added
