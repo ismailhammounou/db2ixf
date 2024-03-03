@@ -32,8 +32,7 @@ from pyarrow import RecordBatch, Schema, schema
 from pyarrow.parquet import ParquetWriter
 from typing import (
     Any, BinaryIO, Dict, Generator, Iterable, List, Literal, Optional, TextIO,
-    Tuple,
-    Union,
+    Tuple, Union,
 )
 
 

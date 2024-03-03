@@ -13,10 +13,8 @@
 
 # DB2IXF Parser
 
-<div style="align-content: center">
-  <img style="align-content: center" 
-        src="https://github.com/ismailhammounou/db2ixf/blob/main/resources/images/db2ixf-logo.png?raw=true" 
-        alt="Logo" width="300" height="300">
+<div align="center">
+  <img src="https://github.com/ismailhammounou/db2ixf/blob/main/resources/images/db2ixf-logo.png?raw=true" alt="Logo" width="300" height="300">
 </div>
 
 DB2IXF parser is an open-source python package that simplifies the parsing and
