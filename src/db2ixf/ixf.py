@@ -313,7 +313,7 @@ class IXFParser:
 
         return self
 
-    def __parse_all_data_records(self) -> Generator[OrderedDict]:
+    def __parse_all_data_records(self) -> Iterable[OrderedDict]:
         """Parses all the data records.
 
         Yields
@@ -335,7 +335,7 @@ class IXFParser:
             yield self.current_row
 
     def __start_parsing(self) -> "IXFParser":
-        """Starts the parsing"""
+        """Starts the parsing."""
         logger.debug("Start parsing")
         logger.debug("Put the pointer at the beginning of the ixf file")
         self.file.seek(0)
@@ -347,27 +347,90 @@ class IXFParser:
         self.__read_column_records()
         return self
 
-    def __iter_row(self) -> Generator[Dict]:
+    def start_parsing(self) -> "IXFParser":
+        """Starts the parsing."""
+        return self.__start_parsing()
+
+    def __iter_row(self) -> Iterable[Dict]:
         """Yields extracted rows (Without parsing of header, table, cols)."""
         logger.debug("Parse all data records")
         for r in self.__parse_all_data_records():
             yield dict(r)
         logger.debug("Finished parsing")
 
-    def get_row(self) -> Generator[Dict]:
-        """Yields an extracted row.
+    def iter_row(self) -> Iterable[Dict]:
+        """Yields parsed rows (Without parsing the header, table, columns).
+
+
+        It won't work if you use it alone. you need to start parsing with
+        `start_parsing` method then you can iterate over rows using `iter_row`.
+
+        Notes
+        -----
+        Use `get_row` instead of `iter_row` because it already starts the
+        parsing for you so you don't need use `start_parsing` method with
+        `iter_method`. But if you need, for exemple, a new output format or
+        customization of the parsing process then using `start_parsing` and
+        `ìter_row` are better than `get_row`.
+        """
+        return self.__iter_row()
+
+    def get_row(self) -> Generator[Dict, None, bool]:
+        """Yields parsed rows and indicates parsing success.
 
         Yields
+        ------
+        Dict
+            Generated parsed row.
+
+        Returns
         -------
-        Generator[Dict]
-            Generated parsed rows.
+        Generator[Dict, None, bool]
+            A generator that yields parsed rows. At the end of the parsing,
+            It returns a boolean: if True, parsing is successful;
+            otherwise, it's not.
+
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
         """
         self.__start_parsing()
         for r in self.__iter_row():
             yield r
 
+        total_rows = self.number_corrupted_rows + self.number_rows
+        if total_rows == 0:
+            logger.warning("Empty ixf file")
+            self.file.close()
+            return True
+
+        logger.debug(f"Number of total rows = {total_rows}")
+        logger.debug(f"Number of healthy rows = {self.number_rows}")
+        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
+
+        cor_rate = self.number_corrupted_rows / total_rows * 100
+
+        if int(cor_rate) != 0:
+            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
+
+        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
+            _msg = f"Corrupted data ({cor_rate}%) > " \
+                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
+            logger.error(_msg)
+            logger.warning(
+                "You can change the accepted rate of the corrupted data "
+                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
+                "variable to a higher value"
+            )
+            self.file.close()
+            raise IXFParsingError(_msg)
+
+        self.file.close()
+        return True
+
     def get_all_rows(self) -> List[Dict]:
-        """Get all the extracted rows from the ixf file.
+        """Get all the parsed rows from the ixf file.
 
         Returns
         -------
@@ -378,13 +441,14 @@ class IXFParser:
         -----
         - Attention: it loads all the extracted rows into memory.
         """
-        rows = list(self.get_row())
+        self.__start_parsing()
+        rows = list(self.__iter_row())
 
         total_rows = self.number_corrupted_rows + self.number_rows
         if total_rows == 0:
             logger.warning("Empty ixf file")
             self.file.close()
-            return rows
+            return []
 
         logger.debug(f"Number of total rows = {total_rows}")
         logger.debug(f"Number of healthy rows = {self.number_rows}")
@@ -414,8 +478,8 @@ class IXFParser:
         self,
         data: Iterable[Dict],
         batch_size: int = None
-    ) -> Generator[List[Dict]]:
-        """Yields batch of rows."""
+    ) -> Iterable[List[Dict]]:
+        """Yields batch of parsed rows."""
         if batch_size is None:
             _size = self.opt_batch_size
         else:
@@ -438,7 +502,7 @@ class IXFParser:
     def iter_batch_of_rows(
         self,
         batch_size: int = None
-    ) -> Generator[List[Dict]]:
+    ) -> Generator[List[Dict], None, bool]:
         """Parses the ixf file and Yields batch of rows."""
         self.__start_parsing()
         _batches = self.__iter_batch_of_rows(
@@ -448,7 +512,7 @@ class IXFParser:
         for batch in _batches:
             yield batch
 
-    @deprecated("0.15.0", "Use `get_row` method instead.")
+    @deprecated("0.16.0", "Use `get_row` method instead of `parse`.")
     def parse(self) -> Generator[Dict]:
         """Alias for __iter_row for compatibility with old versions."""
         return self.get_row()
@@ -711,6 +775,44 @@ class IXFParser:
         if batch:
             yield to_pyarrow_record_batch(batch, self.pyarrow_schema)
 
+    def iter_pa_record_batch(
+        self,
+        batch_size: int = None,
+        for_delta: bool = False
+    ) -> Generator[RecordBatch]:
+        """Yields pyarrow record batch.
+
+        Parameters
+        ----------
+        batch_size : int
+            Batch size
+        for_delta : bool
+            If True, it adapts pyarrow schema for deltalake usage.
+
+        Yields
+        ------
+        RecordBatch
+            Pyarrow record batch
+        """
+        self.__start_parsing()
+        logger.debug("Get pyarrow schema from column records")
+        self.pyarrow_schema = get_pyarrow_schema(self.column_records)
+        if for_delta:
+            logger.debug(
+                "Apply fixes on pyarrow schema for deltalake adaptation"
+            )
+            self.pyarrow_schema = apply_schema_fixes(self.pyarrow_schema)
+
+        rec_batches = self.__iter_pa_record_batch(
+            data=self.__iter_row(),
+            batch_size=batch_size
+        )
+
+        for rb in rec_batches:
+            yield rb
+
+        self.file.close()
+
     def to_parquet(
         self,
         output: Union[str, Path, PathLike, BinaryIO],
@@ -806,7 +908,7 @@ class IXFParser:
         batch_size: Optional[int] = None,
         **kwargs
     ) -> bool:
-        """Parse and convert to a deltalake table.
+        """Parses and converts to a deltalake table.
 
         Parameters
         ----------
