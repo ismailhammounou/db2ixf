@@ -31,7 +31,7 @@ from pathlib import Path
 from pyarrow import RecordBatch, Schema, schema
 from pyarrow.parquet import ParquetWriter
 from typing import (
-    Any, BinaryIO, Dict, Generator, Iterable, List, Literal, Optional, TextIO,
+    Any, BinaryIO, Dict, Iterable, List, Literal, Optional, TextIO,
     Tuple, Union,
 )
 
@@ -351,54 +351,8 @@ class IXFParser:
         """Starts the parsing."""
         return self.__start_parsing()
 
-    def __iter_row(self) -> Iterable[Dict]:
-        """Yields extracted rows (Without parsing of header, table, cols)."""
-        logger.debug("Parse all data records")
-        for r in self.__parse_all_data_records():
-            yield dict(r)
-        logger.debug("Finished parsing")
-
-    def iter_row(self) -> Iterable[Dict]:
-        """Yields parsed rows (Without parsing the header, table, columns).
-
-
-        It won't work if you use it alone. you need to start parsing with
-        `start_parsing` method then you can iterate over rows using `iter_row`.
-
-        Notes
-        -----
-        Use `get_row` instead of `iter_row` because it already starts the
-        parsing for you so you don't need use `start_parsing` method with
-        `iter_method`. But if you need, for exemple, a new output format or
-        customization of the parsing process then using `start_parsing` and
-        `ìter_row` are better than `get_row`.
-        """
-        return self.__iter_row()
-
-    def get_row(self) -> Generator[Dict, None, bool]:
-        """Yields parsed rows and indicates parsing success.
-
-        Yields
-        ------
-        Dict
-            Generated parsed row.
-
-        Returns
-        -------
-        Generator[Dict, None, bool]
-            A generator that yields parsed rows. At the end of the parsing,
-            It returns a boolean: if True, parsing is successful;
-            otherwise, it's not.
-
-        Raises
-        ------
-        IXFParsingError
-            In case it encounters a parsing error.
-        """
-        self.__start_parsing()
-        for r in self.__iter_row():
-            yield r
-
+    def __check_parsing(self) -> bool:
+        """Do some checks on the parsing."""
         total_rows = self.number_corrupted_rows + self.number_rows
         if total_rows == 0:
             logger.warning("Empty ixf file")
@@ -429,61 +383,59 @@ class IXFParser:
         self.file.close()
         return True
 
-    def get_all_rows(self) -> List[Dict]:
-        """Get all the parsed rows from the ixf file.
+    def check_parsing(self) -> bool:
+        """Do some checks on the parsing.
 
         Returns
         -------
-        List[Dict]
-            List of all extracted rows.
+        bool
+            True if parsing and/or conversion are ok.
 
-        Notes
-        -----
-        - Attention: it loads all the extracted rows into memory.
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
         """
-        self.__start_parsing()
-        rows = list(self.__iter_row())
+        return self.__check_parsing()
 
-        total_rows = self.number_corrupted_rows + self.number_rows
-        if total_rows == 0:
-            logger.warning("Empty ixf file")
-            self.file.close()
-            return []
+    def __iter_row(self) -> Iterable[Dict]:
+        """Yields extracted rows (Without parsing of header, table, cols)."""
+        logger.debug("Parse all data records")
+        for r in self.__parse_all_data_records():
+            yield dict(r)
+        logger.debug("Finished parsing")
 
-        logger.debug(f"Number of total rows = {total_rows}")
-        logger.debug(f"Number of healthy rows = {self.number_rows}")
-        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
+    def iter_row(self) -> Iterable[Dict]:
+        """Yields parsed rows.
 
-        cor_rate = self.number_corrupted_rows / total_rows * 100
+        It won't work if you use it alone. you need to start parsing with
+        `start_parsing` method then you can iterate over rows using `iter_row`.
+        Most of the time, you do not need to use this method.
 
-        if int(cor_rate) != 0:
-            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
-
-        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            _msg = f"Corrupted data ({cor_rate}%) > " \
-                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
-            logger.error(_msg)
-            logger.warning(
-                "You can change the accepted rate of the corrupted data "
-                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
-                "variable to a higher value"
-            )
-            self.file.close()
-            raise IXFParsingError(_msg)
-
-        self.file.close()
-        return rows
+        You will need it in case you want to customize the parsing for
+        example adding support for a new output format.
+        """
+        return self.__iter_row()
 
     def __iter_batch_of_rows(
         self,
-        data: Iterable[Dict],
-        batch_size: int = None
+        data: Optional[Iterable[Dict]] = None,
+        batch_size: Optional[int] = None
     ) -> Iterable[List[Dict]]:
         """Yields batch of parsed rows."""
+        if data is None:
+            data = self.__iter_row()
+
+        if not isinstance(data, Iterable):
+            raise TypeError(f"Expecting an `Iterable`, Got: {type(data)}")
+
         if batch_size is None:
             _size = self.opt_batch_size
         else:
             _size = batch_size
+
+        if not isinstance(_size, int):
+            TypeError(f"Expecting an `Integer`, Got {type(_size)}")
 
         batch = []
         counter = 0
@@ -501,29 +453,350 @@ class IXFParser:
 
     def iter_batch_of_rows(
         self,
-        batch_size: int = None
-    ) -> Generator[List[Dict], None, bool]:
-        """Parses the ixf file and Yields batch of rows."""
-        self.__start_parsing()
-        _batches = self.__iter_batch_of_rows(
-            data=self.__iter_row(),
+        data: Optional[Iterable[Dict]] = None,
+        batch_size: Optional[int] = None
+    ) -> Iterable[List[Dict]]:
+        """Yields batches of parsed rows.
+
+        It won't work if you use it alone. you need to start parsing with
+        `start_parsing` method then you can iterate over batch of rows using
+        `iter_batch_of_rows` method. Most of the time, you do not need to use
+        this method.
+
+        You will need it in case you want to customize the parsing for
+        example adding support for a new output format.
+
+        Parameters
+        ----------
+        data : Iterable[Dict]
+            Data extracted from ixf file (parsed rows).
+        batch_size : int
+            Batch size.
+
+        Yields
+        ------
+        List[Dict]
+            Batch of 
+
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
+        """
+        batches = self.__iter_batch_of_rows(
+            data=data,
             batch_size=batch_size
         )
-        for batch in _batches:
+        for batch in batches:
             yield batch
 
+    def __iter_pyarrow_record_batch(
+        self,
+        data: Optional[Iterable[Dict]] = None,
+        batch_size: Optional[int] = None,
+    ) -> Iterable[RecordBatch]:
+        """Yields pyarrow record batches from an iterable of rows."""
+        if data is None:
+            data = self.__iter_row()
+
+        if not isinstance(data, Iterable):
+            raise TypeError(f"Expecting an `Iterable`, Got: {type(data)}")
+
+        if batch_size is None:
+            _size = self.opt_batch_size
+        else:
+            _size = batch_size
+
+        if not isinstance(_size, int):
+            TypeError(f"Expecting an `Integer`, Got {type(_size)}")
+
+        batch = defaultdict(list)
+        counter = 0
+        for i, row in enumerate(data):
+            for key, value in row.items():
+                batch[key].append(value)
+            counter += 1
+            if counter % _size == 0:
+                _size = batch_size if batch_size else self.opt_batch_size
+                yield to_pyarrow_record_batch(batch, self.pyarrow_schema)
+                batch = defaultdict(list)
+
+        if batch:
+            yield to_pyarrow_record_batch(batch, self.pyarrow_schema)
+
+    def iter_pyarrow_record_batch(
+        self,
+        data: Optional[Iterable[Dict]] = None,
+        batch_size: Optional[int] = None,
+    ) -> Iterable[RecordBatch]:
+        """Yields pyarrow record batches.
+
+        It won't work if you use it alone. you need to start parsing with
+        `start_parsing` method, create the pyarrow schema using
+        `get_or_create_pyarrow_schema` method then you can iterate over record
+        batches using `iter_batch_of_rows` method. Most of the time, you do not
+        need to use this method.
+
+        You will need it in case you want to customize the parsing for
+        example adding support for a new output format.
+
+        Parameters
+        ----------
+        data : Iterable[Dict]
+            Data extracted from ixf file (parsed rows).
+        batch_size : int
+            Batch size.
+
+        Yields
+        ------
+        RecordBatch
+            Pyarrow record batch.
+
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
+        """
+        batches = self.__iter_pyarrow_record_batch(
+            data=data,
+            batch_size=batch_size,
+        )
+
+        for batch in batches:
+            yield batch
+
+    def __get_or_create_pyarrow_schema(
+        self,
+        pyarrow_schema: Optional[Schema] = None,
+        for_delta: Optional[bool] = False
+    ) -> Schema:
+        """Get or create pyarrow schema based on the scope it will be used."""
+        if pyarrow_schema is None:
+            logger.debug("Get pyarrow schema from column records")
+            pyarrow_schema = get_pyarrow_schema(self.column_records)
+
+        if for_delta:
+            logger.debug(
+                "Apply fixes on pyarrow schema for deltalake adaptation"
+            )
+            pyarrow_schema = apply_schema_fixes(pyarrow_schema)
+
+        self.pyarrow_schema = pyarrow_schema
+
+        return self.pyarrow_schema
+
+    def get_or_create_pyarrow_schema(
+        self,
+        pyarrow_schema: Optional[Schema] = None,
+        for_delta: Optional[bool] = False
+    ) -> Schema:
+        """Get or create pyarrow schema based on the scope of the usage.
+
+        It won't work if you use it alone. you need to start parsing with
+        `start_parsing` method then you can create the pyarrow schema using
+        `get_or_create_pyarrow_schema` method. After applying it, you will maybe
+        need to iterate over pyarrow record batches. Most of the time, you do
+        not need to use this method.
+
+        You will need it in case you want to customize the parsing for
+        example adding support for a new output format.
+
+        Parameters
+        ----------
+        pyarrow_schema : Schema
+            Pyarrow schema.
+        for_delta : bool
+            If True, it adapts pyarrow schema for deltalake usage.
+
+        Returns
+        -------
+        Schema
+            Pyarrow schema
+        """
+        _schema = self.__get_or_create_pyarrow_schema(
+            pyarrow_schema=pyarrow_schema,
+            for_delta=for_delta
+        )
+        return _schema
+
+    def get_row(self) -> Iterable[Dict]:
+        """Yields parsed rows.
+
+        Yields
+        ------
+        Dict
+            Generated parsed row.
+
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
+        """
+        self.__start_parsing()
+        for r in self.__iter_row():
+            yield r
+
     @deprecated("0.16.0", "Use `get_row` method instead of `parse`.")
-    def parse(self) -> Generator[Dict]:
-        """Alias for __iter_row for compatibility with old versions."""
+    def parse(self) -> Iterable[Dict]:
+        """Yields parsed rows.
+
+        Alias for `get_row` for compatibility with old versions.
+
+        Yields
+        ------
+        Dict
+            Generated parsed row.
+
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
+        """
         return self.get_row()
+
+    def get_all_rows(self) -> List[Dict]:
+        """Get all the parsed rows from the ixf file.
+
+        Returns
+        -------
+        List[Dict]
+            List of all extracted rows.
+
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
+
+        Notes
+        -----
+        - Attention: it loads all the extracted rows into memory.
+        """
+        rows = []
+        for row in self.get_row():
+            rows.append(row)
+
+        if self.__check_parsing() is True:
+            return rows
+        return rows
+
+    def to_json(
+        self,
+        output: Union[str, Path, PathLike, TextIO]
+    ) -> bool:
+        """Parses and converts to JSON format.
+
+        Parameters
+        ----------
+        output : Union[str, Path, PathLike, IO]
+            Output file. It is better to use file-like object.
+
+        Returns
+        -------
+        bool
+            True if the parsing and conversion are ok.
+
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
+        """
+        if isinstance(output, (str, Path, PathLike)):
+            output = open(output, mode="w", encoding="utf-8")
+
+        if not hasattr(output, "mode"):
+            msg = "File-like object should have `mode` attribute"
+            raise TypeError(msg)
+
+        if output.mode not in ["w", "wt"]:
+            msg = "File-like object should be opened in write and text mode"
+            raise ValueError(msg)
+
+        # Force utf-8 encoding for the json file
+        # (Maybe we will need to log without forcing)
+        if output.encoding != "utf-8":
+            raise ValueError("File-like object should be `utf-8` encoded")
+
+        # init the parsing
+        self.__start_parsing()
+        _rows = self.__iter_row()
+
+        logger.debug("Start writing in the json file")
+        with output as out:
+            out.write("[")
+            first_row = True
+            for r in _rows:
+                if not first_row:
+                    out.write(",")
+                json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
+                first_row = False
+            out.write("]")
+        logger.debug("Finished writing json file")
+
+        # dereference source data
+        del _rows
+
+        return self.__check_parsing()
+
+    def to_jsonline(
+        self,
+        output: Union[str, Path, PathLike, TextIO]
+    ) -> bool:
+        """Parses and converts to JSON LINE format.
+
+        Parameters
+        ----------
+        output : Union[str, Path, PathLike, IO]
+            Output file. It is better to use file-like object.
+
+        Returns
+        -------
+        bool
+            True if the parsing and conversion are ok.
+
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
+        """
+        if isinstance(output, (str, Path, PathLike)):
+            output = open(output, mode="w", encoding="utf-8")
+
+        if not hasattr(output, "mode"):
+            msg = "File-like object should have `mode` attribute"
+            raise TypeError(msg)
+
+        if output.mode not in ["w", "wt"]:
+            msg = "File-like object should be opened in write and text mode"
+            raise ValueError(msg)
+
+        # Force utf-8 encoding for the json file
+        # (Maybe we will need to log without forcing)
+        if output.encoding != "utf-8":
+            raise ValueError("File-like object should be `utf-8` encoded")
+
+        # init the parsing
+        self.__start_parsing()
+        _rows = self.__iter_row()
+
+        logger.debug("Start writing in the json line file")
+        with output as out:
+            for r in _rows:
+                json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
+                out.write("\n")
+        logger.debug("Finished writing json line file")
+
+        # dereference source data
+        del _rows
+
+        return self.__check_parsing()
 
     def to_csv(
         self,
         output: Union[str, Path, PathLike, TextIO],
-        sep: str = "|",
-        batch_size: int = None
+        sep: Optional[str] = "|",
+        batch_size: Optional[int] = None
     ) -> bool:
-        """Parse and convert to CSV.
+        """Parses and converts to CSV format.
 
         Parameters
         ----------
@@ -538,6 +811,11 @@ class IXFParser:
         -------
         bool
             True if the parsing and conversion are ok
+
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
         """
         if isinstance(output, (str, Path, PathLike)):
             output = open(output, mode="w", encoding="utf-8")
@@ -556,10 +834,7 @@ class IXFParser:
 
         # init the parsing
         self.__start_parsing()
-        batches = self.__iter_batch_of_rows(
-            data=self.__iter_row(),
-            batch_size=batch_size
-        )
+        batches = self.__iter_batch_of_rows(batch_size=batch_size)
 
         logger.debug("Start writing in the csv file")
         with output as out:
@@ -569,249 +844,48 @@ class IXFParser:
                 writer.writerows([r.values() for r in rows])
         logger.debug("Finished writing csv file")
 
-        total_rows = self.number_corrupted_rows + self.number_rows
-        if total_rows == 0:
-            logger.warning("Empty ixf file")
-            self.file.close()
-            return True
+        # dereference source data
+        del batches
 
-        logger.debug(f"Number of total rows = {total_rows}")
-        logger.debug(f"Number of healthy rows = {self.number_rows}")
-        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
+        return self.__check_parsing()
 
-        cor_rate = self.number_corrupted_rows / total_rows * 100
-
-        if int(cor_rate) != 0:
-            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
-
-        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            _msg = f"Corrupted data ({cor_rate}%) > " \
-                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
-            logger.error(_msg)
-            logger.warning(
-                "You can change the accepted rate of the corrupted data "
-                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
-                "variable to a higher value"
-            )
-            self.file.close()
-            raise IXFParsingError(_msg)
-
-        self.file.close()
-        return True
-
-    def to_json(
+    def get_pyarrow_record_batch(
         self,
-        output: Union[str, Path, PathLike, TextIO]
-    ) -> bool:
-        """Parse and convert to JSON.
+        data: Optional[Iterable[Dict]] = None,
+        batch_size: Optional[int] = None,
+        for_delta: Optional[bool] = False
+    ) -> Iterable[RecordBatch]:
+        """Yields pyarrow records batches.
 
         Parameters
         ----------
-        output : Union[str, Path, PathLike, IO]
-            Output file. It is better to use file-like object.
-
-        Returns
-        -------
-        bool
-            True if the parsing and conversion are ok.
-        """
-        if isinstance(output, (str, Path, PathLike)):
-            output = open(output, mode="w", encoding="utf-8")
-
-        if not hasattr(output, "mode"):
-            msg = "File-like object should have `mode` attribute"
-            raise TypeError(msg)
-
-        if output.mode not in ["w", "wt"]:
-            msg = "File-like object should be opened in write and text mode"
-            raise ValueError(msg)
-
-        # Force utf-8 encoding for the json file
-        # (Maybe we will need to log without forcing)
-        if output.encoding != "utf-8":
-            raise ValueError("File-like object should be `utf-8` encoded")
-
-        # init the parsing
-        self.__start_parsing()
-        _data = self.__iter_row()
-
-        logger.debug("Start writing in the json file")
-        with output as out:
-            out.write("[")
-            first_row = True
-            for r in _data:
-                if not first_row:
-                    out.write(",")
-                json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
-                first_row = False
-            out.write("]")
-        logger.debug("Finished writing json file")
-
-        total_rows = self.number_corrupted_rows + self.number_rows
-        if total_rows == 0:
-            logger.warning("Empty ixf file")
-            self.file.close()
-            return True
-
-        logger.debug(f"Number of total rows = {total_rows}")
-        logger.debug(f"Number of healthy rows = {self.number_rows}")
-        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
-
-        cor_rate = self.number_corrupted_rows / total_rows * 100
-
-        if int(cor_rate) != 0:
-            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
-
-        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            _msg = f"Corrupted data ({cor_rate}%) > " \
-                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
-            logger.error(_msg)
-            logger.warning(
-                "You can change the accepted rate of the corrupted data "
-                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
-                "variable to a higher value"
-            )
-            self.file.close()
-            raise IXFParsingError(_msg)
-
-        self.file.close()
-        return True
-
-    def to_jsonline(
-        self,
-        output: Union[str, Path, PathLike, TextIO]
-    ) -> bool:
-        """Parse and convert to JSON Line Object.
-
-        Parameters
-        ----------
-        output : Union[str, Path, PathLike, IO]
-            Output file. It is better to use file-like object.
-
-        Returns
-        -------
-        bool
-            True if the parsing and conversion are ok.
-        """
-        if isinstance(output, (str, Path, PathLike)):
-            output = open(output, mode="w", encoding="utf-8")
-
-        if not hasattr(output, "mode"):
-            msg = "File-like object should have `mode` attribute"
-            raise TypeError(msg)
-
-        if output.mode not in ["w", "wt"]:
-            msg = "File-like object should be opened in write and text mode"
-            raise ValueError(msg)
-
-        # Force utf-8 encoding for the json file
-        # (Maybe we will need to log without forcing)
-        if output.encoding != "utf-8":
-            raise ValueError("File-like object should be `utf-8` encoded")
-
-        # init the parsing
-        self.__start_parsing()
-        _data = self.__iter_row()
-
-        logger.debug("Start writing in the json line file")
-        with output as out:
-            for r in _data:
-                json.dump(r, out, ensure_ascii=False, cls=CustomJSONEncoder)
-                out.write("\n")
-        logger.debug("Finished writing json line file")
-
-        total_rows = self.number_corrupted_rows + self.number_rows
-        if total_rows == 0:
-            logger.warning("Empty ixf file")
-            self.file.close()
-            return True
-
-        logger.debug(f"Number of total rows = {total_rows}")
-        logger.debug(f"Number of healthy rows = {self.number_rows}")
-        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
-
-        cor_rate = self.number_corrupted_rows / total_rows * 100
-
-        if int(cor_rate) != 0:
-            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
-
-        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            _msg = f"Corrupted data ({cor_rate}%) > " \
-                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
-            logger.error(_msg)
-            logger.warning(
-                "You can change the accepted rate of the corrupted data "
-                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
-                "variable to a higher value"
-            )
-            self.file.close()
-            raise IXFParsingError(_msg)
-
-        self.file.close()
-        return True
-
-    def __iter_pa_record_batch(
-        self,
-        data: Iterable[Dict],
-        batch_size: int = None
-    ) -> Generator[RecordBatch]:
-        """Yields pyarrow record batch from an iterable of rows."""
-        if batch_size is None:
-            _size = self.opt_batch_size
-        else:
-            _size = batch_size
-
-        batch = defaultdict(list)
-        counter = 0
-        for i, row in enumerate(data):
-            for key, value in row.items():
-                batch[key].append(value)
-            counter += 1
-            if counter % _size == 0:
-                _size = batch_size if batch_size else self.opt_batch_size
-                yield to_pyarrow_record_batch(batch, self.pyarrow_schema)
-                batch = defaultdict(list)
-
-        if batch:
-            yield to_pyarrow_record_batch(batch, self.pyarrow_schema)
-
-    def iter_pa_record_batch(
-        self,
-        batch_size: int = None,
-        for_delta: bool = False
-    ) -> Generator[RecordBatch]:
-        """Yields pyarrow record batch.
-
-        Parameters
-        ----------
+        data : Iterable[Dict]
+            Data extracted from ixf file (parsed rows).
         batch_size : int
-            Batch size
+            Batch size.
         for_delta : bool
             If True, it adapts pyarrow schema for deltalake usage.
 
         Yields
         ------
         RecordBatch
-            Pyarrow record batch
+            Pyarrow record batch.
+
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
         """
         self.__start_parsing()
-        logger.debug("Get pyarrow schema from column records")
-        self.pyarrow_schema = get_pyarrow_schema(self.column_records)
-        if for_delta:
-            logger.debug(
-                "Apply fixes on pyarrow schema for deltalake adaptation"
-            )
-            self.pyarrow_schema = apply_schema_fixes(self.pyarrow_schema)
-
-        rec_batches = self.__iter_pa_record_batch(
-            data=self.__iter_row(),
-            batch_size=batch_size
+        self.pyarrow_schema = self.__get_or_create_pyarrow_schema(
+            for_delta=for_delta
         )
-
-        for rb in rec_batches:
-            yield rb
-
-        self.file.close()
+        batches = self.__iter_pyarrow_record_batch(
+            data=data,
+            batch_size=batch_size,
+        )
+        for batch in batches:
+            yield batch
 
     def to_parquet(
         self,
@@ -819,7 +893,7 @@ class IXFParser:
         parquet_version: str = "2.6",
         batch_size: int = None
     ) -> bool:
-        """Parse and convert to parquet.
+        """Parses and converts to PARQUET format.
 
         Parameters
         ----------
@@ -835,6 +909,11 @@ class IXFParser:
         -------
         bool
             True if the parsing and conversion are ok.
+
+        Raises
+        ------
+        IXFParsingError
+            In case it encounters a parsing error.
         """
         if isinstance(output, (str, Path, PathLike)):
             output = open(output, mode="wb")
@@ -849,11 +928,8 @@ class IXFParser:
 
         # Init the parsing
         self.__start_parsing()
-        logger.debug("Get pyarrow schema from column records")
-        self.pyarrow_schema = get_pyarrow_schema(self.column_records)
-        _batches = self.__iter_pa_record_batch(
-            data=self.__iter_row(), batch_size=batch_size
-        )
+        self.pyarrow_schema = self.__get_or_create_pyarrow_schema()
+        batches = self.__iter_pyarrow_record_batch(batch_size=batch_size)
 
         logger.debug("Start writing parquet file")
         with output as of:
@@ -863,39 +939,14 @@ class IXFParser:
                     flavor="spark",
                     version=parquet_version
             ) as writer:
-                for batch in _batches:
+                for batch in batches:
                     writer.write_batch(batch)
         logger.debug("Finished writing parquet file")
 
-        total_rows = self.number_corrupted_rows + self.number_rows
-        if total_rows == 0:
-            logger.warning("Empty ixf file")
-            self.file.close()
-            return True
+        # dereference source data
+        del batches
 
-        logger.debug(f"Number of total rows = {total_rows}")
-        logger.debug(f"Number of healthy rows = {self.number_rows}")
-        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
-
-        cor_rate = self.number_corrupted_rows / total_rows * 100
-
-        if int(cor_rate) != 0:
-            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
-
-        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            _msg = f"Corrupted data ({cor_rate}%) > " \
-                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
-            logger.error(_msg)
-            logger.warning(
-                "You can change the accepted rate of the corrupted data "
-                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
-                "variable to a higher value"
-            )
-            self.file.close()
-            raise IXFParsingError(_msg)
-
-        self.file.close()
-        return True
+        return self.__check_parsing()
 
     def to_deltalake(
         self,
@@ -946,18 +997,15 @@ class IXFParser:
         """
         # Init the parsing
         self.__start_parsing()
-        logger.debug("Get pyarrow schema from column records")
-        self.pyarrow_schema = get_pyarrow_schema(self.column_records)
-        logger.debug("Apply fixes on pyarrow schema for deltalake adaptation")
-        self.pyarrow_schema = apply_schema_fixes(self.pyarrow_schema)
-
-        _data = self.__iter_pa_record_batch(
-            self.__iter_row(), batch_size=batch_size
+        self.pyarrow_schema = self.__get_or_create_pyarrow_schema(
+            for_delta=True
         )
+        batches = self.__iter_pyarrow_record_batch(batch_size=batch_size)
+
         logger.debug("Start writing to deltalake")
         deltalake.write_deltalake(
             table_or_uri=table_or_uri,
-            data=_data,
+            data=batches,
             schema=self.pyarrow_schema,
             partition_by=partition_by,
             mode=mode,
@@ -966,39 +1014,12 @@ class IXFParser:
             large_dtypes=large_dtypes,
             **kwargs
         )
+        logger.debug("Finished writing to deltalake")
 
-        # Add garbage collection step
-        del _data
+        # dereference source data
+        del batches
 
-        total_rows = self.number_corrupted_rows + self.number_rows
-        if total_rows == 0:
-            logger.warning("Empty ixf file")
-            self.file.close()
-            return True
-
-        logger.debug(f"Number of total rows = {total_rows}")
-        logger.debug(f"Number of healthy rows = {self.number_rows}")
-        logger.debug(f"Number of corrupted rows = {self.number_corrupted_rows}")
-
-        cor_rate = self.number_corrupted_rows / total_rows * 100
-
-        if int(cor_rate) != 0:
-            logger.warning(f"Corrupted ixf file (rate={cor_rate}%)")
-
-        if int(cor_rate) > DB2IXF_ACCEPTED_CORRUPTION_RATE:
-            _msg = f"Corrupted data ({cor_rate}%) > " \
-                   f"({DB2IXF_ACCEPTED_CORRUPTION_RATE}%) accepted rate"
-            logger.error(_msg)
-            logger.warning(
-                "You can change the accepted rate of the corrupted data "
-                "by setting `DB2IXF_ACCEPTED_CORRUPTION_RATE` environment "
-                "variable to a higher value"
-            )
-            self.file.close()
-            raise IXFParsingError(_msg)
-
-        self.file.close()
-        return True
+        return self.__check_parsing()
 
 
 __all__ = ["IXFParser"]
