@@ -10,6 +10,15 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
 
+## [0.15.0](https://github.com/ismailhammounou/db2ixf/tree/0.15.0) - 2024-03-05
+
+### Added
+
+- Expose pyarrow record batches for use in other use
+  cases [db2ixf-74](https://github.com/ismailhammounou/db2ixf/issues/74)
+- Expose important methods in case the user wants to add support to new output
+  formats [db2ixf-75](https://github.com/ismailhammounou/db2ixf/issues/75)
+
 ## [0.14.1](https://github.com/ismailhammounou/db2ixf/tree/0.14.1) - 2024-03-04
 
 ### Changed
