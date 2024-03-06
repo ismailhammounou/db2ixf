@@ -10,6 +10,13 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
 
+## [0.15.1](https://github.com/ismailhammounou/db2ixf/tree/0.15.1) - 2024-03-06
+
+### Changed
+
+- Disable strict type conversion in
+  pyarrow [db2ixf-77](https://github.com/ismailhammounou/db2ixf/issues/77)
+
 ## [0.15.0](https://github.com/ismailhammounou/db2ixf/tree/0.15.0) - 2024-03-05
 
 ### Added
