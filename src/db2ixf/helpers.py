@@ -275,6 +275,10 @@ def to_pyarrow_record_batch(
     _arrays = []
     for k, v in batch.items():
         _arrays.append(array(v))
+        # Disable strict type conversion
+        # _dtype = pyarrow_schema.field(k).type
+        # _arrays.append(array(v, type=_dtype))
+        # _dtype = None
 
     return record_batch(_arrays, schema=pyarrow_schema)
 
