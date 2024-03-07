@@ -10,6 +10,13 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
 
+## [0.16.0](https://github.com/ismailhammounou/db2ixf/tree/0.16.0) - 2024-03-07
+
+### Added
+
+- Add time zone support for timestamp
+  datatype [db2ixf-78](https://github.com/ismailhammounou/db2ixf/issues/78)
+
 ## [0.15.1](https://github.com/ismailhammounou/db2ixf/tree/0.15.1) - 2024-03-06
 
 ### Changed
