@@ -6,7 +6,7 @@ import warnings
 from collections import OrderedDict
 from db2ixf.constants import (
     DB2IXF_BUFFER_SIZE_CLOUD_PROVIDER, DB2IXF_DEFAULT_BATCH_SIZE,
-    DB2IXF_RISK_FACTOR, IXF_DTYPES,
+    DB2IXF_RISK_FACTOR, DB2IXF_TIME_ZONE, IXF_DTYPES,
 )
 from db2ixf.exceptions import NotValidDataPrecisionException
 from db2ixf.logger import logger
@@ -66,7 +66,7 @@ def get_pyarrow_schema(cols: List[OrderedDict]) -> Schema:
     mapper = {
         "DATE": date32(),
         "TIME": time64("ns"),
-        "TIMESTAMP": timestamp("ns"),
+        "TIMESTAMP": timestamp("ns", DB2IXF_TIME_ZONE),
         "BLOB": large_binary(),
         "CLOB": large_string(),
         "VARCHAR": string(),
@@ -81,7 +81,7 @@ def get_pyarrow_schema(cols: List[OrderedDict]) -> Schema:
         "BINARY": binary(),
     }
 
-    # todo: use the code page from the header instead of utf-8
+    # todo: use the code page from the header instead of utf-8  # noqa
     _schema = []
     for c in cols:
         cname = c["IXFCNAME"].decode("utf-8").strip()
@@ -103,23 +103,20 @@ def get_pyarrow_schema(cols: List[OrderedDict]) -> Schema:
             precision = int(c["IXFCLENG"][0:3])
             scale = int(c["IXFCLENG"][3:5])
             if precision <= 38:
-                if scale == 0:
-                    dtype = int64()
-                else:
-                    dtype = decimal128(precision, scale)
+                dtype = decimal128(precision, scale)
             else:
                 dtype = decimal256(precision, scale)
 
         if ctype == 392:
             fsp = int(c["IXFCLENG"])
             if fsp == 0:
-                dtype = timestamp("s")
+                dtype = timestamp("s", DB2IXF_TIME_ZONE)
             elif 0 < fsp <= 3:
-                dtype = timestamp("ms")
+                dtype = timestamp("ms", DB2IXF_TIME_ZONE)
             elif 3 < fsp <= 6:
-                dtype = timestamp("us")
+                dtype = timestamp("us", DB2IXF_TIME_ZONE)
             elif 6 < fsp <= 12:
-                dtype = timestamp("ns")
+                dtype = timestamp("ns", DB2IXF_TIME_ZONE)
             else:
                 msg = f"Invalid time precision for {cname}, expected < 12"
                 raise NotValidDataPrecisionException(msg)
@@ -182,10 +179,10 @@ def deltalake_fix_ns_timestamps(pyarrow_schema: Schema) -> Schema:
         Pyarrow schema with fix
     """
     for i, f in enumerate(pyarrow_schema):
-        if f.type == timestamp("ns"):
+        if f.type == timestamp("ns", DB2IXF_TIME_ZONE):
             new_field = field(
                 f.name,
-                timestamp("us"),
+                timestamp("us", DB2IXF_TIME_ZONE),
                 nullable=f.nullable,
                 metadata=f.metadata
             )

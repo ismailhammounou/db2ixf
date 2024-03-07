@@ -166,3 +166,7 @@ DB2IXF_RISK_FACTOR: int = int(
     )
 )
 """Risk factor of the dynamic batch size (Standard deviation of Normal dist)"""
+
+DB2IXF_TIME_ZONE = os.getenv("DB2IXF_TIME_ZONE")
+"""Time zone where the db2 server is hosted or the one used when extracting the 
+ixf file. Default `None` means all timestamps are considered time zone naive."""
