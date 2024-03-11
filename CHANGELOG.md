@@ -10,6 +10,13 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/).
 
 <!-- release notes start -->
 
+## [0.16.1](https://github.com/ismailhammounou/db2ixf/tree/0.16.1) - 2024-03-12
+
+### Changed
+
+- Disable metadata collection as impacts deltalake overwrite of
+  tables [db2ixf-80](https://github.com/ismailhammounou/db2ixf/issues/80)
+
 ## [0.16.0](https://github.com/ismailhammounou/db2ixf/tree/0.16.0) - 2024-03-07
 
 ### Added
