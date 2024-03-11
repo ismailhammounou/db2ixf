@@ -85,7 +85,7 @@ def get_pyarrow_schema(cols: List[OrderedDict]) -> Schema:
     _schema = []
     for c in cols:
         cname = c["IXFCNAME"].decode("utf-8").strip()
-        cdesc = c["IXFCDESC"].decode("utf-8").strip()
+        # cdesc = c["IXFCDESC"].decode("utf-8").strip()
         cnull = c["IXFCNULL"].decode("utf-8").strip()
         ctype = int(c["IXFCTYPE"])
 
@@ -130,7 +130,7 @@ def get_pyarrow_schema(cols: List[OrderedDict]) -> Schema:
             cname,
             dtype,
             nullable=cnullable,
-            metadata={cname: cdesc}
+            # metadata={cname: cdesc}
         )
 
         _schema.append(_field)
@@ -184,7 +184,7 @@ def deltalake_fix_ns_timestamps(pyarrow_schema: Schema) -> Schema:
                 f.name,
                 timestamp("us", DB2IXF_TIME_ZONE),
                 nullable=f.nullable,
-                metadata=f.metadata
+                # metadata=f.metadata
             )
             pyarrow_schema = pyarrow_schema.set(i, new_field)
     return pyarrow_schema
@@ -223,7 +223,7 @@ def deltalake_fix_time(pyarrow_schema: Schema) -> Schema:
                 f.name,
                 string(),
                 nullable=f.nullable,
-                metadata=f.metadata
+                # metadata=f.metadata
             )
             pyarrow_schema = pyarrow_schema.set(i, new_field)
     return pyarrow_schema
