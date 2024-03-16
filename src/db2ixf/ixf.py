@@ -278,7 +278,7 @@ class IXFParser:
                           f"data type {col_type}"
                     raise UnknownDataTypeException(msg)
 
-                collected_data: Any = collector(
+                collected_data = collector(
                     c, self.current_data_record["IXFDCOLS"], pos
                 )
                 self.current_row[col_name] = collected_data
@@ -523,6 +523,7 @@ class IXFParser:
 
         if batch:
             yield to_pyarrow_record_batch(batch, self.pyarrow_schema)
+            batch.clear()
 
     def iter_pyarrow_record_batch(
         self,
