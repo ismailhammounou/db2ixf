@@ -168,12 +168,10 @@ def collect_floating_point(c, fields, pos) -> float:
     col_length = int(c["IXFCLENG"])
 
     if col_length == 4:
-        field = float(unpack(">f", fields[pos:pos + col_length])[0])
-        return field
+        return float(unpack(">f", fields[pos:pos + col_length])[0])
 
     if col_length == 8:
-        field = float(unpack(">d", fields[pos:pos + col_length])[0])
-        return field
+        return float(unpack(">d", fields[pos:pos + col_length])[0])
 
     raise DataCollectorError(
         f"Expecting 4 or 8 bytes, found {col_length} bytes"
