@@ -955,6 +955,7 @@ class IXFParser:
         partition_by: Optional[Union[List[str], str]] = None,
         mode: Literal["error", "append", "overwrite", "ignore"] = "error",
         overwrite_schema: bool = False,
+        schema_mode: Optional[Literal["merge", "overwrite"]] = None,
         partition_filters: Optional[List[Tuple[str, str, Any]]] = None,
         large_dtypes: bool = False,
         batch_size: Optional[int] = None,
@@ -977,6 +978,9 @@ class IXFParser:
                 If "ignore", will not write anything if table already exists.
         overwrite_schema : bool
             If True, allows updating the schema of the table.
+        schema_mode : Optional[Literal["merge", "overwrite"]]
+            If set to "overwrite", allows replacing the schema of the table.
+            Set to "merge" to merge with existing schema.
         partition_filters : Optional[List[Tuple[str, str, Any]]]
             Defaults to None. The partition filters that will be used for
             partition overwrite. Only used in pyarrow engine.
@@ -1011,6 +1015,7 @@ class IXFParser:
             partition_by=partition_by,
             mode=mode,
             overwrite_schema=overwrite_schema,
+            schema_mode=schema_mode,
             partition_filters=partition_filters,
             large_dtypes=large_dtypes,
             **kwargs
