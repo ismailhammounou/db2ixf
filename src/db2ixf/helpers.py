@@ -269,14 +269,7 @@ def to_pyarrow_record_batch(
     RecordBatch
         Pyarrow record batch
     """
-    _arrays = []
-    for k, v in batch.items():
-        _arrays.append(array(v))
-        # Disable strict type conversion (Avoid deltalake errors)
-        # _dtype = pyarrow_schema.field(k).type
-        # _arrays.append(array(v, type=_dtype))
-        # _dtype = None
-
+    _arrays = [array(v) for v in batch.values()]
     return record_batch(_arrays, schema=pyarrow_schema)
 
 
