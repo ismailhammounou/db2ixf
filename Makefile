@@ -11,7 +11,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 # Version of the used tools
-PYTHON_VERSION = 3.10
+PYTHON_VERSION ?= 3.10
 
 # Project Directories
 REPORT_TARGET_DIR = $(PROJECT_ROOT)/target/report
