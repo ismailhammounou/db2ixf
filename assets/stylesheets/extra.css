@@ -1,0 +1,31 @@
+[data-md-color-primary="me"] {
+    --md-primary-fg-color: #d53a1e;
+    --md-primary-fg-color--light: #749bd7;
+    --md-primary-fg-color--dark: #90a2b9;
+}
+
+[data-md-color-scheme="default"] {
+    --md-footer-bg-color: #d53a1e;
+}
+
+[data-md-color-scheme="slate"] {
+    --md-code-bg-color: hsla(var(--md-hue), 0%, 0%, 1);
+}
+
+.twitter {
+    color: #1DA1F2;
+}
+
+
+@keyframes heart {
+    0%, 40%, 80%, 100% {
+        transform: scale(1);
+    }
+    20%, 60% {
+        transform: scale(1.15);
+    }
+}
+
+.heart {
+    animation: heart 1000ms infinite;
+}
