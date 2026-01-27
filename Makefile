@@ -11,7 +11,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 # Version of the used tools
-PYTHON_VERSION = 3.9
+PYTHON_VERSION = 3.10
 
 # Project Directories
 REPORT_TARGET_DIR = $(PROJECT_ROOT)/target/report
@@ -59,7 +59,7 @@ info: ## Show this information
 #   ENV
 # ============================
 $(VENV_DIR):
-	conda create --verbose --no-default-packages --yes --prefix $(VENV_DIR)
+	conda create --verbose --no-default-packages --yes --prefix $(VENV_DIR) python=$(PYTHON_VERSION)
 	cp -f .condarc venv/.condarc || true
 	cp -f pip.conf venv/pip.conf || true
 	cp -f pip.conf venv/pip.ini || true
