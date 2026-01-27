@@ -59,7 +59,7 @@ info: ## Show this information
 #   ENV
 # ============================
 $(VENV_DIR):
-	conda create --verbose --no-default-packages --yes --prefix $(VENV_DIR)
+	conda create --verbose --no-default-packages --yes --prefix $(VENV_DIR) python=$(PYTHON_VERSION)
 	cp -f .condarc venv/.condarc || true
 	cp -f pip.conf venv/pip.conf || true
 	cp -f pip.conf venv/pip.ini || true

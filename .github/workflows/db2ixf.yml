@@ -57,6 +57,8 @@ jobs:
           conda update -n base -c defaults conda
 
       - name: Install dependencies using conda
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           make venv
 
