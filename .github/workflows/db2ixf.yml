@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
+        python-version: ['3.10', '3.11', '3.12', '3.13']
 
     steps:
       - name: Checkout
@@ -57,6 +57,8 @@ jobs:
           conda update -n base -c defaults conda
 
       - name: Install dependencies using conda
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           make venv
 
